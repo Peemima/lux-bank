@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Lux Banking User List</title>
+  <link rel="stylesheet" href="/lux-bank/assets/styles.css">
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js" defer></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js" defer></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+</head>
+<body>
+  <div id="printableContent"></div>
+  <button id="printButton">Print PDF</button>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+    import { getDatabase, ref, set, get } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+
+    // Your Firebase configuration
+    const firebaseConfig = {
+      apiKey: "AIzaSyASd5JOikXTlRp8eA2j_26Z1NWatZMjZds", // Replace with your actual API key
+      authDomain: "lux-bank.firebaseapp.com", // Replace with your actual Auth Domain
+      databaseURL: "https://lux-bank-default-rtdb.firebaseio.com", // Replace with your actual Database URL
+      projectId: "lux-bank", // Replace with your actual Project ID
+      storageBucket: "lux-bank.appspot.com", // Replace with your actual Storage Bucket
+      messagingSenderId: "764922032293", // Replace with your actual Messaging Sender ID
+      appId: "1:764922032293:web:573599b6116f025ee15d4c", // Replace with your actual App ID
+      measurementId: "G-JQ7CWEJS9N" // Replace with your actual Measurement ID
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const database = getDatabase(app);
+
+    document.addEventListener('DOMContentLoaded', function() {
+      const printButton = document.getElementById('printButton');
+      const printableContent = document.getElementById('printableContent');
+
+      // Fetch user data from Firebase
+      fetchUserData().then(users => {
+        // Create the table HTML
+        const tableHTML = `
+          <h2>Lux Banking User List</h2>
+          <table border="1">
+            <thead>
+              <tr>
+                <th>User ID</th>
+                <th>User Name</th>
+                <th>Balance</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${Object.keys(users).map(key => `
+                <tr>
+                  <td>${users[key].id}</td>
+                  <td>${key}</td>
+                  <td>$${users[key].balance}</td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        `;
+        printableContent.innerHTML = tableHTML; 
+
+        printButton.addEventListener('click', () => {
+          // 1. Generate the PDF using html2pdf
+          html2pdf()
+            .from(printableContent)
+            .set({
+              margin: 10,
+              filename: 'user-list.pdf',
+              image: { type: 'jpeg', quality: 0.98 },
+              html2canvas: { scale: 2 },
+              jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+            })
+            .output('datauristring', (dataUri) => {
+              // 2. Create a new window to display the PDF
+              const printWindow = window.open('', 'Print PDF', 'width=800,height=600');
+
+              // 3. Add the PDF data to the new window's body as an iframe
+              printWindow.document.write('<iframe src="' + dataUri + '" style="width:100%; height:100%;"></iframe>'); 
+
+              // 4. Focus on the new window and trigger printing
+              printWindow.focus();
+              printWindow.print();
+            });
+        });
+      });
+    });
+
+    // Function to fetch user data from Firebase
+    async function fetchUserData() {
+      const snapshot = await get(ref(database, 'users'));
+      if (snapshot.exists()) {
+        return snapshot.val();
+      } else {
+        return {}; 
+      }
+    }
+  </script>
+</body>
+</html>
