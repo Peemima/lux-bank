@@ -72,9 +72,7 @@
               html2canvas: { scale: 2 },
               jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
             })
-            .get(function(pdf) {
-               window.open(pdf.output('datauristring'), '_blank'); // Open the PDF in a new window
-            });
+            .save()
         });
       });
     });
