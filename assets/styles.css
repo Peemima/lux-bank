@@ -1,0 +1,257 @@
+:root {
+    /* Color Variables */
+    --background-color: #FBFCFF;
+    --text-color: #333;
+    --button-color: #11ABFC;
+    --input-border-color: #ddd;
+    --section-background-color: #e9ecef;
+    --user-background-color: #f8f9fa;
+    --modal-background-color: #fefefe;
+    --modal-overlay-color: rgba(0,0,0,0.4);
+    --outline-button-border-color: #11ABFC;
+    --close-button-color: #aaa;
+    --close-button-hover-color: black;
+    --border-radius: 40px; /* New variable for border-radius */
+    --shadow-color: rgba(0,0,0,0.1); /* New variable for box-shadow color */
+    --font-family: Arial, sans-serif;
+    --font-family-button: "Poppins", sans-serif;
+    --modal-border-color: #888;
+    
+    /* Size Variables */
+    --padding-small: 10px;
+    --padding-normal: 11px;
+    --padding-large: 19px;
+    --margin-normal: 10px;
+    --font-size-close-button: 28px;
+    --font-weight-bold: bold;
+    --box-shadow: 0 2px 4px var(--shadow-color);
+    --border-width: 1px;
+    --border-width-outline-button: 2px;
+    --modal-content-margin-top: 15%;
+    --modal-content-width: 80%;
+    --modal-content-padding: 20px;
+    --modal-content-border-radius: 15px;
+  }
+
+  /* Reset and base styles */
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: var(--font-family);
+    outline: none;
+  }
+
+  body {
+    background-color: var(--background-color);
+    padding: var(--padding-large);
+    color: var(--text-color);
+  }
+
+  .container {
+    max-width: 800px;
+    margin: auto;
+    padding: var(--padding-large);
+    background-color: white;
+    border-radius: var(--border-radius);
+    box-shadow: var(--box-shadow);
+  }
+
+  form {
+    margin-bottom: var(--margin-normal);
+    width: 300px;
+  }
+
+  input[type=text], input[type=number] {
+    padding: var(--padding-small);
+    margin: var(--margin-normal) 0;
+    border: var(--border-width) solid var(--input-border-color);
+    border-radius: var(--border-radius);
+    width: 300px;
+    display: block;
+    outline: none;
+  }
+
+  .logo {
+    width: 125px;
+  }
+
+  button, .fill-button, input[type="submit"] {
+    font-weight: normal;
+    color: white;
+    background-color: var(--button-color);
+    padding: var(--padding-normal) var(--padding-large);
+    font-family: var(--font-family-button);
+    text-decoration: none;
+    border: none;
+    cursor: pointer;
+    border-radius: var(--border-radius);
+    display: inline-block;
+    font-size: inherit;
+  }
+
+  h2 {
+    font-size: 36px;
+    font-weight: 500;
+  }
+
+  #message, #searchResult, #allUsers {
+    padding: var(--padding-small);
+    margin-top: var(--margin-normal);
+    background-color: var(--section-background-color);
+    border-radius: var(--border-radius);
+  }
+
+  #searchForm, #adduserform {
+    display: flex;            /* This makes the form use Flexbox */
+    text-align: center;
+    justify-content: space-between; /* This spreads out the items */
+}
+
+#adduserform {
+    display: block;
+}
+
+#searchForm:focus, #adduserform:focus {
+  outline: none;
+}
+
+#searchForm input, #searchForm button, #adduserform input {
+    margin: 3px;  /* Provides space between the input field and the button */
+}
+
+
+  #allUsers {
+  margin-top: var(--margin-normal);
+  background-color: var(--section-background-color);
+  border-radius: 50px;
+}
+
+
+  #allUsers > div {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: var(--padding-small);
+    background-color: var(--user-background-color);
+  }
+
+  .modal {
+    display: none;
+    position: fixed;
+    z-index: 1;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    background-color: var(--modal-overlay-color);
+  }
+
+  .modal-content {
+    background-color: var(--modal-background-color);
+    margin: var(--modal-content-margin-top) auto;
+    padding: var(--modal-content-padding);
+    border: var(--border-width) solid var(--modal-border-color);
+    width: 400px;
+    border-radius: var(--modal-content-border-radius);
+  }
+
+  .close {
+    color: var(--close-button-color);
+    float: right;
+    font-size: var(--font-size-close-button);
+    font-weight: var(--font-weight-bold);
+  }
+
+  .close:hover,
+  .close:focus {
+    color: var(--close-button-hover-color);
+    text-decoration: none;
+    cursor: pointer;
+  }
+
+  .outline-button {
+    font-weight: normal;
+    background-color: white;
+    color: var(--button-color);
+    padding: var(--padding-normal) var(--padding-large);
+    font-family: var(--font-family-button);
+    text-decoration: none;
+    border: var(--border-width-outline-button) solid var(--outline-button-border-color);
+    cursor: pointer;
+    border-radius: var(--border-radius);
+    display: inline-block;
+    font-size: inherit;
+  }
+
+  #businessInfo {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+  }
+  .user-top {
+  border-top-left-radius: var(--border-radius);
+  border-top-right-radius: var(--border-radius);
+  border-bottom-left-radius: 0;
+  border-bottom-right-radius: 0;
+}
+
+.user-middle {
+  border-radius: 0; /* No border-radius */
+}
+
+.user-bottom {
+  border-bottom-left-radius: var(--border-radius);
+  border-bottom-right-radius: var(--border-radius);
+  border-top-left-radius: 0;
+  border-top-right-radius: 0;
+}
+.only-user {
+  border-bottom-left-radius: var(--border-radius);
+  border-bottom-right-radius: var(--border-radius);
+  border-top-left-radius: var(--border-radius);
+  border-top-right-radius: var(--border-radius);
+}
+
+.list-name {
+  margin-left: 10px;
+}
+
+.user-info {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-radius: var(--border-radius);
+  padding: var(--padding-small);
+}
+
+.container {
+  max-width: 800px;
+  margin: 0 auto; /* Center aligns the container */
+  padding: var(--padding-large);
+  background-color: white;
+  border-radius: var(--border-radius);
+  box-shadow: var(--box-shadow);
+  text-align: center; /* Ensures text elements inside the container are centered */
+}
+
+form {
+  margin-bottom: var(--margin-normal);
+  width: 300px;
+  margin: 0 auto; /* Center aligns the form inside the container */
+  display: block;
+}
+
+@keyframes jiggle {
+  0% { transform: translateX(0); }
+  25% { transform: translateX(-5px); }
+  50% { transform: translateX(5px); }
+  75% { transform: translateX(-5px); }
+  100% { transform: translateX(0); }
+}
+
+.jiggle {
+  animation: jiggle 0.5s ease;
+}
