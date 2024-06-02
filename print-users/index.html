@@ -72,17 +72,7 @@
               html2canvas: { scale: 2 },
               jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
             })
-            .get()  // Use .get() to retrieve the PDF data
-            .then(pdfData => { 
-              // Open the PDF data in a new window
-              const pdfWindow = window.open('data:application/pdf;base64,' + pdfData.toString('base64'), '_blank');
-
-              // Try to trigger the print dialog (less reliable across browsers)
-              if (pdfWindow) {
-                pdfWindow.focus();
-                pdfWindow.print();
-              }
-            });
+            .save();
         });
       });
     });
