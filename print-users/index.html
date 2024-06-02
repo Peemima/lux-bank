@@ -70,10 +70,19 @@
               filename: 'user-list.pdf',
               image: { type: 'jpeg', quality: 0.98 },
               html2canvas: { scale: 2 },
-              jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' } 
+              jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
             })
-            .print() // Print the PDF directly
-            .save(); // Save the PDF as well (optional)
+            .get()  // Use .get() to retrieve the PDF data
+            .then(pdfData => { 
+              // Open the PDF data in a new window
+              const pdfWindow = window.open('data:application/pdf;base64,' + pdfData.toString('base64'), '_blank');
+
+              // Try to trigger the print dialog (less reliable across browsers)
+              if (pdfWindow) {
+                pdfWindow.focus();
+                pdfWindow.print();
+              }
+            });
         });
       });
     });
