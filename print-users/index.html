@@ -10,7 +10,10 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 </head>
 <body>
-  <div id="printableContent"></div>
+  <div id="printableContent">
+    <div class="users-print-sheet">
+      </div>
+  </div>
   <button id="printButton">Print PDF</button>
 
   <script type="module">
@@ -35,32 +38,20 @@
     document.addEventListener('DOMContentLoaded', function() {
       const printButton = document.getElementById('printButton');
       const printableContent = document.getElementById('printableContent');
+      const usersPrintSheet = document.querySelector('.users-print-sheet');
 
       // Fetch user data from Firebase
       fetchUserData().then(users => {
-        // Create the table HTML
-        const tableHTML = `
-          <h2>Lux Banking User List</h2>
-          <table border="1">
-            <thead>
-              <tr>
-                <th>User ID</th>
-                <th>User Name</th>
-                <th>Balance</th>
-              </tr>
-            </thead>
-            <tbody>
-              ${Object.keys(users).map(key => `
-                <tr>
-                  <td>${users[key].id}</td>
-                  <td>${key}</td>
-                  <td>$${users[key].balance}</td>
-                </tr>
-              `).join('')}
-            </tbody>
-          </table>
-        `;
-        printableContent.innerHTML = tableHTML; // Add the table to the div
+        // Create the cards for each user
+        Object.keys(users).forEach(key => {
+          const userCard = document.createElement('div');
+          userCard.classList.add('user-card');
+          userCard.innerHTML = `
+            <p1>Show this number to businesses to pay for things, ${key}.</p1>
+            <h1>${users[key].id}</h1>
+          `;
+          usersPrintSheet.appendChild(userCard);
+        });
 
         printButton.addEventListener('click', () => {
           html2pdf()
