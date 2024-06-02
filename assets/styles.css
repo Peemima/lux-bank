@@ -157,6 +157,16 @@
     border-radius: var(--modal-content-border-radius);
   }
 
+  .user-card{
+    background-color: #B4F2FE;
+    color: #0680E4;
+    font-family: Arial, sans-serif;
+    padding: 25px;
+    border-radius: 25px;
+    width: calc(100% /3);
+    margin: 10px;
+  }
+
   .close {
     color: var(--close-button-color);
     float: right;
