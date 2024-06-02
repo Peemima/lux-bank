@@ -63,19 +63,20 @@
         printableContent.innerHTML = tableHTML; // Add the table to the div
 
         printButton.addEventListener('click', () => {
-          html2pdf()
-            .from(printableContent)
-            .set({
-              margin: 10,
-              filename: 'user-list.pdf',
-              image: { type: 'jpeg', quality: 0.98 },
-              html2canvas: { scale: 2 },
-              jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
-            })
-            .save()
-        });
-      });
+  html2pdf()
+    .from(printableContent)
+    .set({ /* your PDF options */ })
+    .save().then(() => { // Wait for the PDF to download
+      // After the PDF is downloaded, open it in a new window
+      const pdfWindow = window.open('user-list.pdf', '_blank');
+
+      // Try to trigger the print dialog (less reliable across browsers)
+      if (pdfWindow) {
+        pdfWindow.focus(); 
+        pdfWindow.print(); 
+      }
     });
+});
 
     // Function to fetch user data from Firebase
     async function fetchUserData() {
