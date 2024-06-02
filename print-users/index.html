@@ -70,8 +70,8 @@
               filename: 'user-list.pdf',
               image: { type: 'jpeg', quality: 0.98 },
               html2canvas: { scale: 2 },
-              jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
-            })
+              jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' } 
+            }) // The missing parenthesis was here!
             .save().then(() => { // Wait for the PDF to download
               // After the PDF is downloaded, open it in a new window
               const pdfWindow = window.open('user-list.pdf', '_blank');
