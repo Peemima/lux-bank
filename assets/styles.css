@@ -163,9 +163,16 @@
     font-family: Arial, sans-serif;
     padding: 25px;
     border-radius: 25px;
-    width: calc(100% /3);
+    width: calc(100% / 3 - 70px);
     margin: 10px;
-  }
+    float: left;
+}
+.users-print-sheet {
+    justify-content: space-between;
+    width: 8.5in;
+    height: 11in;
+    border: solid, 2px, black;
+}
 
   .close {
     color: var(--close-button-color);
