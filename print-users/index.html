@@ -34,28 +34,30 @@
     const app = initializeApp(firebaseConfig);
     const database = getDatabase(app);
 
-// ... (Your Firebase code) ...
+    document.addEventListener('DOMContentLoaded', function() {
+      const printButton = document.getElementById('printButton');
+      const printableContent = document.getElementById('printableContent');
+      const usersPrintSheet = document.querySelector('.users-print-sheet');
 
-document.addEventListener('DOMContentLoaded', function() {
-  // ... (Get user data) ...
+      // Fetch user data from Firebase
+      fetchUserData().then(users => {
+        // Create the cards for each user
+        Object.keys(users).forEach(key => {
+          const userCard = document.createElement('div');
+          userCard.classList.add('user-card');
+          userCard.innerHTML = `
+            <p1>Show this number to businesses to pay for things, ${key}.</p1>
+            <h1>${users[key].id}</h1>
+          `;
+          usersPrintSheet.appendChild(userCard);
+        });
 
-  const printButton = document.getElementById('printButton');
-
-  printButton.addEventListener('click', () => {
-    const doc = new jsPDF();
-    // Add content to the PDF
-    doc.setFontSize(16);
-    doc.text(20, 20, 'Lux Banking User List');
-    
-    // Iterate through user data and add each user to the PDF
-    Object.keys(users).forEach((key, index) => {
-      doc.text(20, 40 + index * 10, `User ID: ${users[key].id}`);
-      // Add other user details as needed
+        printButton.addEventListener('click', () => {
+          window.print();
+        });
+      });
     });
 
-    doc.save('user-list.pdf'); 
-  });
-});
     // Function to fetch user data from Firebase
     async function fetchUserData() {
       const snapshot = await get(ref(database, 'users'));
