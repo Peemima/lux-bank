@@ -7,13 +7,14 @@
   <link rel="stylesheet" href="/lux-bank/assets/styles.css">
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js" defer></script>
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js" defer></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 </head>
 <body>
   <div id="printableContent">
     <div class="users-print-sheet">
       </div>
   </div>
-  <button id="printButton">Print</button>
+  <button id="printButton">Print PDF</button>
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
