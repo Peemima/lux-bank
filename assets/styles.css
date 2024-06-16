@@ -178,7 +178,6 @@
   -webkit-print-color-adjust: exact;
   display: flex;
   flex-direction: column; /* Stack cards vertically */
-  gap: 20px;
 }
   .close {
     color: var(--close-button-color);
