@@ -173,6 +173,7 @@
     width: 8.5in;
     height: 11in;
     /*border: solid, 2px, black;*/
+    -webkit-print-color-adjust: exact;
 }
 
   .close {
