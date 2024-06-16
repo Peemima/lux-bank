@@ -14,7 +14,7 @@
     <div class="users-print-sheet">
       </div>
   </div>
-  <button id="printButton">Download PDF</button>
+  <button id="printButton">Print PDF</button>
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
@@ -53,18 +53,9 @@
           usersPrintSheet.appendChild(userCard);
         });
 
-        // Download the PDF
+        // Print the list
         printButton.addEventListener('click', () => {
-          html2pdf()
-            .from(printableContent)
-            .set({
-              margin: 10,
-              filename: 'user-list.pdf',
-              image: { type: 'jpeg', quality: 0.98 },
-              html2canvas: { scale: 3 },
-              jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
-            })
-            .save();
+          window.print();
         });
       });
     });
