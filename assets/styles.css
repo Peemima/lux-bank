@@ -166,7 +166,7 @@
   font-family: Arial, sans-serif;
   padding: 25px;
   border-radius: 25px;
-  width: 100%;
+  width: 30%;
   margin-bottom: 20px; /* Add margin to separate cards */
   -webkit-print-color-adjust: exact;
 }
