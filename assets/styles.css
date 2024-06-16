@@ -174,9 +174,11 @@
   height: 11in;
   /*border: solid, 2px, black;*/
   -webkit-print-color-adjust: exact;
-  display: grid;  /* Make it a grid container */
+  display: grid;
   grid-template-columns: repeat(3, 1fr); /* 3 equal columns */
-  gap: 20px; /* Space between grid items */
+  gap: 20px;
+  /* Add this: */
+  grid-auto-rows: minmax(100px, auto); /* Minimum row height to ensure cards fit */
 }
   .close {
     color: var(--close-button-color);
