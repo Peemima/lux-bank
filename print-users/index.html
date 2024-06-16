@@ -12,9 +12,7 @@
 <body>
   <div id="printableContent">
     <div class="users-print-sheet">
-        <div class="user-card-grid">
-        </div>
-    </div>
+      </div>
   </div>
   <button id="printButton">Print PDF</button>
 
@@ -41,7 +39,6 @@
       const printButton = document.getElementById('printButton');
       const printableContent = document.getElementById('printableContent');
       const usersPrintSheet = document.querySelector('.users-print-sheet');
-      const userCardGrid = document.querySelector('.user-card-grid'); // Get the grid container
 
       // Fetch user data from Firebase
       fetchUserData().then(users => {
@@ -53,7 +50,7 @@
             <p1>Show this number to businesses to pay for things, ${key}.</p1>
             <h1>${users[key].id}</h1>
           `;
-          userCardGrid.appendChild(userCard); // Append to the grid container
+          usersPrintSheet.appendChild(userCard);
         });
 
         // Print the list
