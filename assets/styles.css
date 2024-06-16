@@ -160,8 +160,16 @@
     border-radius: var(--modal-content-border-radius);
   }
 
-/* ... existing CSS ... */
-
+.user-card{
+  background-color: #B4F2FE;
+  color: #0680E4;
+  font-family: Arial, sans-serif;
+  padding: 25px;
+  border-radius: 25px;
+  width: 30%;
+  margin-bottom: 20px; /* Add margin to separate cards */
+  -webkit-print-color-adjust: exact;
+}
 .users-print-sheet {
   justify-content: space-between;
   width: 8.5in;
@@ -169,17 +177,8 @@
   /*border: solid, 2px, black;*/
   -webkit-print-color-adjust: exact;
   display: flex;
-  flex-direction: row; /* Change to row to make cards horizontal */
-  flex-wrap: wrap;   /* Wrap to new rows if needed */
+  flex-direction: column; /* Stack cards vertically */
 }
-
-.user-card {
-  /* ... existing styles ... */
-  width: 30%;  /* This should be adjusted to fit your card layout */
-  margin-bottom: 20px; /* Add margin to separate cards */
-  -webkit-print-color-adjust: exact;
-}
-/* ... existing CSS ... */
   .close {
     color: var(--close-button-color);
     float: right;
@@ -279,4 +278,4 @@ form {
   animation: jiggle 0.5s ease;
 }
 
-Each user card MUST be nex
+Each user card 
