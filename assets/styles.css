@@ -55,11 +55,14 @@
     background-color: white;
     border-radius: var(--border-radius);
     box-shadow: var(--box-shadow);
+    text-align: center; 
   }
 
   form {
     margin-bottom: var(--margin-normal);
     width: 300px;
+    margin: 0 auto; 
+    display: block;
   }
 
   input[type=text], input[type=number] {
@@ -164,7 +167,7 @@
   padding: 25px;
   border-radius: 25px;
   width: 100%;
-  /* float: left; */ /* Remove this */
+  margin-bottom: 20px; /* Add margin to separate cards */
   -webkit-print-color-adjust: exact;
 }
 .users-print-sheet {
@@ -173,8 +176,8 @@
   height: 11in;
   /*border: solid, 2px, black;*/
   -webkit-print-color-adjust: exact;
-  display: grid;
-  grid-template-columns: repeat(3, 1fr); /* 3 equal columns */
+  display: flex;
+  flex-direction: column; /* Stack cards vertically */
   gap: 20px;
 }
   .close {
@@ -249,18 +252,18 @@
 
 .container {
   max-width: 800px;
-  margin: 0 auto; /* Center aligns the container */
+  margin: 0 auto; 
   padding: var(--padding-large);
   background-color: white;
   border-radius: var(--border-radius);
   box-shadow: var(--box-shadow);
-  text-align: center; /* Ensures text elements inside the container are centered */
+  text-align: center; 
 }
 
 form {
   margin-bottom: var(--margin-normal);
   width: 300px;
-  margin: 0 auto; /* Center aligns the form inside the container */
+  margin: 0 auto; 
   display: block;
 }
 
