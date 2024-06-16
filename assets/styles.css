@@ -157,24 +157,27 @@
     border-radius: var(--modal-content-border-radius);
   }
 
-  .user-card{
-    background-color: #B4F2FE;
-    color: #0680E4;
-    font-family: Arial, sans-serif;
-    padding: 25px;
-    border-radius: 25px;
-    margin: 10px;
-    float: left;
-    -webkit-print-color-adjust: exact;
+.user-card{
+  background-color: #B4F2FE;
+  color: #0680E4;
+  font-family: Arial, sans-serif;
+  padding: 25px;
+  border-radius: 25px;
+  width: calc(100% / 3 - 70px); /* Remove this as grid handles sizing */
+  margin: 10px; /* Remove this as grid handles spacing */
+  /* float: left; */ /* Remove this */
+  -webkit-print-color-adjust: exact;
 }
 .users-print-sheet {
-    justify-content: space-between;
-    width: 8.5in;
-    height: 11in;
-    /*border: solid, 2px, black;*/
-    -webkit-print-color-adjust: exact;
+  justify-content: space-between;
+  width: 8.5in;
+  height: 11in;
+  /*border: solid, 2px, black;*/
+  -webkit-print-color-adjust: exact;
+  display: grid;  /* Make it a grid container */
+  grid-template-columns: repeat(3, 1fr); /* 3 equal columns */
+  gap: 20px; /* Space between grid items */
 }
-
   .close {
     color: var(--close-button-color);
     float: right;
