@@ -166,7 +166,6 @@
   width: 100%;
   /* float: left; */ /* Remove this */
   -webkit-print-color-adjust: exact;
-  overflow-y: auto;
 }
 .users-print-sheet {
   justify-content: space-between;
