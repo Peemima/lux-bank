@@ -176,8 +176,6 @@
   display: grid;
   grid-template-columns: repeat(3, 1fr); /* 3 equal columns */
   gap: 20px;
-  /* Remove this: */
-  /* grid-auto-rows: minmax(100px, auto); */ 
 }
   .close {
     color: var(--close-button-color);
