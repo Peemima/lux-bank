@@ -163,6 +163,7 @@
   font-family: Arial, sans-serif;
   padding: 25px;
   border-radius: 25px;
+  width: 100%;
   /* float: left; */ /* Remove this */
   -webkit-print-color-adjust: exact;
 }
