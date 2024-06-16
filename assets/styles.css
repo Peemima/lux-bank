@@ -123,14 +123,13 @@
     margin: 3px;  /* Provides space between the input field and the button */
 }
 
+
   #allUsers {
-    display: flex; /* Make the user cards display in a row */
-    flex-wrap: wrap; /* Allow wrapping if cards exceed container width */
-    justify-content: space-around; /* Distribute cards evenly */
-    margin-top: var(--margin-normal);
-    background-color: var(--section-background-color);
-    border-radius: 50px;
-  }
+  margin-top: var(--margin-normal);
+  background-color: var(--section-background-color);
+  border-radius: 50px;
+}
+
 
   #allUsers > div {
     display: flex;
@@ -138,8 +137,6 @@
     align-items: center;
     padding: var(--padding-small);
     background-color: var(--user-background-color);
-    margin-bottom: var(--margin-normal); /* Add margin to separate cards */
-    width: 30%; /* Adjust width as needed for card layout */
   }
 
   .modal {
@@ -281,23 +278,4 @@ form {
   animation: jiggle 0.5s ease;
 }
 
-/* Ensure user cards are side by side and wrap if needed */
-#allUsers > div {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: var(--padding-small);
-  background-color: var(--user-background-color);
-  margin-bottom: var(--margin-normal); /* Add margin to separate cards */
-  width: 30%; /* Adjust width as needed for card layout */
-}
-
-/* Apply these styles to ensure user cards are side-by-side */
-#allUsers {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: space-around; 
-  margin-top: var(--margin-normal);
-  background-color: var(--section-background-color);
-  border-radius: 50px;
-}
+Each user card MUST be nex
