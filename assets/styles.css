@@ -164,7 +164,6 @@
   padding: 25px;
   border-radius: 25px;
   width: 100%;
-  display: flex;
   /* float: left; */ /* Remove this */
   -webkit-print-color-adjust: exact;
 }
