@@ -163,8 +163,6 @@
   font-family: Arial, sans-serif;
   padding: 25px;
   border-radius: 25px;
-  width: calc(100% / 3 - 70px); /* Remove this as grid handles sizing */
-  margin: 10px; /* Remove this as grid handles spacing */
   /* float: left; */ /* Remove this */
   -webkit-print-color-adjust: exact;
 }
