@@ -166,6 +166,7 @@
     width: calc(100% / 3 - 70px);
     margin: 10px;
     float: left;
+    -webkit-print-color-adjust: exact;
 }
 .users-print-sheet {
     justify-content: space-between;
