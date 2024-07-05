@@ -1,18 +1,21 @@
+.users-print-sheet {
+  display: flex; /* Use flexbox for easier layout */
+  flex-wrap: wrap; /* Allow cards to wrap onto multiple rows */
+  justify-content: space-between; /* Space cards evenly */
+  width: 8.5in;
+  height: 11in;
+  /*border: solid, 2px, black;*/
+  -webkit-print-color-adjust: exact;
+}
+
 .user-card {
   background-color: #B4F2FE;
   color: #0680E4;
   font-family: Arial, sans-serif;
   padding: 25px;
   border-radius: 25px;
-  width: calc((8.5in / 3) -20px); /* Adjust width as needed for your card layout */
-  margin: 20px; /* Add margin to separate cards */
-  -webkit-print-color-adjust: exact;
-}
-.users-print-sheet {
-  justify-content: space-between;
-  width: 8.5in;
-  height: 11in;
-  /*border: solid, 2px, black;*/
+  width: calc((8.5in / 3) - 20px); /* Adjust width as needed for your card layout */
+  margin-bottom: 20px; /* Add margin to separate cards */
   -webkit-print-color-adjust: exact;
 }
 
