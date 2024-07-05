@@ -162,7 +162,7 @@
 
 .users-print-sheet {
   display: grid; 
-  grid-template-columns: repeat(3, 1fr); 
+  grid-template-columns: repeat(1, 1fr); 
   grid-gap: 20px; 
   width: 8.5in;
   height: 11in;
