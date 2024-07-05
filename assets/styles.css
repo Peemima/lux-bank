@@ -1,24 +1,3 @@
-.users-print-sheet {
-  display: grid; 
-  grid-template-columns: repeat(3, 1fr); 
-  grid-gap: 20px; 
-  width: 8.5in;
-  height: 11in;
-  /*border: solid, 2px, black;*/
-  -webkit-print-color-adjust: exact;
-  /* Add this to control row height */
-  grid-auto-rows: min-content; /* Makes each row only as tall as its content */
-}
-
-.user-card {
-  background-color: #B4F2FE;
-  color: #0680E4;
-  font-family: Arial, sans-serif;
-  padding: 25px;
-  border-radius: 25px;
-  -webkit-print-color-adjust: exact;
-}
-
 :root {
     /* Color Variables */
     --background-color: #FBFCFF;
@@ -181,7 +160,26 @@
     border-radius: var(--modal-content-border-radius);
   }
 
-/! This is where user card and print sheet styles go!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! !/
+.users-print-sheet {
+  display: grid; 
+  grid-template-columns: repeat(3, 1fr); 
+  grid-gap: 20px; 
+  width: 8.5in;
+  height: 11in;
+  /*border: solid, 2px, black;*/
+  -webkit-print-color-adjust: exact;
+  /* Add this to control row height */
+  grid-auto-rows: min-content; /* Makes each row only as tall as its content */
+}
+
+.user-card {
+  background-color: #B4F2FE;
+  color: #0680E4;
+  font-family: Arial, sans-serif;
+  padding: 25px;
+  border-radius: 25px;
+  -webkit-print-color-adjust: exact;
+}
 
   .close {
     color: var(--close-button-color);
