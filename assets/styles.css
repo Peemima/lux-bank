@@ -1,3 +1,25 @@
+.user-card {
+  background-color: #B4F2FE;
+  color: #0680E4;
+  font-family: Arial, sans-serif;
+  padding: 25px;
+  border-radius: 25px;
+  width: calc((8.5in / 3) -20px); /* Adjust width as needed for your card layout */
+  margin: 20px; /* Add margin to separate cards */
+  -webkit-print-color-adjust: exact;
+}
+.users-print-sheet {
+  justify-content: space-between;
+  width: 8.5in;
+  height: 11in;
+  /*border: solid, 2px, black;*/
+  -webkit-print-color-adjust: exact;
+  /*  These are the changes to make the cards appear horizontally */
+  display: flex;      /* Use Flexbox for horizontal layout */
+  flex-wrap: wrap;   /* Allow cards to wrap to the next line if needed */
+  justify-content: space-around; /* Distribute cards evenly */
+}
+
 :root {
     /* Color Variables */
     --background-color: #FBFCFF;
@@ -160,27 +182,7 @@
     border-radius: var(--modal-content-border-radius);
   }
 
-.user-card {
-  background-color: #B4F2FE;
-  color: #0680E4;
-  font-family: Arial, sans-serif;
-  padding: 25px;
-  border-radius: 25px;
-  width: calc((8.5in / 3) -20px); /* Adjust width as needed for your card layout */
-  margin: 20px; /* Add margin to separate cards */
-  -webkit-print-color-adjust: exact;
-}
-.users-print-sheet {
-  justify-content: space-between;
-  width: 8.5in;
-  height: 11in;
-  /*border: solid, 2px, black;*/
-  -webkit-print-color-adjust: exact;
-  /*  These are the changes to make the cards appear horizontally */
-  display: flex;      /* Use Flexbox for horizontal layout */
-  flex-wrap: wrap;   /* Allow cards to wrap to the next line if needed */
-  justify-content: space-around; /* Distribute cards evenly */
-}
+/! This is where user card and print sheet styles go!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! !/
 
   .close {
     color: var(--close-button-color);
