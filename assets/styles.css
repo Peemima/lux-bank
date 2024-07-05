@@ -1,7 +1,7 @@
 .users-print-sheet {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: space-between;
+  display: flex; 
+  flex-wrap: wrap; 
+  justify-content: space-between; 
   width: 8.5in;
   height: 11in;
   /*border: solid, 2px, black;*/
@@ -15,13 +15,10 @@
   padding: 25px;
   border-radius: 25px;
   width: calc((8.5in / 3) - 20px); /* Adjust width as needed for your card layout */
-  margin-bottom: 20px;
+  margin-bottom: 20px; 
   -webkit-print-color-adjust: exact;
+  height: auto; /* This is the key change to allow for dynamic height */
 }
-
-.user-card > * {
-  word-wrap: break-word;
-} 
 
 :root {
     /* Color Variables */
