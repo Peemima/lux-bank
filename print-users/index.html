@@ -10,12 +10,6 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 </head>
 <body>
-  <div id="businessInfo" style="display: grid; grid-template-columns: 1fr auto 1fr;">
-  <span id="businessName" style="float: left;">User List</span>
-  <img class="logo" src="/lux-bank/assets/Lux_Logo.svg">
-  <span id="businessBalance" style="float: right; text-align: right;"><button id="printButton">Print PDF</button></span>
-  </div>
-  
   <div id="printableContent">
     <div class="users-print-sheet">
       </div>
@@ -40,8 +34,8 @@
 
     const app = initializeApp(firebaseConfig);
     const database = getDatabase(app);
-    
-    function loadUsers() {
+
+    document.addEventListener('DOMContentLoaded', function() {
       const printButton = document.getElementById('printButton');
       const printableContent = document.getElementById('printableContent');
       const usersPrintSheet = document.querySelector('.users-print-sheet');
@@ -75,10 +69,6 @@
         return {}; // Return an empty object if no users exist
       }
     }
-
-loadUsers();
-
-    setInterval(loadUsers, 10000);
   </script>
 </body>
 </html>
