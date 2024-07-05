@@ -44,6 +44,7 @@ document.addEventListener('DOMContentLoaded', function() {
   fetchUserData().then(users => {
     // Create the cards for each user
     let currentSheet = null; // Keep track of the current sheet
+    let userCount = 0; // Count the users added to the current sheet
     Object.keys(users).forEach(key => {
       const userCard = document.createElement('div');
       userCard.classList.add('user-card');
@@ -53,17 +54,19 @@ document.addEventListener('DOMContentLoaded', function() {
       `;
 
       // Create a new sheet if it's the first card or the current sheet is full
-      if (!currentSheet || currentSheet.children.length === 3) { // Assuming 3 cards per sheet
+      if (!currentSheet || userCount === 18) { 
         currentSheet = document.createElement('div');
         currentSheet.classList.add('user-sheet');
         usersPrintSheet.appendChild(currentSheet);
+        userCount = 0; // Reset the user count for the new sheet
       }
 
       // Add the user card to the current sheet
       currentSheet.appendChild(userCard);
+      userCount++; // Increment the user count
     });
 
-    // Print the list (assuming you want to print when the data is loaded)
+    // Print the list 
     document.getElementById("printableContent").style.display = "block";
     window.print();
   });
