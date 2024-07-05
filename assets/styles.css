@@ -170,6 +170,7 @@
   -webkit-print-color-adjust: exact;
   /* Add this to control row height */
   grid-auto-rows: min-content; /* Makes each row only as tall as its content */
+  page-break-after: always;
 }
 
 .user-card {
