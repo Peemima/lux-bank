@@ -166,12 +166,12 @@
   font-family: Arial, sans-serif;
   padding: 25px;
   border-radius: 25px;
-  /* Adjusted width calculation */
-  width: calc((8.5in / 3) - 20px);  
-  margin-bottom: 20px;
+  width: calc(8.5in / 3); /* Adjust width as needed for your card layout */
+  margin-bottom: 20px; /* Add margin to separate cards */
   -webkit-print-color-adjust: exact;
+  /*  This change is important to make cards appear next to each other */
+  flex: 1 0 calc(8.5in / 3);  /* Allow cards to take up available space */
 }
-
 .users-print-sheet {
   justify-content: space-between;
   width: 8.5in;
