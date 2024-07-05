@@ -171,9 +171,7 @@
   -webkit-print-color-adjust: exact;
   /*  This change is important to make cards appear next to each other */
   flex: 1 0 calc(8.5in / 3);  /* Allow cards to take up available space */
-  /* Remove fixed height */
 }
-
 .users-print-sheet {
   justify-content: space-between;
   width: 8.5in;
@@ -284,3 +282,5 @@ form {
 .jiggle {
   animation: jiggle 0.5s ease;
 }
+
+the height for the user cards should not be fixed. just give me the code i need to change
