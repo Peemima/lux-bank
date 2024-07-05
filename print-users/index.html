@@ -75,6 +75,13 @@
       }
     }
 
+
+// Get the reference to the 'number-of-students' node in the base folder
+const studentsRef = ref(database, 'number-of-students-at-school');
+
+// Get the reference to the 'users' node in the base folder
+const usersRef = ref(database, 'users');
+    
     // Function to update the businessBalance text
 function updateBusinessBalanceElement() {
   Promise.all([
