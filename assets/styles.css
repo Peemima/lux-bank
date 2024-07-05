@@ -170,7 +170,6 @@
   width: calc((8.5in / 3) - 20px);  
   margin-bottom: 20px;
   -webkit-print-color-adjust: exact;
-  flex: 1 0 calc((8.5in / 3) - 20px); 
 }
 
 .users-print-sheet {
