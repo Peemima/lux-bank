@@ -74,6 +74,38 @@
         return {}; // Return an empty object if no users exist
       }
     }
+
+    // Function to update the businessBalance text
+function updateBusinessBalanceElement() {
+  Promise.all([
+    get(studentsRef),
+    get(usersRef)
+  ]).then(([studentsSnapshot, usersSnapshot]) => {
+    if (studentsSnapshot.exists()) {
+      const numberOfStudents = studentsSnapshot.val();
+
+      if (usersSnapshot.exists()) {
+        const numberOfUsers = Object.keys(usersSnapshot.val()).length;
+
+        // Update the #businessInfo element *inside the then block*
+        const businessInfoElement = document.getElementById('businessBalance');
+        businessInfoElement.innerText = `${numberOfUsers}/${numberOfStudents} students input`;
+      } else {
+        console.log("No data found for 'users'");
+      }
+    } else {
+      console.log("No data found for 'number-of-students'");
+    }
+  }).catch((error) => {
+    console.error("Error fetching data:", error);
+  });
+}
+
+// Call the update function initially
+updateBusinessBalanceElement();
+
+// Call the update function every 10 secconds (adjust as needed)
+setInterval(updateBusinessBalanceElement, 100);
   </script>
 </body>
 </html>
