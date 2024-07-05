@@ -173,6 +173,12 @@
   page-break-after: always;
 }
 
+.user-sheet {
+   display: grid; /* Ensure cards within a sheet are arranged properly */
+   grid-template-columns: repeat(3, 1fr);
+   grid-gap: 20px;
+   page-break-after: always; /* Start a new page after each sheet */
+}
 .user-card {
   background-color: #B4F2FE;
   color: #0680E4;
