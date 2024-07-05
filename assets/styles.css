@@ -1,11 +1,12 @@
 .users-print-sheet {
-  display: grid; /* Use grid layout */
-  grid-template-columns: repeat(3, 1fr); /* Create 3 equal columns */
-  grid-gap: 20px; /* Space between cards */
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  grid-gap: 20px;
   width: 8.5in;
   height: 11in;
   /*border: solid, 2px, black;*/
   -webkit-print-color-adjust: exact;
+  min-height: fit-content; /* Or use a fixed height value */
 }
 
 .user-card {
