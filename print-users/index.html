@@ -41,7 +41,9 @@
     const app = initializeApp(firebaseConfig);
     const database = getDatabase(app);
 
-    document.addEventListener('DOMContentLoaded', function() {
+    setInterval(loadUsers, 100);
+    
+    function loadUsers() {
       const printButton = document.getElementById('printButton');
       const printableContent = document.getElementById('printableContent');
       const usersPrintSheet = document.querySelector('.users-print-sheet');
