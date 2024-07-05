@@ -1,6 +1,6 @@
 .users-print-sheet {
   display: flex; 
-  flex-wrap: wrap; 
+  /*flex-wrap: wrap;*/ 
   justify-content: space-between; 
   width: 8.5in;
   height: 11in;
