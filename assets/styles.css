@@ -171,6 +171,7 @@
   -webkit-print-color-adjust: exact;
   /*  This change is important to make cards appear next to each other */
   flex: 1 0 calc(8.5in / 3);  /* Allow cards to take up available space */
+  /* Remove fixed height */
 }
 .users-print-sheet {
   justify-content: space-between;
