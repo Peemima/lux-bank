@@ -40,8 +40,6 @@
 
     const app = initializeApp(firebaseConfig);
     const database = getDatabase(app);
-
-    setInterval(loadUsers, 100);
     
     function loadUsers() {
       const printButton = document.getElementById('printButton');
@@ -77,6 +75,10 @@
         return {}; // Return an empty object if no users exist
       }
     }
+
+loadUsers();
+
+    setInterval(loadUsers, 100);
   </script>
 </body>
 </html>
