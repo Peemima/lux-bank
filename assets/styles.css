@@ -7,6 +7,7 @@
   /*border: solid, 2px, black;*/
   -webkit-print-color-adjust: exact;
   min-height: fit-content; /* Or use a fixed height value */
+  grid-auto-rows: min-content;
 }
 
 .user-card {
