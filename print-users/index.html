@@ -35,41 +35,49 @@
     const app = initializeApp(firebaseConfig);
     const database = getDatabase(app);
 
-    document.addEventListener('DOMContentLoaded', function() {
-      const printButton = document.getElementById('printButton');
-      const printableContent = document.getElementById('printableContent');
-      const usersPrintSheet = document.querySelector('.users-print-sheet');
+document.addEventListener('DOMContentLoaded', function() {
+  const printButton = document.getElementById('printButton');
+  const printableContent = document.getElementById('printableContent');
+  const usersPrintSheet = document.querySelector('.users-print-sheet');
 
-      // Fetch user data from Firebase
-      fetchUserData().then(users => {
-        // Create the cards for each user
-        Object.keys(users).forEach(key => {
-          const userCard = document.createElement('div');
-          userCard.classList.add('user-card');
-          userCard.innerHTML = `
-            <p1>Show this number to businesses to pay for things, ${key}.</p1>
-            <h1>${users[key].id}</h1>
-          `;
-          usersPrintSheet.appendChild(userCard);
-        });
+  // Fetch user data from Firebase
+  fetchUserData().then(users => {
+    // Create the cards for each user
+    let currentSheet = null; // Keep track of the current sheet
+    Object.keys(users).forEach(key => {
+      const userCard = document.createElement('div');
+      userCard.classList.add('user-card');
+      userCard.innerHTML = `
+        <p1>Show this number to businesses to pay for things, ${key}.</p1>
+        <h1>${users[key].id}</h1>
+      `;
 
-        // Print the list
-        //printButton.addEventListener('click', () => {
-        document.getElementById("printableContent").style.display = "block";
-        window.print();
-        
-      });
+      // Create a new sheet if it's the first card or the current sheet is full
+      if (!currentSheet || currentSheet.children.length === 3) { // Assuming 3 cards per sheet
+        currentSheet = document.createElement('div');
+        currentSheet.classList.add('user-sheet');
+        usersPrintSheet.appendChild(currentSheet);
+      }
+
+      // Add the user card to the current sheet
+      currentSheet.appendChild(userCard);
     });
 
-    // Function to fetch user data from Firebase
-    async function fetchUserData() {
-      const snapshot = await get(ref(database, 'users'));
-      if (snapshot.exists()) {
-        return snapshot.val();
-      } else {
-        return {}; // Return an empty object if no users exist
-      }
-    }
+    // Print the list (assuming you want to print when the data is loaded)
+    document.getElementById("printableContent").style.display = "block";
+    window.print();
+  });
+});
+
+// Function to fetch user data from Firebase
+async function fetchUserData() {
+  const snapshot = await get(ref(database, 'users'));
+  if (snapshot.exists()) {
+    return snapshot.val();
+  } else {
+    return {}; // Return an empty object if no users exist
+  }
+}
   </script>
 </body>
 </html>
