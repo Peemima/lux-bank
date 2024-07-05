@@ -180,11 +180,6 @@
   border-radius: 25px;
   -webkit-print-color-adjust: exact;
 }
-
-#printableContent {
-    display: none;
-}
-
   .close {
     color: var(--close-button-color);
     float: right;
