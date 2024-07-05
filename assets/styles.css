@@ -177,6 +177,8 @@
   /*border: solid, 2px, black;*/
   -webkit-print-color-adjust: exact;
   display: inline;
+    float: left;
+
 }
   .close {
     color: var(--close-button-color);
