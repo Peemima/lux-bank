@@ -1,13 +1,13 @@
 .users-print-sheet {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  grid-gap: 20px;
+  display: grid; 
+  grid-template-columns: repeat(3, 1fr); 
+  grid-gap: 20px; 
   width: 8.5in;
   height: 11in;
   /*border: solid, 2px, black;*/
   -webkit-print-color-adjust: exact;
-  min-height: fit-content; /* Or use a fixed height value */
-  grid-auto-rows: min-content;
+  /* Add this to control row height */
+  grid-auto-rows: min-content; /* Makes each row only as tall as its content */
 }
 
 .user-card {
