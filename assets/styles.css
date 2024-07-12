@@ -296,6 +296,7 @@
 
 .suggestion-item:hover {
   border: 1px solid #ddd;
+  background-color: #fff;
 }
 
 .container {
