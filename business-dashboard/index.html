@@ -368,54 +368,6 @@
         }
       });
     }
-    // Function to set a cookie
-function setCookie(name, value, days) {
-  const d = new Date();
-  d.setTime(d.getTime() + (days * 24 * 60 * 60 * 1000));
-  let expires = "expires=" + d.toUTCString();
-  document.cookie = name + "=" + value + ";" + expires + ";path=/";
-}
-
-// Function to get a cookie value
-function getCookie(name) {
-  let nameEQ = name + "=";
-  let ca = document.cookie.split(';');
-  for (let i = 0; i < ca.length; i++) {
-    let c = ca[i];
-    while (c.charAt(0) == ' ') c = c.substring(1);
-    if (c.indexOf(nameEQ) == 0) return c.substring(nameEQ.length, c.length);
-  }
-  return null;
-}
-
-let businessValue = getCookie("businessValue"); // Get business value from cookie
-
-if (businessValue) {
-  // Business value is present in cookie, show the dashboard
-  document.getElementById("businessName").innerText = businessValue;
-
-  // ... (Rest of your dashboard code, same as before)
-} else {
-  // Business value is not present in cookie, show the login screen
-  document.getElementById("main-content").style.display = 'none'; // Hide the dashboard
-  document.getElementById("login-screen").style.display = 'block'; // Show the login screen
-
-  document.getElementById("businessNameInput").addEventListener("mousedown", function() {
-    document.getElementById("businessNameInput").placeholder = "Business Name";
-  });
-
-  document.getElementById("businessNameInput").addEventListener("blur", function() {
-    document.getElementById("businessNameInput").placeholder = "";
-  });
-
-  document.getElementById("businessNameInput").addEventListener("keydown", function(event) {
-    if (event.key === "Enter") {
-      const businessName = document.getElementById("businessNameInput").value;
-      window.location.href = `?businessvalue=${businessName}`; // Redirect with query parameter
-      setCookie("businessValue", businessName, 1); // Set cookie for one day
-    }
-  });
-}
 
   </script>
 </head>
