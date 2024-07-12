@@ -453,7 +453,7 @@
 
   <div id="login-screen" class="center-container" style="display: none;">
     <h1 style="font-family: 'Poppins', sans-serif; font-weight: 500">Login to your business</h1>
-    <input id="businessNameInput" type="text" placeholder="">
+    <input id="businessNameInput" type="text" placeholder="" onkeydown="if(event.keyCode === 13) {return false;}">
     <div id="suggestions"></div>
   </div>
 
