@@ -33,7 +33,7 @@
     const database = getDatabase(app);
 
     window.businessValue = new URLSearchParams(window.location.search).get('businessvalue');
-    
+
     if (businessValue) {
       // Business value is present in the URL, show the dashboard
       document.getElementById("businessName").innerText = businessValue;
@@ -364,9 +364,48 @@
       document.getElementById("businessNameInput").addEventListener("keydown", function(event) {
         if (event.key === "Enter") {
           const businessName = document.getElementById("businessNameInput").value;
-          window.location.href = `?businessvalue=${businessName}`;
+          // Instead of directly redirecting, fetch business suggestions
+          fetchBusinessSuggestions(businessName);
         }
       });
+
+      // Function to fetch business suggestions
+      async function fetchBusinessSuggestions(businessName) {
+        // Replace with your actual logic for fetching suggestions
+        // This is a placeholder example
+        const suggestions = [
+          "Lux Business 1",
+          "Lux Business 2",
+          "Lux Business 3",
+          "Lux Business 4",
+          "Lux Business 5"
+        ];
+        
+        // ... (implement your actual fetch logic here)
+
+        // Display the suggestions
+        displayBusinessSuggestions(suggestions);
+      }
+
+      // Function to display business suggestions
+      function displayBusinessSuggestions(suggestions) {
+        const suggestionList = document.getElementById("suggestionList");
+        suggestionList.innerHTML = ""; // Clear previous suggestions
+
+        // Create suggestion elements
+        suggestions.forEach(suggestion => {
+          const listItem = document.createElement("li");
+          listItem.textContent = suggestion;
+          listItem.addEventListener("click", () => {
+            window.location.href = `?businessvalue=${suggestion}`;
+          });
+          suggestionList.appendChild(listItem);
+        });
+
+        // Show the suggestion list
+        document.getElementById("suggestionList").style.display = "block";
+        document.getElementById("login-screen").style.display = "none";
+      }
     }
 
   </script>
@@ -400,9 +439,10 @@
     </div>
   </div>
 
-  <div id="login-screen" class="center-container" style="display: none;">
+  <div id="login-screen" class="center-container" style="display: block;">
     <h1 style="font-family: 'Poppins', sans-serif; font-weight: 500">Login to your business</h1>
     <input id="businessNameInput" type="text" placeholder="">
+    <ul id="suggestionList" style="display: none;"></ul> 
   </div>
 
 </body>
