@@ -470,9 +470,12 @@
     </div>
   </div>
 
-  <div id="login-screen" class="center-container" style="display: none;" onSubmit="return false;">
+  <div id="login-screen" class="center-container" style="display: none;"
+    >
     <h1 style="font-family: 'Poppins', sans-serif; font-weight: 500">Login to your business</h1>
-    <input id="businessNameInput" type="text" placeholder=""> 
+    <form onSubmit="return false;">
+      <input id="businessNameInput" type="text" placeholder="">
+    </form>
     <div id="suggestions"></div>
   </div>
 
