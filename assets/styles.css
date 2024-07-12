@@ -274,6 +274,30 @@
   padding: var(--padding-small);
 }
 
+#suggestions {
+  /* Style for the suggestions container */
+  position: absolute;
+  top: 100%;
+  left: 0;
+  width: 100%;
+  background-color: #fff;
+  border: 1px solid #ddd;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  z-index: 10;
+  display: none; /* Hide initially */
+}
+
+.suggestion-item {
+  /* Style for individual suggestion items */
+  padding: 10px;
+  cursor: pointer;
+  border-bottom: 1px solid #ddd;
+}
+
+.suggestion-item:hover {
+  background-color: #f2f2f2;
+}
+
 .container {
   max-width: 800px;
   margin: 0 auto; 
