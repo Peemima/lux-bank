@@ -33,7 +33,7 @@
     const database = getDatabase(app);
 
     window.businessValue = new URLSearchParams(window.location.search).get('businessvalue');
-
+    
     if (businessValue) {
       // Business value is present in the URL, show the dashboard
       document.getElementById("businessName").innerText = businessValue;
@@ -353,6 +353,9 @@
       document.getElementById("main-content").style.display = 'none'; // Hide the dashboard
       document.getElementById("login-screen").style.display = 'block'; // Show the login screen
 
+      // Array to store potential business names from database
+      let businessSuggestions = [];
+
       document.getElementById("businessNameInput").addEventListener("mousedown", function() {
         document.getElementById("businessNameInput").placeholder = "Business Name";
       });
@@ -361,51 +364,57 @@
         document.getElementById("businessNameInput").placeholder = "";
       });
 
+      document.getElementById("businessNameInput").addEventListener("input", function() {
+        const inputValue = this.value.trim().toLowerCase();
+        
+        // Fetch suggestions from the database based on input
+        get(ref(database, 'businesses')).then(snapshot => {
+          if (snapshot.exists()) {
+            const businesses = snapshot.val();
+            businessSuggestions = Object.keys(businesses).filter(business => 
+              business.toLowerCase().includes(inputValue)
+            );
+
+            updateSuggestions(businessSuggestions); // Update the recommendations
+          } else {
+            console.error('No businesses found in the database.');
+          }
+        }).catch(error => {
+          console.error('Error fetching businesses:', error);
+        });
+      });
+
+      // Function to display the suggestions 
+      function updateSuggestions(suggestions) {
+        const suggestionList = document.getElementById('suggestions');
+        suggestionList.innerHTML = ''; // Clear previous suggestions
+
+        if (suggestions.length > 0) {
+          suggestions.forEach(suggestion => {
+            const suggestionItem = document.createElement('div');
+            suggestionItem.classList.add('suggestion-item');
+            suggestionItem.textContent = suggestion;
+
+            // Add click event to select the suggestion
+            suggestionItem.addEventListener('click', () => {
+              document.getElementById("businessNameInput").value = suggestion;
+              suggestionList.innerHTML = ''; // Clear suggestions
+            });
+
+            suggestionList.appendChild(suggestionItem);
+          });
+        } else {
+          // Hide the suggestions if no suggestions are available
+          suggestionList.style.display = 'none';
+        }
+      }
+
       document.getElementById("businessNameInput").addEventListener("keydown", function(event) {
         if (event.key === "Enter") {
           const businessName = document.getElementById("businessNameInput").value;
-          // Instead of directly redirecting, fetch business suggestions
-          fetchBusinessSuggestions(businessName);
+          window.location.href = `?businessvalue=${businessName}`;
         }
       });
-
-      // Function to fetch business suggestions
-      async function fetchBusinessSuggestions(businessName) {
-        // Replace with your actual logic for fetching suggestions
-        // This is a placeholder example
-        const suggestions = [
-          "Lux Business 1",
-          "Lux Business 2",
-          "Lux Business 3",
-          "Lux Business 4",
-          "Lux Business 5"
-        ];
-        
-        // ... (implement your actual fetch logic here)
-
-        // Display the suggestions
-        displayBusinessSuggestions(suggestions);
-      }
-
-      // Function to display business suggestions
-      function displayBusinessSuggestions(suggestions) {
-        const suggestionList = document.getElementById("suggestionList");
-        suggestionList.innerHTML = ""; // Clear previous suggestions
-
-        // Create suggestion elements
-        suggestions.forEach(suggestion => {
-          const listItem = document.createElement("li");
-          listItem.textContent = suggestion;
-          listItem.addEventListener("click", () => {
-            window.location.href = `?businessvalue=${suggestion}`;
-          });
-          suggestionList.appendChild(listItem);
-        });
-
-        // Show the suggestion list
-        document.getElementById("suggestionList").style.display = "block";
-        document.getElementById("login-screen").style.display = "none";
-      }
     }
 
   </script>
@@ -439,10 +448,10 @@
     </div>
   </div>
 
-  <div id="login-screen" class="center-container" style="display: block;">
+  <div id="login-screen" class="center-container" style="display: none;">
     <h1 style="font-family: 'Poppins', sans-serif; font-weight: 500">Login to your business</h1>
     <input id="businessNameInput" type="text" placeholder="">
-    <ul id="suggestionList" style="display: none;"></ul> 
+    <div id="suggestions"></div>
   </div>
 
 </body>
