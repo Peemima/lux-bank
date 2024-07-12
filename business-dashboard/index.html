@@ -247,19 +247,6 @@
             console.error('Error logging transaction:', error);
           });
       }
-
-    document.getElementById("businessNameInput").addEventListener("keydown", function(event) {
-      if (event.keyCode === 13) {
-        // Check if there's actually content in the input field
-        if (this.value.trim() === "") { 
-          // Do nothing if the input is empty 
-          event.preventDefault(); // Prevent the form from submitting
-          return;
-        }
-        const businessName = document.getElementById("businessNameInput").value;
-        window.location.href = `?businessvalue=${businessName}`;
-      }
-    });
       
       // Function to update the business's balance: Adds the amount to the current balance
       function updateBusinessBalance(amountToAdd) {
@@ -466,7 +453,7 @@
 
   <div id="login-screen" class="center-container" style="display: none;">
     <h1 style="font-family: 'Poppins', sans-serif; font-weight: 500">Login to your business</h1>
-    <input id="businessNameInput" type="text" placeholder="" onkeydown="if(event.keyCode === 13) {return false;}"> 
+    <input id="businessNameInput" type="text" placeholder=""> 
     <div id="suggestions"></div>
   </div>
 
