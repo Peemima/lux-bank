@@ -40,18 +40,13 @@
 
       let currentSearchQuery = "";
 
-      // Function to check if business account exists and create it if not
+      // Function to check if business account exists and redirect if not
       function ensureBusinessAccountExists() {
         if (businessValue != null) {
           const businessRef = ref(database, `businesses/${businessValue}`);
           get(businessRef).then((snapshot) => {
             if (!snapshot.exists()) {
-              // Business doesn't exist, create it with initial balance of 0
-              set(businessRef, { balance: 0 }).then(() => {
-                console.log(`Business "${businessValue}" created with balance: 0`);
-              }).catch((error) => {
-                console.error('Error creating business:', error);
-              });
+              window.location.href = `?businessvalue=`;
             }
           }).catch((error) => {
             console.error('Error checking for business existence:', error);
@@ -399,8 +394,7 @@
 
             // Add click event to select the suggestion
             suggestionItem.addEventListener('click', () => {
-              document.getElementById("businessNameInput").value = suggestion;
-              suggestionList.innerHTML = ''; // Clear suggestions
+              window.location.href = `?businessvalue=${suggestion}`;
             });
 
             suggestionList.appendChild(suggestionItem);
@@ -411,12 +405,6 @@
           suggestionList.style.display = 'block'; // Ensure the box is still visible for the message
         }
       }
-
-      document.getElementById("businessNameInput").addEventListener("keydown", function(event) {
-        if (event.key === "Enter") {
-          const businessName = document.getElementById("businessNameInput").value;
-          window.location.href = `?businessvalue=${businessName}`;
-        }
       });
     }
 
