@@ -217,6 +217,26 @@
         }
       }
     };
+
+    //Jiggle when theres an input error: fix the weird charecter input problem
+document.getElementById('userIDInput').addEventListener('input', function(e) {
+  // Remove any non-digit characters from the input.
+  const validValue = this.value.replace(/[^0-9]/g, '');
+  
+  // Check if the input value is not solely composed of digits.
+  if (this.value !== validValue) {
+    // Replace the input value with the cleaned, digit-only version.
+    this.value = validValue;
+    
+    // Add the 'jiggle' class to trigger the animation.
+    this.classList.add('jiggle');
+    
+    // Automatically remove the 'jiggle' class after the animation ends (500ms) to reset the state.
+    setTimeout(() => {
+      this.classList.remove('jiggle');
+    }, 500);
+  }
+});
   </script>
 </head>
 <body>
