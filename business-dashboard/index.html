@@ -59,7 +59,7 @@
       document.getElementById("transactionForm").addEventListener("submit", function(event) {
         event.preventDefault(); 
 
-        const userID = parseInt(document.getElementById("userIDInput").value);
+        const userID = document.getElementById("userIDInput").value;
         const amount = parseFloat(document.getElementById("amountInput").value);
 
         if (isNaN(userID) || isNaN(amount) || amount <= 0) {
@@ -231,7 +231,7 @@
     <h2>Process Transaction</h2>
     <form id="transactionForm">
       <label for="userIDInput">User ID:</label><br>
-      <input type="number" id="userIDInput" name="userIDInput" required><br><br>
+      <input type="text" id="userIDInput" name="userIDInput" required><br><br>
 
       <label for="amountInput">Amount to Remove (Lux):</label><br>
       <input type="number" id="amountInput" name="amountInput" required><br><br>
