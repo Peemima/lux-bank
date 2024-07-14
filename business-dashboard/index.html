@@ -143,18 +143,6 @@
 
       let selectedUserKey = ''; // To keep track of which user is selected
 
-      // After: Make openModal global by attaching it to the window object
-      window.openModal = function(userKey) {
-        selectedUserKey = userKey; // Set the selected user key
-        document.getElementById('userModal').style.display = 'block'; // Show the modal
-        document.getElementById('modal-header').innerText = selectedUserKey;
-      };
-
-      // Close the modal
-      document.querySelector('.close').addEventListener('click', function() {
-        document.getElementById('userModal').style.display = 'none';
-      }); 
-
       // Make addAmount global
       window.addAmount = function() {
         const amount = Number(document.getElementById('amountInput').value);
@@ -418,12 +406,16 @@
       <span id="businessBalance" style="float: right; text-align: right;">...</span>
     </div>
 
-    <form id="searchForm">
-      <input type="text" id="searchInput" placeholder="Search users...">
-      <button class="fill-button" type="submit">Search</button>
-      <button id="resetButton" style="display: none;" class="outline-button">Reset</button>
-    </form>
-    <div id="allUsers" class="container"></div>
+<div id="userModal" class="modal">
+  <div class="modal-content">
+    <span class="close">×</span>
+    <h2 id="modal-header">Lux Transaction</h2> 
+    <p>Transactions are measured in Lux.</p>
+    <input type="text" id="userIDInput" placeholder="Enter User ID...">
+    <input type="text" id="amountInput" placeholder="Enter amount..." pattern="\d*"> 
+    <button class="fill-button" onclick="processTransaction()">Process</button> 
+  </div>
+</div>
     <!-- The Modal -->
     <div id="userModal" class="modal">
       <div class="modal-content">
