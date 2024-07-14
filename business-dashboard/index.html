@@ -10,8 +10,7 @@
     <p>Tell Ian F about it immediately.</p>
     <br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br>
   </noscript>
-<link rel="stylesheet" href="/lux-bank/assets/styles.css">
-
+  <link rel="stylesheet" href="/lux-bank/assets/styles.css">
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js" defer></script>
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js" defer></script>
   <script type="module">
@@ -33,12 +32,9 @@
     const database = getDatabase(app);
 
     window.businessValue = new URLSearchParams(window.location.search).get('businessvalue');
-    
-    if (businessValue) {
-      // Business value is present in the URL, show the dashboard
-      document.getElementById("businessName").innerText = businessValue;
 
-      let currentSearchQuery = "";
+    if (businessValue) {
+      document.getElementById("businessName").innerText = businessValue;
 
       // Function to check if business account exists and redirect if not
       function ensureBusinessAccountExists() {
@@ -57,115 +53,57 @@
       // Call the function to ensure business account exists on load
       document.addEventListener("DOMContentLoaded", function() {
         ensureBusinessAccountExists();
+        fetchAndDisplayBusinessBalance();
       });
 
-      document.addEventListener("DOMContentLoaded", function() {
-        const searchForm = document.getElementById("searchForm");
-        searchForm.addEventListener("submit", function(event) {
-          event.preventDefault();
-          currentSearchQuery = document.getElementById("searchInput").value.trim(); // Get the raw input
-          fetchAndDisplayUsers(currentSearchQuery); 
-        });
+      document.getElementById("transactionForm").addEventListener("submit", function(event) {
+        event.preventDefault(); 
 
-        // Fetch and display users right away
-        fetchAndDisplayUsers();
-      });
+        const userID = parseInt(document.getElementById("userIDInput").value);
+        const amount = parseFloat(document.getElementById("amountInput").value);
 
-      function fetchAndDisplayUsers(query = "") {
-        get(ref(database, 'users')).then((snapshot) => {
-          if (snapshot.exists() && Object.keys(snapshot.val()).length > 0) {
-            const users = snapshot.val();
-            // Filter users based on ID match
-            let matchingUsers = Object.entries(users).filter(([userName, userData]) => {
-              return userData.id && userData.id.toString().includes(query);
-            });
-
-            let content = "";
-            if (matchingUsers.length === 0) { 
-              document.getElementById("allUsers").innerHTML = `<div class="user-info"><p class="list-name">No matching users found.</p></div>`;
-            } else {
-              matchingUsers.forEach(([userName, userData], index) => {
-                let positionClass = 'user-middle';
-                if (matchingUsers.length === 1) {
-                  positionClass = 'only-user';
-                } else if (index === 0) {
-                  positionClass = 'user-top';
-                } else if (index === matchingUsers.length - 1) {
-                  positionClass = 'user-bottom';
-                }
-                content += `<div class="${positionClass}"><p class="list-name">${userName}: $${userData.balance} (ID: ${userData.id})</p><button class="fill-button" onclick="openModal('${userData.id}')">Select</button></div>`;
-              });
-              document.getElementById("allUsers").innerHTML = content;
-            }
-          } else {
-            document.getElementById("allUsers").innerHTML = `<div class="user-info"><p class="list-name">No users found.</p></div>`;
-          }
-        }).catch((error) => {
-          console.error("Error fetching users: ", error);
-          document.getElementById("allUsers").innerText = 'Err_fetching_users: A wild error apeared! Contact Ian F *immediately*';
-        });
-      }
-
-      let selectedUserID = ''; 
-
-      window.openModal = function(userID) {
-        selectedUserID = userID; 
-        document.getElementById('userModal').style.display = 'block'; 
-        document.getElementById('modal-header').innerText = `Edit User (ID: ${selectedUserID})`;
-      };
-
-      document.querySelector('.close').addEventListener('click', function() {
-        document.getElementById('userModal').style.display = 'none';
-      }); 
-
-      window.addAmount = function() {
-        const amount = Number(document.getElementById('amountInput').value);
-        updateUserBalance(selectedUserID, amount); 
-      };
-
-      document.getElementById('amountInput').addEventListener('input', function(e) {
-        const validValue = this.value.replace(/[^0-9]/g, '');
-        if (this.value !== validValue) {
-          this.value = validValue;
-          this.classList.add('jiggle');
-          setTimeout(() => {
-            this.classList.remove('jiggle');
-          }, 500);
+        if (isNaN(userID) || isNaN(amount) || amount <= 0) {
+          alert("Please enter a valid User ID and a positive amount.");
+          return;
         }
+
+        processTransaction(userID, amount);
       });
 
-      function updateUserBalance(userID, amount) {
-        // Find the user by ID
+      function processTransaction(userID, amount) {
         get(ref(database, 'users')).then((snapshot) => {
           if (snapshot.exists()) {
             const users = snapshot.val();
             for (let userKey in users) {
               if (users[userKey].id === userID) {
                 let currentBalance = users[userKey].balance;
-                let newBalance = currentBalance + amount; 
+                if (amount > currentBalance) {
+                  alert("Insufficient funds!");
+                  return;
+                }
 
+                let newBalance = currentBalance - amount; 
                 set(ref(database, 'users/' + userKey + '/balance'), newBalance)
                   .then(() => {
-                    console.log('User balance updated successfully.');
-                    if (amount < 0) {
-                      updateBusinessBalance(Math.abs(amount));
-                    }
-                    logTransaction(userKey, amount, newBalance, businessValue, businessData.balance); 
-                    document.getElementById('userModal').style.display = 'none';
-                    fetchAndDisplayUsers(currentSearchQuery); // Refresh the user list
+                    updateBusinessBalance(amount);
+                    logTransaction(userKey, -amount, newBalance, businessValue, businessData.balance); 
+                    document.getElementById("transactionForm").reset();
+                    alert(`Transaction successful! New balance for User ID ${userID}: $${newBalance}`);
                   })
                   .catch((error) => {
                     console.error('Error updating user balance:', error);
+                    alert("An error occurred during the transaction.");
                   });
-                return; // Stop searching after finding the user
+                return; 
               }
             }
-            console.log('No user found with ID:', userID);
+            alert(`No user found with ID: ${userID}`);
           } else {
             console.log('No users found in the database.');
           }
         }).catch((error) => {
           console.error('Error fetching user data:', error);
+          alert("An error occurred during the transaction.");
         });
       }
 
@@ -192,14 +130,13 @@
 
       function updateBusinessBalance(amountToAdd) {
         const businessRef = ref(database, `businesses/${businessValue}/balance`);
-
         get(businessRef).then((snapshot) => {
           let newBalance;
           let currentBalance = snapshot.exists() ? snapshot.val() : 0; 
           newBalance = currentBalance + amountToAdd;
           set(businessRef, newBalance).then(() => {
             console.log(`Business balance updated to ${newBalance}`);
-            fetchAndDisplayBusinessBalance(); // Update the displayed balance
+            fetchAndDisplayBusinessBalance(); 
           }).catch((error) => {
             console.error('Error updating business balance:', error);
           });
@@ -212,52 +149,6 @@
           });
         });
       }
-
-      window.withdrawAmount = function() {
-        const amountInput = document.getElementById('amountInput');
-        const amountToWithdraw = Number(amountInput.value);
-        const userID = selectedUserID; 
-
-        // Find the user by ID
-        get(ref(database, 'users')).then((snapshot) => {
-          if (snapshot.exists()) {
-            const users = snapshot.val();
-            for (let userKey in users) {
-              if (users[userKey].id === userID) {
-                let currentBalance = users[userKey].balance;
-                if (amountToWithdraw > currentBalance) {
-                  amountInput.classList.add('jiggle');
-                  setTimeout(() => {
-                    amountInput.classList.remove('jiggle');
-                  }, 500);
-                } else {
-                  let newBalance = currentBalance - amountToWithdraw; 
-
-                  // Update the user's balance
-                  set(ref(database, 'users/' + userKey + '/balance'), newBalance)
-                    .then(() => {
-                      console.log('Withdrawal successful, user balance updated.');
-                      updateBusinessBalance(amountToWithdraw);
-                      logTransaction(userKey, -amountToWithdraw, newBalance, businessValue, businessData.balance);
-                      document.getElementById('userModal').style.display = 'none';
-                      fetchAndDisplayUsers(currentSearchQuery); // Refresh the user list
-                    })
-                    .catch((error) => {
-                      console.error('Error updating user balance:', error);
-                    });
-                }
-                return; // Stop searching after updating the user
-              }
-            }
-            console.log('No user found with ID:', userID); 
-          } else {
-            console.log('No users found in the database.');
-          }
-        }).catch((error) => {
-          console.error('Error fetching user data:', error);
-        });
-      };
-
 
       function fetchAndDisplayBusinessBalance() {
         const businessRef = ref(database, `businesses/${businessValue}`);
@@ -274,13 +165,8 @@
       }
 
       setInterval(fetchAndDisplayBusinessBalance, 200);
-      setInterval(() => {
-        fetchAndDisplayUsers(currentSearchQuery); 
-      }, 750); 
 
-      fetchAndDisplayBusinessBalance();
     } else {
-      // Business value is not present in the URL, show the login screen
       document.getElementById("main-content").style.display = 'none'; 
       document.getElementById("login-screen").style.display = 'block'; 
 
@@ -330,7 +216,7 @@
           suggestionList.style.display = 'block'; 
         }
       }
-      };
+    };
   </script>
 </head>
 <body>
@@ -342,23 +228,17 @@
       <span id="businessBalance" style="float: right; text-align: right;">...</span>
     </div>
 
-    <form id="searchForm">
-      <input type="text" id="searchInput" placeholder="Enter User ID...">
-      <button class="fill-button" type="submit">Search</button>
-      <button id="resetButton" style="display: none;" class="outline-button">Reset</button>
-    </form>
-    <div id="allUsers" class="container"></div>
+    <h2>Process Transaction</h2>
+    <form id="transactionForm">
+      <label for="userIDInput">User ID:</label><br>
+      <input type="number" id="userIDInput" name="userIDInput" required><br><br>
 
-    <div id="userModal" class="modal">
-      <div class="modal-content">
-        <span class="close">×</span>
-        <h2 id="modal-header">Edit User Balance</h2>
-        <p>Transactions are measured in Lux.</p>
-        <input type="text" id="amountInput" placeholder="Enter amount..." pattern="\d*">
-        <button class="fill-button" onclick="addAmount()">Add</button>
-        <button class="outline-button" onclick="withdrawAmount()">Withdraw</button>
-      </div>
-    </div>
+      <label for="amountInput">Amount to Remove (Lux):</label><br>
+      <input type="number" id="amountInput" name="amountInput" required><br><br>
+
+      <button type="submit" class="fill-button">Process</button>
+    </form>
+
   </div>
 
   <div id="login-screen" class="center-container" style="display: none;"
