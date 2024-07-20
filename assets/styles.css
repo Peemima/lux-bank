@@ -133,21 +133,21 @@
 }
 
     .usernumber-input {
-        font-family: "Poppins", sans-serif;
-        border: 2px solid #0680E4;
-        color: #0680E4;
-        font-size: 50px;
-        padding: 5px;
-        padding-left: 15px;
-        border-radius: 27px;
-        width: 137px;
-        outline: none;
-        caret-color: #0680E4;
-        background-color: white;
+        font-family: "Poppins", sans-serif !important;
+        border: 2px solid #0680E4 !important;
+        color: #0680E4 !important;
+        font-size: 50px !important;
+        padding: 5px !important;
+        padding-left: 15px !important;
+        border-radius: 27px !important;
+        width: 137px !important;
+        outline: none !important;
+        caret-color: #0680E4 !important;
+        background-color: white !important;
     }
     .usernumber-input::placeholder {
-        color: #0680E4;
-        opacity: 50%;
+        color: #0680E4 !important;
+        opacity: 50% !important;
     }
 
   #allUsers > div {
