@@ -132,6 +132,23 @@
   border-radius: 50px;
 }
 
+    .usernumber-input {
+        font-family: "Poppins", sans-serif;
+        border: 2px solid #0680E4;
+        color: #0680E4;
+        font-size: 50px;
+        padding: 5px;
+        padding-left: 15px;
+        border-radius: 27px;
+        width: 137px;
+        outline: none;
+        caret-color: #0680E4;
+        background-color: white;
+    }
+    .usernumber-input::placeholder {
+        color: #0680E4;
+        opacity: 50%;
+    }
 
   #allUsers > div {
     display: flex;
