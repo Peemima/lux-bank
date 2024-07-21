@@ -7,7 +7,7 @@ function hideLoadingScreen() {
   setTimeout(() => { 
     // Set the display property to 'none'
     document.getElementById("loading-overlay").style.display = "none"; 
-  }, 10);
+  }, 100);
 }
 
 // Add loading overlay to the page
