@@ -3,9 +3,6 @@ function hideLoadingScreen() {
   document.getElementById("loading-image").classList.add("animate__bounceOutDown");
   setTimeout(() => { document.getElementById("loading-overlay").classList.add("animate__fadeOut"); }, 400);
 }
-setTimeout(hideLoadingScreen, 1500);
-
-createLoadingScreen();
 
 // Add loading overlay to the page
 function createLoadingScreen() {
@@ -21,3 +18,9 @@ function createLoadingScreen() {
   loadingOverlayDiv.appendChild(loadingImage);
   document.body.insertBefore(loadingOverlayDiv, document.body.firstChild);
 };
+
+// Ensure the DOM is ready before inserting the loading screen
+document.addEventListener("DOMContentLoaded", () => {
+  createLoadingScreen();
+  setTimeout(hideLoadingScreen, 1500);
+});
