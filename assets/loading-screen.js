@@ -1,8 +1,13 @@
 function hideLoadingScreen() {
   document.getElementById("loading-image").classList.remove("animate__zoomInDown");
   document.getElementById("loading-image").classList.add("animate__bounceOutDown");
-  setTimeout(() => { document.getElementById("loading-overlay").classList.add("animate__fadeOut"); }, 400);
-  setTimeout(() => { document.getElementById("loading-overlay").style.display("none"); }, 2400);
+  setTimeout(() => { 
+    document.getElementById("loading-overlay").classList.add("animate__fadeOut"); 
+  }, 400);
+  setTimeout(() => { 
+    // Set the display property to 'none'
+    document.getElementById("loading-overlay").style.display = "none"; 
+  }, 2400);
 }
 
 // Add loading overlay to the page
