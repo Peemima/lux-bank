@@ -318,7 +318,7 @@
 
 .loading-overlay {
   width: 100%;
-  background-color: white;
+  background-color: #FBFCFF;
   height: 100%;
   display: flex;
   align-items: center;
