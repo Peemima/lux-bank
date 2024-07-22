@@ -330,7 +330,6 @@
 }
 
 .loading-image {
-    background-color: white;
     width: calc(100% * 0.85);
     max-width: 500px;
     max-width: 85%;
