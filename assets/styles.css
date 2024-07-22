@@ -46,7 +46,6 @@
 
   body {
     background-color: var(--background-color);
-    padding: var(--padding-large);
     color: var(--text-color);
   }
 
