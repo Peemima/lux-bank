@@ -236,6 +236,9 @@ document.getElementById('userIDInput').addEventListener('input', function(e) {
       this.classList.remove('jiggle');
     }, 500);
   }
+  if (this.value.length === 4) {
+    document.getElementsByClassName("user-card").style.display = "none";
+  }
 });
   </script>
 </head>
