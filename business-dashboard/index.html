@@ -237,7 +237,10 @@ document.getElementById('userIDInput').addEventListener('input', function(e) {
     }, 500);
   }
   if (this.value.length === 4) {
-    document.getElementsByClassName("user-card").style.display = "none";
+    let userCards = document.getElementsByClassName("user-card");
+    for (let i = 0; i < userCards.length; i++) {
+      userCards[i].style.display = "none";
+    }
   }
 });
   </script>
