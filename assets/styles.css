@@ -330,9 +330,9 @@
 }
 
 .loading-image {
-    width: calc(100% * 0.85);
+    width: calc(100% * 0.75);
     max-width: 500px;
-    max-width: 85%;
+    max-width: 75%;
 }
 
 .container {
