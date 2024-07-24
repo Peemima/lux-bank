@@ -113,7 +113,7 @@
           }
         }).catch((error) => {
           console.error('Error fetching user data:', error);
-          showPopup("flex", "We ran into a problem", "block", "What happened? <br>&Tab;There was an error fetching user information. <br><br>What can you do? <br>&Tab;Reload the page and try again.");
+          showPopup("flex", "Help is on the way", "none", "There was an error, but don't worry, help is on the way. <br><br>Error information: <br>Error fetching user data,", error);
         });
       }
 
