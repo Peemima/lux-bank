@@ -98,7 +98,7 @@
                     document.getElementById("user-card").style.display = "block";
                     document.getElementById("transaction-amount").style.display = "none";
                     document.getElementById("userIDInput").focus();
-                    showPopup("flex", "Success", "block", `${businessValue} now has ${businessData.balance} hawkeyes`);
+                    showPopup("flex", "Success!", "block", `The transaction was successful!`);
                   })
                   .catch((error) => {
                     console.error('Error updating user balance:', error);
