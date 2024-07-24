@@ -116,8 +116,8 @@ function getUserFirstNameByUserId(userId) {
                       console.error("User not found.");
                       showPopup("flex", "Not enough hawkeyes", "block", "It looks like this person doesn't have enough hawkeyes to buy that.")
                     }
-                    return;
                   });
+                  return;
                 }
 
                 let newBalance = currentBalance - amount; 
