@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Lux Banking Dashboard</title>
-  
+  <script src="https://peemima.github.io/lux-bank/assets/popup-code.js"></script>
   <noscript>
     <h1>js_err_noscrpt_popup</h1>
     <p>A wild error popped out of nowhere!</p>
@@ -33,6 +33,30 @@
     const database = getDatabase(app);
 
     window.businessValue = new URLSearchParams(window.location.search).get('businessvalue');
+
+    function getNameFromUserId(userId) {
+  // Iterate through all users in the "users" object
+  for (const userName in data.users) {
+    // Check if the current user has an "id" property
+    if (data.users[userName].hasOwnProperty('id')) {
+      // If the id matches the provided userId, return the username
+      if (data.users[userName].id === userId) {
+        return userName;
+      }
+    }
+  }
+    
+    function getFirstWord(userName) {
+    // Check if userName is defined and not empty
+    if (userName) {
+    // Split the userName string by spaces
+    const words = userName.split(' ');
+    // Return the first word
+    return words[0];
+    } else {
+    return null; // Or return an empty string if you prefer
+    }
+    }
 
     if (businessValue) {
       document.getElementById("businessName").innerText = businessValue;
@@ -64,7 +88,7 @@
         const amount = parseFloat(document.getElementById("amountInput").value);
 
         if (isNaN(userID) || isNaN(amount) || amount <= 0) {
-          alert("Please enter a valid User ID and a positive amount.");
+          showPopup("flex", "Notice", "block", "Please enter a valid User ID and a positive amount.");
           return;
         }
 
@@ -79,7 +103,9 @@
               if (users[userKey].id === userID) {
                 let currentBalance = users[userKey].balance;
                 if (amount > currentBalance) {
-                  alert("Insufficient funds!");
+                  const userName = getNameFromUserId(userId);
+                  const firstName = getFirstWord(userName);
+                  showPopup("flex", "Not enough hawkeyes", "Block", "It looks like "+firstName+" doesn't have enough hawkeyes to buy that.");
                   return;
                 }
 
