@@ -57,35 +57,6 @@
         fetchAndDisplayBusinessBalance();
       });
 
-// 1. Function to get the user's name by user id
-function getUserNameByUserId(userId) {
-  const usersRef = ref(database, 'users');
-  return get(usersRef).then(snapshot => {
-    if (snapshot.exists()) {
-      const users = snapshot.val();
-      for (let userKey in users) {
-        if (users[userKey].id === userId) {
-          return users[userKey].id; // Return the user's name
-        }
-      }
-    }
-    return null; // User not found
-  });
-}
-
-// 2. Function to get the user's first name by user id
-function getUserFirstNameByUserId(userId) {
-  return getUserNameByUserId(userId)
-    .then(userName => {
-      if (userName) {
-        const nameParts = userName.split(' '); // Assuming user ID is "FirstName LastName"
-        return nameParts[0];
-      }
-      return null; // User not found
-    });
-}
-
-
       document.getElementById("transactionForm").addEventListener("submit", function(event) {
         event.preventDefault(); 
 
@@ -108,15 +79,7 @@ function getUserFirstNameByUserId(userId) {
               if (users[userKey].id === userID) {
                 let currentBalance = users[userKey].balance;
                 if (amount > currentBalance) {
-                  getUserFirstNameByUserId(userID).then(firstName => {
-                    if (firstName) {
-                      console.log("User's first name:", firstName); 
-                      showPopup("flex", "Not enough hawkeyes", "block", "It looks like " + firstName + " doesn't have enough hawkeyes to buy that.")
-                    } else {
-                      console.error("User not found.");
-                      showPopup("flex", "Not enough hawkeyes", "block", "It looks like this person doesn't have enough hawkeyes to buy that.")
-                    }
-                  });
+                  showPopup("flex", "Not enough hawkeyes", "block", "It looks like (users first name) doesn't have enough hawkeyes to buy that.")
                   return;
                 }
 
