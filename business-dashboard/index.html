@@ -88,9 +88,9 @@
                     updateBusinessBalance(amount);
                     logTransaction(userKey, -amount, newBalance, businessValue, businessData.balance); 
                     document.getElementById("transactionForm").reset();
-                    userCard[i].style.display = "block";
+                    document.getElementById("user-card").style.display = "block";
                     document.getElementById("transaction-amount").style.display = "none";
-                    document.getElementById("amountInput").focus();
+                    document.getElementById("userIDInput").focus();
                     alert(`Transaction successful! New balance for User ID ${userID}: $${newBalance}`);
                   })
                   .catch((error) => {
@@ -240,11 +240,9 @@ document.getElementById('userIDInput').addEventListener('input', function(e) {
     }, 500);
   }
   if (this.value.length === 4) {
-    for (let i = 0; i < document.getElementById("userIDInput").length; i++) {
-      userCard[i].style.display = "none";
+      document.getElementById("user-card").style.display = "none";
       document.getElementById("transaction-amount").style.display = "block";
       document.getElementById("amountInput").focus();
-    }
   }
 });
   </script>
@@ -260,7 +258,7 @@ document.getElementById('userIDInput').addEventListener('input', function(e) {
 
     <h2>Process Transaction</h2>
     <form id="transactionForm">
-      <div class="user-card">
+      <div id="user-card" class="user-card">
         <p>Enter the number shown on the customer's transaction slip.</p>
         <input type="text" id="userIDInput" class="usernumber-input" name="userIDInput" required>
       </div>
@@ -271,8 +269,7 @@ document.getElementById('userIDInput').addEventListener('input', function(e) {
       </div>
     </form>
   </div>
-  <div id="login-screen" class="center-container" style="display: none;"
-    >
+  <div id="login-screen" class="center-container" style="display: none;">
     <h1 style="font-family: 'Poppins', sans-serif; font-weight: 500">Login to your business</h1>
     <form onSubmit="return false;">
       <input id="businessNameInput" type="text" placeholder="">
