@@ -32,7 +32,7 @@
     const app = initializeApp(firebaseConfig);
     const database = getDatabase(app);
 
-    console.log("%cVersion: %c1.2", "color: blue; font-size:75px;", "color: orange; font-size:75px;");
+    console.log("%cVersion: %c1.3", "color: blue; font-size:75px;", "color: green; font-size:75px;");
     
     window.businessValue = new URLSearchParams(window.location.search).get('businessvalue');
 
@@ -113,7 +113,7 @@
           }
         }).catch((error) => {
           console.error('Error fetching user data:', error);
-          alert("An error occurred during the transaction.");
+          showPopup("flex", "We ran into a problem", "block", "What happened? <br>&Tab;There was an error fetching user information. <br><br>What can you do? <br>&Tab;Reload the page and try again.");
         });
       }
 
@@ -290,11 +290,11 @@ document.getElementById('amountInput').addEventListener('input', function(e) {
     <form id="transactionForm">
       <div id="user-card" class="user-card" style="height: auto;">
         <p>Enter the number shown on the customer's transaction slip.</p>
-        <input type="text" id="userIDInput" class="usernumber-input" name="userIDInput" required>
+        <input autocomplete="off" type="text" id="userIDInput" class="usernumber-input" name="userIDInput" required>
       </div>
       <div id="transaction-amount" style="display: none;">
         <label for="amountInput">Amount to Remove (Lux):</label>
-        <input type="text" id="amountInput" name="amountInput" style="font-size: 18px;" required>
+        <input autocomplete="off" type="text" id="amountInput" name="amountInput" style="font-size: 18px;" required>
         <button id="cancel-button" class="outline-button">Back</button>
         <button type="submit" class="fill-button">Process</button>
       </div>
