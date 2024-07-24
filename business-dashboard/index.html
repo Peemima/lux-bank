@@ -240,6 +240,7 @@ document.getElementById('userIDInput').addEventListener('input', function(e) {
     let userCards = document.getElementsByClassName("user-card");
     for (let i = 0; i < userCards.length; i++) {
       userCards[i].style.display = "none";
+      document.getElementById("amountInput").focus();
     }
   }
 });
