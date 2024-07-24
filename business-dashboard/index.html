@@ -88,6 +88,9 @@
                     updateBusinessBalance(amount);
                     logTransaction(userKey, -amount, newBalance, businessValue, businessData.balance); 
                     document.getElementById("transactionForm").reset();
+                    document.getElementsByClassName("user-card")[i].style.display = "block";
+                    document.getElementById("transaction-amount").style.display = "none";
+                    document.getElementById("amountInput").focus();
                     alert(`Transaction successful! New balance for User ID ${userID}: $${newBalance}`);
                   })
                   .catch((error) => {
@@ -237,9 +240,8 @@ document.getElementById('userIDInput').addEventListener('input', function(e) {
     }, 500);
   }
   if (this.value.length === 4) {
-    let userCards = document.getElementsByClassName("user-card");
     for (let i = 0; i < userCards.length; i++) {
-      userCards[i].style.display = "none";
+      document.getElementsByClassName("user-card")[i].style.display = "none";
       document.getElementById("transaction-amount").style.display = "block";
       document.getElementById("amountInput").focus();
     }
@@ -268,9 +270,7 @@ document.getElementById('userIDInput').addEventListener('input', function(e) {
         <button type="submit" class="fill-button">Process</button>
       </div>
     </form>
-
   </div>
-
   <div id="login-screen" class="center-container" style="display: none;"
     >
     <h1 style="font-family: 'Poppins', sans-serif; font-weight: 500">Login to your business</h1>
