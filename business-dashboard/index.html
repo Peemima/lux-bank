@@ -69,7 +69,7 @@
 
         processTransaction(userID, amount);
       });
-
+      let userCard  = document.getElementsByClassName("user-card");
       function processTransaction(userID, amount) {
         get(ref(database, 'users')).then((snapshot) => {
           if (snapshot.exists()) {
@@ -88,7 +88,7 @@
                     updateBusinessBalance(amount);
                     logTransaction(userKey, -amount, newBalance, businessValue, businessData.balance); 
                     document.getElementById("transactionForm").reset();
-                    document.getElementsByClassName("user-card")[i].style.display = "block";
+                    userCard[i].style.display = "block";
                     document.getElementById("transaction-amount").style.display = "none";
                     document.getElementById("amountInput").focus();
                     alert(`Transaction successful! New balance for User ID ${userID}: $${newBalance}`);
@@ -241,7 +241,7 @@ document.getElementById('userIDInput').addEventListener('input', function(e) {
   }
   if (this.value.length === 4) {
     for (let i = 0; i < userCards.length; i++) {
-      document.getElementsByClassName("user-card")[i].style.display = "none";
+      userCard[i].style.display = "none";
       document.getElementById("transaction-amount").style.display = "block";
       document.getElementById("amountInput").focus();
     }
