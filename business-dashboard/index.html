@@ -60,6 +60,33 @@
   return null;
 }
 
+// 1. Function to get the user's name by user id
+function getUserNameByUserId(userId) {
+  const usersRef = ref(database, 'users');
+  return get(usersRef).then(snapshot => {
+    if (snapshot.exists()) {
+      const users = snapshot.val();
+      for (let userKey in users) {
+        if (users[userKey].id === userId) {
+          return users[userKey]; // Return the entire user object
+        }
+      }
+    }
+    return null; // User not found
+  });
+}
+
+// 2. Function to get the user's first name by user id
+function getUserFirstNameByUserId(userId) {
+  return getUserNameByUserId(userId)
+    .then(user => {
+      if (user) {
+        const nameParts = user.id.split(' '); // Assuming user ID is "FirstName LastName"
+        return nameParts[0];
+      }
+      return null; // User not found
+    });
+}
 
 
       document.getElementById("transactionForm").addEventListener("submit", function(event) {
