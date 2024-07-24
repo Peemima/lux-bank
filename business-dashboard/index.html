@@ -253,6 +253,24 @@ document.getElementById('userIDInput').addEventListener('input', function(e) {
       document.getElementById("amountInput").focus();
   }
 });
+document.getElementById('amountInput').addEventListener('input', function(e) {
+  // Remove any non-digit characters from the input.
+  const validValue = this.value.replace(/[^0-9]/g, '');
+  
+  // Check if the input value is not solely composed of digits.
+  if (this.value !== validValue) {
+    // Replace the input value with the cleaned, digit-only version.
+    this.value = validValue;
+    
+    // Add the 'jiggle' class to trigger the animation.
+    this.classList.add('jiggle');
+    
+    // Automatically remove the 'jiggle' class after the animation ends (500ms) to reset the state.
+    setTimeout(() => {
+      this.classList.remove('jiggle');
+    }, 500);
+  }
+});
   </script>
 </head>
 <body>
@@ -270,7 +288,7 @@ document.getElementById('userIDInput').addEventListener('input', function(e) {
       </div>
       <div id="transaction-amount" style="display: none;">
         <label for="amountInput">Amount to Remove (Lux):</label>
-        <input type="number" id="amountInput" name="amountInput" required>
+        <input type="text" id="amountInput" name="amountInput" style="font-size: 18px;" required>
         <button id="cancel-button" class="outline-button">Back</button>
         <button type="submit" class="fill-button">Process</button>
       </div>
