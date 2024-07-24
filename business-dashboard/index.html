@@ -111,11 +111,12 @@ function getUserFirstNameByUserId(userId) {
                   getUserFirstNameByUserId(userID).then(firstName => {
                     if (firstName) {
                       console.log("User's first name:", firstName); 
-                      showPopup("flex", "Not enough hawkeyes", "block", "It looks like " + firstName + " doesn't have enough hawkeyes to pay " + amount + ".")
-                      return;
+                      showPopup("flex", "Not enough hawkeyes", "block", "It looks like " + firstName + " doesn't have enough hawkeyes to buy that.")
                     } else {
                       console.error("User not found.");
+                      showPopup("flex", "Not enough hawkeyes", "block", "It looks like this person doesn't have enough hawkeyes to buy that.")
                     }
+                    return;
                   });
                 }
 
