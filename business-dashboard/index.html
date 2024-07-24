@@ -32,7 +32,7 @@
     const app = initializeApp(firebaseConfig);
     const database = getDatabase(app);
 
-    console.log("%cVersion: %c1.15", "color: blue; font-size:75px;", "color: yellow; font-size:75px;");
+    console.log("%cVersion: %c1.2", "color: blue; font-size:75px;", "color: orange; font-size:75px;");
     
     window.businessValue = new URLSearchParams(window.location.search).get('businessvalue');
 
@@ -98,7 +98,7 @@
                     document.getElementById("user-card").style.display = "block";
                     document.getElementById("transaction-amount").style.display = "none";
                     document.getElementById("userIDInput").focus();
-                    alert(`Transaction successful! New balance for User ID ${userID}: $${newBalance}`);
+                    showPopup("flex", "Success", "block", `${businessValue} now has ${businessData.balance} hawkeyes`);
                   })
                   .catch((error) => {
                     console.error('Error updating user balance:', error);
