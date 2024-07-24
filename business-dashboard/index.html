@@ -93,7 +93,7 @@ function getUserFirstNameByUserId(userId) {
         const amount = parseFloat(document.getElementById("amountInput").value);
 
         if (isNaN(userID) || isNaN(amount) || amount <= 0) {
-          alert("Please enter a valid User ID and a positive amount.");
+          showPopup("flex", "Notice", "block", "Please enter a valid price for this product");
           return;
         }
 
@@ -108,8 +108,15 @@ function getUserFirstNameByUserId(userId) {
               if (users[userKey].id === userID) {
                 let currentBalance = users[userKey].balance;
                 if (amount > currentBalance) {
-                  alert("Insufficient funds!");
-                  return;
+                  getUserFirstNameByUserId(userID).then(firstName => {
+                    if (firstName) {
+                      console.log("User's first name:", firstName); 
+                      showPopup("flex", "Not enough hawkeyes", "block", "It looks like " + firstName + " doesn't have enough hawkeyes to pay " + amount + ".")
+                      return;
+                    } else {
+                      console.error("User not found.");
+                    }
+                  });
                 }
 
                 let newBalance = currentBalance - amount; 
