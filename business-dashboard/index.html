@@ -32,7 +32,7 @@
     const app = initializeApp(firebaseConfig);
     const database = getDatabase(app);
 
-    console.log("%cVersion: %c1.6", "color: blue; font-size:75px;", "color: purple; font-size:75px;");
+    console.log("%cVersion: %c1.61", "color: blue; font-size:75px;", "color: purple; font-size:75px;");
     
     window.businessValue = new URLSearchParams(window.location.search).get('businessvalue');
 
@@ -289,9 +289,9 @@ document.getElementById('amountInput').addEventListener('input', function(e) {
       <span id="businessBalance" style="float: right; text-align: right;">...</span>
     </div>
     <form id="transactionForm">
-      <div id="user-card" class="user-card" style="height: auto;">
+      <div id="user-card" class="user-card">
         <p>Enter the number shown on the customer's transaction slip.</p>
-        <input autocomplete="off" type="text" id="userIDInput" class="usernumber-input" name="userIDInput" required>
+        <input style="margin: 0px;" autocomplete="off" type="text" id="userIDInput" class="usernumber-input" name="userIDInput" required>
       </div>
       <div id="transaction-amount" style="display: none;">
         <label for="amountInput">How many hawkeyes?</label>
