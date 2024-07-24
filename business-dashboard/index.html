@@ -240,7 +240,7 @@ document.getElementById('userIDInput').addEventListener('input', function(e) {
     }, 500);
   }
   if (this.value.length === 4) {
-    for (let i = 0; i < userCards.length; i++) {
+    for (let i = 0; i < userCard.length; i++) {
       userCard[i].style.display = "none";
       document.getElementById("transaction-amount").style.display = "block";
       document.getElementById("amountInput").focus();
