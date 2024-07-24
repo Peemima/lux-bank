@@ -57,32 +57,6 @@
         fetchAndDisplayBusinessBalance();
       });
 
-      function getNameFromId(userId) {
-  // Access the users object in your database
-  const users = database.users; 
-
-  // Iterate through the users object
-  for (const userKey in users) {
-    // Check if the user has an ID and if it matches the given userId
-    if (users[userKey].id && users[userKey].id === userId) {
-      // Return the username if the IDs match
-      return userKey; 
-    }
-  }
-
-        function getFirstNameFromId(userId) {
-  const users = database.users;
-
-  for (const userKey in users) {
-    if (users[userKey].id && users[userKey].id === userId) {
-      // Split the username into an array of words
-      const nameParts = userKey.split(' '); 
-
-      // Return the first word of the username (first name)
-      return nameParts[0];
-    }
-  }
-
   return null;
 }
 
