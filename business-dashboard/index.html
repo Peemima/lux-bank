@@ -240,6 +240,7 @@ document.getElementById('userIDInput').addEventListener('input', function(e) {
     let userCards = document.getElementsByClassName("user-card");
     for (let i = 0; i < userCards.length; i++) {
       userCards[i].style.display = "none";
+      document.getElementById("transaction-amount").style.display = "block";
       document.getElementById("amountInput").focus();
     }
   }
@@ -261,10 +262,11 @@ document.getElementById('userIDInput').addEventListener('input', function(e) {
         <p>Enter the number shown on the customer's transaction slip.</p>
         <input type="text" id="userIDInput" class="usernumber-input" name="userIDInput" required>
       </div>
-      <label for="amountInput">Amount to Remove (Lux):</label><br>
-      <input type="number" id="amountInput" name="amountInput" required><br><br>
-
-      <button type="submit" class="fill-button">Process</button>
+      <div id="transaction-amount">
+        <label for="amountInput">Amount to Remove (Lux):</label><br>
+        <input type="number" id="amountInput" name="amountInput" required><br><br>
+        <button type="submit" class="fill-button">Process</button>
+      </div
     </form>
 
   </div>
