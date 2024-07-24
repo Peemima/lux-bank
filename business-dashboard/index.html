@@ -74,16 +74,20 @@
       });
       let userCard  = document.getElementsByClassName("user-card");
       function processTransaction(userID, amount) {
-        get(ref(database, 'users')).then((snapshot) => {
-          if (snapshot.exists()) {
-            const users = snapshot.val();
-            for (let userKey in users) {
-              if (users[userKey].id === userID) {
-                let currentBalance = users[userKey].balance;
-                if (amount > currentBalance) {
-                  showPopup("flex", "Not enough hawkeyes", "block", "It looks like (users first name) doesn't have enough hawkeyes to buy that.")
-                  return;
-                }
+  get(ref(database, 'users')).then((snapshot) => {
+    if (snapshot.exists()) {
+      const users = snapshot.val();
+      for (let userKey in users) {
+        // Check if the user ID matches 
+        if (users[userKey].id === userID) {
+          // Access the user's first name, which is the key of the user object
+          const userName = userKey; 
+
+          let currentBalance = users[userKey].balance;
+          if (amount > currentBalance) {
+            showPopup("flex", "Not enough hawkeyes", "block", `It looks like ${userName} doesn't have enough hawkeyes to buy that.`);
+            return;
+          }
 
                 let newBalance = currentBalance - amount; 
                 set(ref(database, 'users/' + userKey + '/balance'), newBalance)
