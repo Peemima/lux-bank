@@ -57,6 +57,18 @@
         fetchAndDisplayBusinessBalance();
       });
 
+      function getNameFromUserId(userId) {
+  // Iterate through all users in the "users" object
+  for (const userName in data.users) {
+    // Check if the current user has an "id" property
+    if (data.users[userName].hasOwnProperty('id')) {
+      // If the id matches the provided userId, return the username
+      if (data.users[userName].id === userId) {
+        return userName;
+      }
+    }
+  }
+
       document.getElementById("transactionForm").addEventListener("submit", function(event) {
         event.preventDefault(); 
 
@@ -75,11 +87,12 @@
         get(ref(database, 'users')).then((snapshot) => {
           if (snapshot.exists()) {
             const users = snapshot.val();
+            const userName = getNameFromUserId(userId);
             for (let userKey in users) {
               if (users[userKey].id === userID) {
                 let currentBalance = users[userKey].balance;
                 if (amount > currentBalance) {
-                  alert("Insufficient funds!");
+                  showPopup("Flex", "Not enough hawkeyes", "block", "It looks like" + getFirstWord(userName) + " doesn't have enough hawkeyes to pay.");
                   return;
                 }
 
