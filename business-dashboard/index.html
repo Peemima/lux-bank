@@ -32,7 +32,7 @@
     const app = initializeApp(firebaseConfig);
     const database = getDatabase(app);
 
-    console.log("%cVersion: %c1.5", "color: blue; font-size:75px;", "color: yellow; font-size:75px;");
+    console.log("%cVersion: %c1.6", "color: blue; font-size:75px;", "color: purple; font-size:75px;");
     
     window.businessValue = new URLSearchParams(window.location.search).get('businessvalue');
 
@@ -93,7 +93,7 @@
                 set(ref(database, 'users/' + userKey + '/balance'), newBalance)
                   .then(() => {
                     updateBusinessBalance(amount);
-                    logTransaction(userKey, -amount, newBalance, businessValue, businessData.balance); 
+                    logTransaction(userKey, userID, -amount, newBalance, businessValue, businessData.balance); 
                     document.getElementById("transactionForm").reset();
                     document.getElementById("user-card").style.display = "block";
                     document.getElementById("transaction-amount").style.display = "none";
@@ -117,11 +117,12 @@
         });
       }
 
-      function logTransaction(userKey, amount, newBalance, businessValue, businessBalanceAmount) {
+      function logTransaction(userKey, userId, amount, newBalance, businessValue, businessBalanceAmount) {
         const transactionID = `trans_${Date.now()}_${Math.floor(Math.random() * 1000)}`; 
         const transactionRef = ref(database, 'transactions/' + transactionID); 
         const transactionData = {
           userKey: userKey,
+          userId: userId,
           amount: amount,
           newBalance: newBalance,
           businessBalance: businessBalanceAmount,
