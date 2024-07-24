@@ -262,11 +262,11 @@ document.getElementById('userIDInput').addEventListener('input', function(e) {
         <p>Enter the number shown on the customer's transaction slip.</p>
         <input type="text" id="userIDInput" class="usernumber-input" name="userIDInput" required>
       </div>
-      <div id="transaction-amount">
-        <label for="amountInput">Amount to Remove (Lux):</label><br>
-        <input type="number" id="amountInput" name="amountInput" required><br><br>
+      <div id="transaction-amount" style="display: none;">
+        <label for="amountInput">Amount to Remove (Lux):</label>
+        <input type="number" id="amountInput" name="amountInput" required>
         <button type="submit" class="fill-button">Process</button>
-      </div
+      </div>
     </form>
 
   </div>
