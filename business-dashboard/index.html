@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Lux Banking Dashboard</title>
-  <script src="https://peemima.github.io/lux-bank/assets/popup-code.js"></script>
+  
   <noscript>
     <h1>js_err_noscrpt_popup</h1>
     <p>A wild error popped out of nowhere!</p>
@@ -57,18 +57,6 @@
         fetchAndDisplayBusinessBalance();
       });
 
-      function getNameFromUserId(userId) {
-  // Iterate through all users in the "users" object
-  for (const userName in data.users) {
-    // Check if the current user has an "id" property
-    if (data.users[userName].hasOwnProperty('id')) {
-      // If the id matches the provided userId, return the username
-      if (data.users[userName].id === userId) {
-        return userName;
-      }
-    }
-  }
-
       document.getElementById("transactionForm").addEventListener("submit", function(event) {
         event.preventDefault(); 
 
@@ -76,7 +64,7 @@
         const amount = parseFloat(document.getElementById("amountInput").value);
 
         if (isNaN(userID) || isNaN(amount) || amount <= 0) {
-          showPopup("flex", "Notice", "flex", "Please enter a valid positive number");
+          alert("Please enter a valid User ID and a positive amount.");
           return;
         }
 
@@ -87,17 +75,16 @@
         get(ref(database, 'users')).then((snapshot) => {
           if (snapshot.exists()) {
             const users = snapshot.val();
-            const userName = getNameFromUserId(userId);
             for (let userKey in users) {
               if (users[userKey].id === userID) {
                 let currentBalance = users[userKey].balance;
                 if (amount > currentBalance) {
-                  showPopup("Flex", "Not enough hawkeyes", "block", "It looks like" + getFirstWord(userName) + " doesn't have enough hawkeyes to pay.");
+                  alert("Insufficient funds!");
                   return;
                 }
 
                 let newBalance = currentBalance - amount; 
-                update(ref(database, 'users/' + userKey), { balance: newBalance })
+                set(ref(database, 'users/' + userKey + '/balance'), newBalance)
                   .then(() => {
                     updateBusinessBalance(amount);
                     logTransaction(userKey, -amount, newBalance, businessValue, businessData.balance); 
@@ -183,7 +170,7 @@
 
       setInterval(fetchAndDisplayBusinessBalance, 200);
 
-    }
+    } else {
       document.getElementById("main-content").style.display = 'none'; 
       document.getElementById("login-screen").style.display = 'block'; 
 
@@ -288,7 +275,6 @@ document.getElementById('amountInput').addEventListener('input', function(e) {
   </script>
 </head>
 <body>
-
   <div id="main-content"> 
     <div id="businessInfo" style="display: grid; grid-template-columns: 1fr auto 1fr;">
       <span id="businessName" style="float: left;">...</span>
@@ -315,6 +301,5 @@ document.getElementById('amountInput').addEventListener('input', function(e) {
     </form>
     <div id="suggestions"></div>
   </div>
-
 </body>
 </html>
