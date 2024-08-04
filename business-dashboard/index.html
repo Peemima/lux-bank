@@ -199,14 +199,7 @@
             businessSuggestions = Object.keys(businesses).filter(business => 
               business.toLowerCase().includes(inputValue)
             );
-            
-            // Show suggestions ONLY if there's exactly one match
-            if (businessSuggestions.length === 1) { 
-              updateSuggestions(businessSuggestions); 
-            } else {
-              // Hide suggestions if there are zero or multiple matches
-              document.getElementById('suggestions').style.display = 'none'; 
-            }
+            updateSuggestions(businessSuggestions); 
           } else {
             console.error('No businesses found in the database.');
           }
@@ -234,6 +227,7 @@
           suggestionList.style.display = 'block'; 
         }
       }
+    };
 
     //Reset the forum when cancel button is pressed
     document.getElementById("cancel-button").addEventListener('click', function() {
