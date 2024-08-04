@@ -218,15 +218,11 @@
         const suggestionList = document.getElementById('suggestions');
         if (suggestions.length > 0) {
           suggestionList.style.display = 'block'; 
-          suggestionList.innerHTML = ''; 
           suggestions.forEach(suggestion => {
-            const suggestionItem = document.createElement('div');
-            suggestionItem.classList.add('suggestion-item');
-            suggestionItem.textContent = suggestion;
+            suggestionList.innerHtml = 'Press Enter to login to ' + suggestion;
             suggestionItem.addEventListener('click', () => {
               window.location.href = `?businessvalue=${suggestion}`;
             });
-            suggestionList.appendChild(suggestionItem);
           });
         } else {
           suggestionList.innerHTML = '<div class="suggestion-item">No businesses found</div>';
