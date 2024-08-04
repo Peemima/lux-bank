@@ -210,24 +210,24 @@
 
       function updateSuggestions(suggestions) {
         const suggestionList = document.getElementById('suggestions');
-        if (suggestions.length > 0) {
+        if (suggestions.length > 1) {
+          suggestionList.innerHTML = '<div class="suggestion-item">No businesses found</div>';
+          suggestionList.style.display = 'block'; 
+        } else if (suggestions.length === 1) {
           suggestionList.style.display = 'block'; 
           suggestionList.innerHTML = ''; 
-          suggestions.forEach(suggestion => {
-            const suggestionItem = document.createElement('div');
+          const suggestionItem = document.createElement('div');
             suggestionItem.classList.add('suggestion-item');
             suggestionItem.textContent = suggestion;
             suggestionItem.addEventListener('click', () => {
               window.location.href = `?businessvalue=${suggestion}`;
             });
             suggestionList.appendChild(suggestionItem);
-          });
         } else {
           suggestionList.innerHTML = '<div class="suggestion-item">No businesses found</div>';
           suggestionList.style.display = 'block'; 
         }
       }
-    };
 
     //Reset the forum when cancel button is pressed
     document.getElementById("cancel-button").addEventListener('click', function() {
