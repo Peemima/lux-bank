@@ -220,7 +220,7 @@
           suggestionList.style.display = 'block'; 
           suggestions.forEach(suggestion => {
             suggestionList.innerHtml = 'Press Enter to login to ' + suggestion;
-            suggestionItem.addEventListener('click', () => {
+            suggestionList.addEventListener('click', () => {
               window.location.href = `?businessvalue=${suggestion}`;
             });
           });
