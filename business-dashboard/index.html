@@ -215,22 +215,21 @@
       });
 
       function updateSuggestions(suggestions) {
-const suggestionList = document.getElementById('suggestions');
-if (suggestions.length > 0) {
-suggestionList.style.display = 'block';
-suggestions.forEach(suggestion => {
-suggestionList.innerHtml = 'Press Enter to login to ' + suggestion;
-suggestionList.addEventListener('click', () => {
-window.location.href = ?businessvalue=${suggestion};
-});
-});
-} else {
-suggestionList.innerHTML = '
-No businesses found';
-suggestionList.style.display = 'block';
-}
-}
-};
+        const suggestionList = document.getElementById('suggestions');
+        if (suggestions.length > 0) {
+          suggestionList.style.display = 'block'; 
+          suggestions.forEach(suggestion => {
+            suggestionList.innerHtml = 'Press Enter to login to ' + suggestion;
+            suggestionList.addEventListener('click', () => {
+              window.location.href = `?businessvalue=${suggestion}`;
+            });
+          });
+        } else {
+          suggestionList.innerHTML = '<div class="suggestion-item">No businesses found</div>';
+          suggestionList.style.display = 'block'; 
+        }
+      }
+    };
 
     //Reset the forum when cancel button is pressed
     document.getElementById("cancel-button").addEventListener('click', function() {
