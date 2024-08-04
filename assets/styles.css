@@ -99,6 +99,20 @@
     font-weight: 500;
   }
 
+.key-text {
+        border: 1px solid black;
+        padding: 2px;
+        border-radius: 4px;
+        width: min-content;
+        margin: 0px;
+        border-bottom: 3px solid grey;
+        cursor: pointer;
+    }
+    .key-text:active {
+        border-bottom: 2px solid grey;
+        margin-bottom: 1px;
+    }
+
   #message, #searchResult, #allUsers {
     padding: var(--padding-small);
     margin-top: var(--margin-normal);
