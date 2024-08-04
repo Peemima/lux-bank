@@ -32,7 +32,7 @@
     const app = initializeApp(firebaseConfig);
     const database = getDatabase(app);
 
-    console.log("%cVersion: %c1.632", "color: black; font-size:75px;", "color: green; font-size:75px;");
+    console.log("%cVersion: %c1.633", "color: black; font-size:75px;", "color: yellow; font-size:75px;");
     
     window.businessValue = new URLSearchParams(window.location.search).get('businessvalue');
 
@@ -219,7 +219,7 @@
         if (suggestions.length > 0) {
           suggestionList.style.display = 'block'; 
           suggestions.forEach(suggestion => {
-            suggestionList.innerHtml = 'Press Enter to login to ' + suggestion;
+            suggestionList.innerText = 'Press Enter to login to ' + suggestion;
             suggestionList.addEventListener('click', () => {
               window.location.href = `?businessvalue=${suggestion}`;
             });
