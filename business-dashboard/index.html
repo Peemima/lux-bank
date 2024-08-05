@@ -291,8 +291,9 @@ document.getElementById('userIDInput').addEventListener('input', function(e) {
            const userName = userKey.split(' ')[0];
            const userBalance = users[userKey].balance; 
            showPopup('flex', 'User Balance', 'block', `${userName}'s balance is $${userBalance}.`);
-            document.getElementById("checkUserBalanceForm").style.display = "none";
-            document.getElementById("homepage").style.display = "block";
+           document.getElementById("userIDInputBalance").value = '';
+           document.getElementById("checkUserBalanceForm").style.display = "none";
+           document.getElementById("homepage").style.display = "block";
            return;
          }
        }
