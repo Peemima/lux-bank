@@ -98,6 +98,9 @@
     font-size: 36px;
     font-weight: 500;
   }
+  p {
+    display: inline;
+  }
 
 .key-text {
         border: 1px solid black;
