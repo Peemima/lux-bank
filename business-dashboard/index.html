@@ -319,7 +319,12 @@ document.getElementById('userIDInput').addEventListener('input', function(e) {
    const userID = document.getElementById("userIDInputBalance").value;
    checkUserBalance(userID); 
  });
-    
+
+    document.getElementById('check-balance-button').addEventListener('click', function() {
+  document.getElementById('checkUserBalanceForm').style.display = 'block';
+  document.getElementById('transactionForm').style.display = 'none';
+  document.getElementById('userIDInputBalance').focus();
+});
   </script>
 </head>
 <body>
