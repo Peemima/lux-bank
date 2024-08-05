@@ -221,7 +221,7 @@
           suggestions.forEach(suggestion => {
             suggestionList.innerText = 'Press Enter to login to ' + suggestion;
             document.getElementById("businessNameInput").addEventListener('input', () => {
-              if (event.key === 'Enter')
+              if (event.key === 'Enter') {
                 window.location.href = `?businessvalue=${suggestion}`;
               }
             });
