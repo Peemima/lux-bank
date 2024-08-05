@@ -220,7 +220,7 @@
           suggestionList.style.display = 'block'; 
           suggestions.forEach(suggestion => {
             suggestionList.innerText = 'Press Enter to login to ' + suggestion;
-            document.getElementById("businessNameInput").addEventListener('keydown', () => {
+            document.getElementById("businessNameInput").addEventListener('keydown', (event) => {
               if (event.key === 13) {
                 window.location.href = `?businessvalue=${suggestion}`;
               }
