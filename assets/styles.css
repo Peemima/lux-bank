@@ -110,6 +110,7 @@
         margin: 0px;
         border-bottom: 3px solid grey;
         cursor: pointer;
+        background-color: white;
     }
     .key-text:active {
         border-bottom: 2px solid grey;
