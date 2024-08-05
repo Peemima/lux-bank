@@ -219,13 +219,13 @@
         if (suggestions.length > 0) {
           suggestionList.style.display = 'block'; 
           suggestions.forEach(suggestion => {
-            suggestionList.innerHTML = 'Press Enter or return to login to ' + suggestion;
+            suggestionList.innerText = 'Press Enter or return to login to ' + suggestion;
             suggestionList.addEventListener('click', () => {
               window.location.href = `?businessvalue=${suggestion}`;
             });
           });
         } else {
-          suggestionList.innerHTML = '<div class="suggestion-item">No businesses found</div>';
+          suggestionList.innerText = '<div class="suggestion-item">No businesses found</div>';
           suggestionList.style.display = 'block'; 
         }
       }
