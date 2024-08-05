@@ -277,10 +277,10 @@ document.getElementById('userIDInput').addEventListener('input', function(e) {
      }, 500);
    }
    if (this.value.length === 4) {
+     const userID = document.getElementById("userIDInputBalance").value; 
      checkUserBalance(userID);
      document.getElementById("user-card-balance").style.display = "none";
      document.getElementById("homepage").style.display = "block";
-     const userID = document.getElementById("userIDInputBalance").value; 
    }
  });
     
