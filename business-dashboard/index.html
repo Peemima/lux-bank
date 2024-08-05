@@ -266,6 +266,31 @@ document.getElementById('userIDInput').addEventListener('input', function(e) {
       document.getElementById("amountInput").focus();
   }
 });
+
+    document.getElementById('userIDInputForBalance').addEventListener('input', function(e) {
+  // Remove any non-digit characters from the input.
+  const validValue = this.value.replace(/[^0-9]/g, '');
+  
+  // Check if the input value is not solely composed of digits.
+  if (this.value !== validValue) {
+    // Replace the input value with the cleaned, digit-only version.
+    this.value = validValue;
+    
+    // Add the 'jiggle' class to trigger the animation.
+    this.classList.add('jiggle');
+    
+    // Automatically remove the 'jiggle' class after the animation ends (500ms) to reset the state.
+    setTimeout(() => {
+      this.classList.remove('jiggle');
+    }, 500);
+  }
+  if (this.value.length === 4) {
+      document.getElementById("homescreen").style.display = "block";
+      document.getElementById("checkUserBalanceForm").style.display = "none";
+      showPopup("flex", "User balance", "block", "This user has (hawkeye amount) hawkeyes"); // This is to show how many hawkeyes a user has, in case they want to know. Replace (hawkeye amount) with the correct variable for the inputed usernumber.
+  }
+});
+    
 document.getElementById('amountInput').addEventListener('input', function(e) {
   // Remove any non-digit characters from the input.
   const validValue = this.value.replace(/[^0-9]/g, '');
@@ -303,6 +328,12 @@ document.getElementById('amountInput').addEventListener('input', function(e) {
         <input autocomplete="off" type="text" id="amountInput" name="amountInput" style="font-size: 18px;" required>
         <button id="cancel-button" class="outline-button">Back</button>
         <button type="submit" class="fill-button">Process</button>
+      </div>
+    </form>
+    <form id="checkUserBalanceForm" style="display: none;">
+      <div id="user-card" class="user-card">
+        <p>Enter the number shown on the customer's transaction slip.</p>
+        <input style="margin-bottom: 0px;" autocomplete="off" type="text" id="userIDInputForBalance" class="usernumber-input" name="userIDInputForBalance" required>
       </div>
     </form>
   </div>
