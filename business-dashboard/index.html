@@ -192,46 +192,46 @@
       });
 
       document.getElementById("businessNameInput").addEventListener("input", function() {
-        const inputValue = this.value.trim().toLowerCase();
-        get(ref(database, 'businesses')).then(snapshot => {
-          if (snapshot.exists()) {
-            const businesses = snapshot.val();
-            businessSuggestions = Object.keys(businesses).filter(business => 
-              business.toLowerCase().includes(inputValue)
-            );
-            // Show suggestions ONLY if there's exactly one match
-            if (businessSuggestions.length === 1) { 
-              updateSuggestions(businessSuggestions); 
-            } else {
-              // Hide suggestions if there are zero or multiple matches
-              document.getElementById('suggestions').style.display = 'none'; 
-            }
-          } else {
-            console.error('No businesses found in the database.');
-          }
-        }).catch(error => {
-          console.error('Error fetching businesses:', error);
-        });
-      });
+  const inputValue = this.value.trim().toLowerCase();
+  get(ref(database, 'businesses')).then(snapshot => {
+    if (snapshot.exists()) {
+      const businesses = snapshot.val();
+      businessSuggestions = Object.keys(businesses).filter(business => 
+        business.toLowerCase().includes(inputValue)
+      );
 
-      function updateSuggestions(suggestions) {
-        const suggestionList = document.getElementById('suggestions');
-        if (suggestions.length > 0) {
-          suggestionList.style.display = 'block'; 
-          suggestions.forEach(suggestion => {
-            suggestionList.innerText = 'Press Enter to login to ' + suggestion;
-            document.getElementById("businessNameInput").addEventListener('keydown', (event) => {
-              if (event.key === 13) {
-                window.location.href = `?businessvalue=${suggestion}`;
-              }
-            });
-          });
-        } else {
-          suggestionList.innerText = '<div class="suggestion-item">No businesses found</div>';
-          suggestionList.style.display = 'block'; 
-        }
+      // Show suggestions ONLY if there's exactly one match
+      if (businessSuggestions.length === 1) { 
+        updateSuggestions(businessSuggestions[0]); // Pass the single suggestion
+      } else {
+        // Hide suggestions if there are zero or multiple matches
+        document.getElementById('suggestions').style.display = 'none'; 
       }
-    };
+    } else {
+      console.error('No businesses found in the database.');
+    }
+  }).catch(error => {
+    console.error('Error fetching businesses:', error);
+  });
+});
+
+function updateSuggestions(suggestion) {
+  const suggestionList = document.getElementById('suggestions');
+  if (suggestion) {
+    suggestionList.style.display = 'block'; 
+    suggestionList.innerText = 'Press Enter to login to ' + suggestion;
+  } else {
+    suggestionList.innerText = 'No businesses found';
+  }
+}
+
+// Add event listener to the input field for Enter key press
+document.getElementById("businessNameInput").addEventListener("keydown", (event) => {
+  if (event.key === 'Enter') {
+    const suggestion = document.getElementById('suggestions').innerText.replace('Press Enter to login to ', '');
+    window.location.href = `?businessvalue=${suggestion}`;
+  }
+});
 
     //Reset the forum when cancel button is pressed
     document.getElementById("cancel-button").addEventListener('click', function() {
