@@ -219,9 +219,11 @@
         if (suggestions.length > 0) {
           suggestionList.style.display = 'block'; 
           suggestions.forEach(suggestion => {
-            suggestionList.innerText = 'Press Enter or return to login to ' + suggestion;
-            suggestionList.addEventListener('click', () => {
-              window.location.href = `?businessvalue=${suggestion}`;
+            suggestionList.innerText = 'Press Enter to login to ' + suggestion;
+            document.getElementById("businessNameInput").addEventListener('input', () => {
+              if (event.key === 'Enter')
+                window.location.href = `?businessvalue=${suggestion}`;
+              }
             });
           });
         } else {
