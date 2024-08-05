@@ -279,8 +279,6 @@ document.getElementById('userIDInput').addEventListener('input', function(e) {
    if (this.value.length === 4) {
      const userID = document.getElementById("userIDInputBalance").value; 
      checkUserBalance(userID);
-     document.getElementById("user-card-balance").style.display = "none";
-     document.getElementById("homepage").style.display = "block";
    }
  });
     
@@ -294,6 +292,8 @@ document.getElementById('userIDInput').addEventListener('input', function(e) {
            const userName = userKey.split(' ')[0];
            const userBalance = users[userKey].balance; 
            showPopup('flex', 'User Balance', 'block', `${userName}'s balance is $${userBalance}.`);
+            document.getElementById("user-card-balance").style.display = "none";
+            document.getElementById("homepage").style.display = "block";
            return;
          }
        }
