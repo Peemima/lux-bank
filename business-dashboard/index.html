@@ -268,22 +268,24 @@ document.getElementById('userIDInput').addEventListener('input', function(e) {
 });
 
  document.getElementById('userIDInputBalance').addEventListener('input', function(e) {
-  const validValue = this.value.replace(/[^0-9]/g, '');
-  if (this.value !== validValue) {
-    this.value = validValue;
-    this.classList.add('jiggle');
-    setTimeout(() => {
-      this.classList.remove('jiggle');
-    }, 500);
-  }
-  if (this.value.length === 4) {
-    document.getElementById("user-card-balance").style.display = "none";
-    document.getElementById("transaction-amount-balance").style.display = "block";
-
-    // Call checkUserBalance automatically instead of focusing on the button
-    checkUserBalance(this.value); 
-  }
-});
+   const validValue = this.value.replace(/[^0-9]/g, '');
+   if (this.value !== validValue) {
+     this.value = validValue;
+     this.classList.add('jiggle');
+     setTimeout(() => {
+       this.classList.remove('jiggle');
+     }, 500);
+   }
+   if (this.value.length === 4) {
+     document.getElementById("user-card-balance").style.display = "none";
+     document.getElementById("transaction-amount-balance").style.display = "block";
+     document.getElementById("check-balance-button-form").focus();
+   }
+ });
+     document.getElementById('check-balance-button-form').addEventListener('click', function() {
+   const userID = document.getElementById("userIDInputBalance").value;
+   checkUserBalance(userID); 
+ });
 
      function checkUserBalance(userID) {
    get(ref(database, 'users')).then((snapshot) => {
@@ -353,6 +355,10 @@ document.getElementById('userIDInput').addEventListener('input', function(e) {
          <p>Enter the number shown on the customer's transaction slip.</p>
          <input style="margin-bottom: 0px;" autocomplete="off" type="text" id="userIDInputBalance" class="usernumber-input" name="userIDInputBalance" required>
        </div>
+      <div id="transaction-amount-balance" style="display: none;">
+         <button id="cancel-button-balance" class="outline-button">Back</button>
+         <button type="button" id="check-balance-button-form" class="fill-button">Check Balance</button>
+      </div>
      </form>
   </div>
   <div id="login-screen" class="center-container" style="display: none;">
