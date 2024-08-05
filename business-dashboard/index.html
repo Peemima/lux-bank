@@ -219,8 +219,8 @@
         if (suggestions.length > 0) {
           suggestionList.style.display = 'block'; 
           suggestions.forEach(suggestion => {
-            suggestionList.innerHTML = 'Press <p class="key-text login-button">Enter</p> or <p class="key-text login-button">return</p> to login to ' + suggestion;
-            document.querySelectorAll('.login-button').addEventListener('click', () => {
+            suggestionList.innerHTML = 'Press Enter or return to login to ' + suggestion;
+            suggestionList.addEventListener('click', () => {
               window.location.href = `?businessvalue=${suggestion}`;
             });
           });
