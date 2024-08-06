@@ -35,12 +35,12 @@
 
     // Make hideElement a window function
     window.hideElement = function(identifier) {
-      document.querySelectorAll(identifier).forEach(item => { item.classList.add('hidden'); });
+      document.querySelectorAll(identifier).forEach(item => { item.style.display= 'none'; });
     };
 
     // Make showElement a window function
     window.showElement = function(identifier) {
-      document.querySelectorAll(identifier).forEach(item => { item.classList.remove('hidden'); });
+      document.querySelectorAll(identifier).forEach(item => { el.attributeStyleMap.delete('display') });
     };
     
     window.businessValue = new URLSearchParams(window.location.search).get('businessvalue');
