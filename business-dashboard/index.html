@@ -273,9 +273,11 @@ document.getElementById('userIDInput').addEventListener('input', function(e) {
       document.querySelectorAll(identifier).forEach(item => { item.classList.remove('hidden'); });
     }
 
-    // Variables for the navbar options
-    var buyButton = document.getElementById('transaction-option'); // Set buyButton
-    var bidButton = document.getElementById('auction-option'); // Set bidButton
+    // Set the navbar variables
+    document.addEventListener('DOMContentLoaded', function() {
+      var buyButton = document.getElementById('transaction-option'); 
+      var bidButton = document.getElementById('auction-option'); 
+    });
 
     // Event listeners for the navbar options
     buyButton.addEventListener("click", function() { // Start listening for a click
