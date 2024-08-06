@@ -107,6 +107,7 @@
                     document.getElementById("user-card").style.display = "block";
                     document.getElementById("transaction-amount").style.display = "none";
                     document.getElementById("userIDInput").focus();
+                    showElement('#homepage-heading');
                     showPopup("flex", "Success!", "block", `The transaction was successful!`);
                   })
                   .catch((error) => {
