@@ -92,7 +92,6 @@
     border-radius: var(--border-radius);
     display: inline-block;
     font-size: inherit;
-    margin: 5px;
   }
 
   h2 {
@@ -270,7 +269,6 @@
     border-radius: var(--border-radius);
     display: inline-block;
     font-size: inherit;
-    margin: 5px;
   }
 
   #businessInfo {
