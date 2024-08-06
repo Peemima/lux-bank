@@ -32,6 +32,14 @@
     const database = getDatabase(app);
 
     console.log("%cVersion: %c1.634", "color: black; font-size:75px;", "color: red; font-size:75px;");
+
+    function hideElement(identifier) {
+      document.querySelectorAll(identifier).forEach(item => { item.classList.add('hidden'); });
+    }
+
+    function showElement(identifier) {
+      document.querySelectorAll(identifier).forEach(item => { item.classList.remove('hidden'); });
+    }
     
     window.businessValue = new URLSearchParams(window.location.search).get('businessvalue');
 
@@ -265,13 +273,6 @@ document.getElementById('userIDInput').addEventListener('input', function(e) {
       document.getElementById("amountInput").focus();
   }
 });
-
-    function hideElement(identifier) {
-      document.querySelectorAll(identifier).forEach(item => { item.classList.add('hidden'); });
-    }
-    function showElement(identifier) {
-      document.querySelectorAll(identifier).forEach(item => { item.classList.remove('hidden'); });
-    }
 
     // Set the navbar variables
     var buyButton = document.getElementById('transaction-option'); 
