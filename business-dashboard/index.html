@@ -33,13 +33,15 @@
 
     console.log("%cVersion: %c1.634", "color: black; font-size:75px;", "color: red; font-size:75px;");
 
-    function hideElement(identifier) {
+    // Make hideElement a window function
+    window.hideElement = function(identifier) {
       document.querySelectorAll(identifier).forEach(item => { item.classList.add('hidden'); });
-    }
+    };
 
-    function showElement(identifier) {
+    // Make showElement a window function
+    window.showElement = function(identifier) {
       document.querySelectorAll(identifier).forEach(item => { item.classList.remove('hidden'); });
-    }
+    };
     
     window.businessValue = new URLSearchParams(window.location.search).get('businessvalue');
 
@@ -275,8 +277,8 @@ document.getElementById('userIDInput').addEventListener('input', function(e) {
 });
 
     // Set the navbar variables
-    var buyButton = document.getElementById('transaction-option'); 
-    var bidButton = document.getElementById('auction-option'); 
+    window.buyButton = document.getElementById('transaction-option'); 
+    window.bidButton = document.getElementById('auction-option'); 
 
     // Event listeners for the navbar options
     buyButton.addEventListener("click", function() { // Start listening for a click
