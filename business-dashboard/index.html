@@ -40,7 +40,7 @@
 
     // Make showElement a window function
     window.showElement = function(identifier) {
-      document.querySelectorAll(identifier).forEach(item => { el.attributeStyleMap.delete('display') });
+      document.querySelectorAll(identifier).forEach(item => { item.attributeStyleMap.delete('display') });
     };
     
     window.businessValue = new URLSearchParams(window.location.search).get('businessvalue');
