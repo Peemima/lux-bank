@@ -298,10 +298,12 @@ document.getElementById('userIDInput').addEventListener('input', function(e) {
   <script>
     // Setup scripting
     // Hide elements
-    hideElement('#transactionForm');
-    hideElement('#bidScreen')
-    hideElement('#transaction-amount');
-    hideElement('#login-screen');
+    document.addEventListener('DOMContentLoaded', function() {
+      hideElement('#transactionForm');
+      hideElement('#bidScreen')
+      hideElement('#transaction-amount');
+      hideElement('#login-screen');
+    });
   </script>
 </head>
 <body>
