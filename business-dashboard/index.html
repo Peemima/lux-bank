@@ -274,10 +274,8 @@ document.getElementById('userIDInput').addEventListener('input', function(e) {
     }
 
     // Set the navbar variables
-    document.addEventListener('DOMContentLoaded', function() {
-      var buyButton = document.getElementById('transaction-option'); 
-      var bidButton = document.getElementById('auction-option'); 
-    });
+    var buyButton = document.getElementById('transaction-option'); 
+    var bidButton = document.getElementById('auction-option'); 
 
     // Event listeners for the navbar options
     buyButton.addEventListener("click", function() { // Start listening for a click
@@ -294,8 +292,7 @@ document.getElementById('userIDInput').addEventListener('input', function(e) {
       hideElement('#transactionForm'); // Hide the transaction form
       showElement('#bidScreen'); // Show the bid screen
     });
-  </script>
-  <script>
+    
     // Setup scripting
     // Hide elements
     document.addEventListener('DOMContentLoaded', function() {
