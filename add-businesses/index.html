@@ -84,11 +84,37 @@
       <div id="result"></div>
       <button style="display: none;" id="finish-scanning">Next</button>
     </div>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database-compat.js"></script>
     <script>
+      const firebaseConfig = {
+        apiKey: "AIzaSyASd5JOikXTlRp8eA2j_26Z1NWatZMjZds",
+        authDomain: "lux-bank.firebaseapp.com",
+        databaseURL: "https://lux-bank-default-rtdb.firebaseio.com",
+        projectId: "lux-bank",
+        storageBucket: "lux-bank.appspot.com",
+        messagingSenderId: "764922032293",
+        appId: "1:764922032293:web:573599b6116f025ee15d4c",
+        measurementId: "G-JQ7CWEJS9N"
+      };
+      // Initialize Firebase
+      firebase.initializeApp(firebaseConfig);
+      const database = firebase.database();
+
       const users = [];
       window.scanCode = function(scannedText){
         document.getElementById('finish-scanning').style.display = 'block';
         document.getElementById("result").innerText += "Scanned user: " + scannedText;
+
+        // Get user data from Firebase
+        database.ref(`users/${scannedText}`).once('value').then((snapshot) => {
+          if (snapshot.exists()) {
+            const user = snapshot.val();
+            document.getElementById("result").innerText += ` - Name: ${user.username}`;
+          } else {
+            document.getElementById("result").innerText += ` - User not found`;
+          }
+        });
       }
       // Initialize the video element
       const scanningVideo = document.getElementById('scanningVideo');
