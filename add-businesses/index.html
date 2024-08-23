@@ -6,6 +6,8 @@
     <title>QR Code Scanner</title>
     <script src="https://unpkg.com/html5-qrcode@2.0.9/dist/html5-qrcode.min.js"></script>
     <link href="https://peemima.github.io/lux-bank/assets/styles.css" rel="stylesheet" />
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js" defer></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js" defer></script>
     <style>
       #barcode-reader {
         width: 100%;
@@ -84,12 +86,54 @@
       <div id="result"></div>
       <button style="display: none;" id="finish-scanning">Next</button>
     </div>
-    <script>
-      const users = [];
-      window.scanCode = function(scannedText){
-        document.getElementById('finish-scanning').style.display = 'block';
-        document.getElementById("result").innerText += "Scanned user: " + scannedText;
+    <script type="module">
+          import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+    import { getDatabase, ref, set, get } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+      const firebaseConfig = {
+  apiKey: "AIzaSyASd5JOikXTlRp8eA2j_26Z1NWatZMjZds",
+  authDomain: "lux-bank.firebaseapp.com",
+  databaseURL: "https://lux-bank-default-rtdb.firebaseio.com",
+  projectId: "lux-bank",
+  storageBucket: "lux-bank.appspot.com",
+  messagingSenderId: "764922032293",
+  appId: "1:764922032293:web:573599b6116f025ee15d4c",
+  measurementId: "G-JQ7CWEJS9N"
+};
+
+// Initialize Firebase
+firebase.initializeApp(firebaseConfig);
+
+const database = firebase.database();
+
+// Get the reference to the users node
+const usersRef = database.ref('users');
+
+// Define a function to handle the scanned code
+window.scanCode = function(scannedText){
+  document.getElementById('finish-scanning').style.display = 'block';
+  // Check if the scanned text is a valid user ID
+  if (scannedText.length === 4) {
+    // Get the reference to the user with the scanned ID
+    const userRef = usersRef.child(scannedText);
+    // Read the user data
+    userRef.once('value', (snapshot) => {
+      if (snapshot.exists()) {
+        const user = snapshot.val();
+        // Add the user's username to the result list
+        document.getElementById("result").innerText += `Scanned user: ${user.username} (${user.id})`;
+        // Push the user to the users array
+        users.push(user);
+      } else {
+        // If the user ID is not found, display an error message
+        document.getElementById("result").innerText += `Scanned ID not found: ${scannedText}`;
       }
+    });
+  } else {
+    // If the scanned text is not a valid user ID, display an error message
+    document.getElementById("result").innerText += `Invalid user ID scanned: ${scannedText}`;
+  }
+};
+
       // Initialize the video element
       const scanningVideo = document.getElementById('scanningVideo');
       window.onload = (event) => {
