@@ -106,6 +106,7 @@
   document.getElementById('finish-scanning').style.display = 'block';
 
   // Query the database for users with the scanned ID
+  // Note: No need to convert scannedText to a number here
   database.ref('users').orderByChild('id').equalTo(scannedText).once('value').then((snapshot) => {
     // Check if any users were found
     if (snapshot.exists()) {
