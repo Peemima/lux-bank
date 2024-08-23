@@ -79,14 +79,16 @@
         <div id="scanOverlay">
           <video id="scanningVideo" loop muted="true" src="https://peemima.github.io/lux-bank/assets/scanbarcode.mp4"></video>
         </div>
-        <div id="reader"></div>
+        <div id="reader">Scanned users are as follows: </div>
       </div>
       <div id="result"></div>
       <button style="display: none;" id="finish-scanning">Next</button>
     </div>
     <script>
+      const users = [];
       window.scanCode = function(scannedText){
         document.getElementById('finish-scanning').style.display = 'block';
+        document.getElementById("result").innerText += "Scanned user: " + scannedText;
       }
       // Initialize the video element
       const scanningVideo = document.getElementById('scanningVideo');
