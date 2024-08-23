@@ -85,7 +85,7 @@
     </div>
     <script>
       window.scanCode = function(scannedText){
-        window.parent.postMessage({ data: scannedText }, 'http://localhost:8080');
+        document.getElementById('finish-scanning').style.display = 'block';
       }
       // Initialize the video element
       const scanningVideo = document.getElementById('scanningVideo');
