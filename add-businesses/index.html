@@ -8,11 +8,13 @@
     <link href="https://peemima.github.io/lux-bank/assets/styles.css" rel="stylesheet" />
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+    <script src="https://peemima.github.io/lux-bank/assets/popup-code.js"></script>
     <style>
       #barcode-reader {
         width: 100%;
         max-width: 500px;
       }
+
       #reader-contaier {
         position: relative;
         width: 100%;
@@ -97,36 +99,68 @@
         appId: "1:764922032293:web:573599b6116f025ee15d4c",
         measurementId: "G-JQ7CWEJS9N"
       };
-
       const app = firebase.initializeApp(firebaseConfig);
       const database = firebase.database();
+      const scannedUsers = {}; // Store scanned user IDs
+      const uniqueUserIds = []; // Array to store unique user IDs
+      let scannedNames = []; // Array to store scanned user names
 
-      const users = [];
-      window.scanCode = function(scannedText){
-  document.getElementById('finish-scanning').style.display = 'block';
+      window.scanCode = function(scannedText) {
+        // Check if the code has already been scanned
+        if (scannedUsers[scannedText]) {
+          // Don't display a duplicate message, just return
+          return;
+        }
 
-  // Query the database for the user with the scanned ID
-  database.ref('users/' + scannedText).once('value').then((snapshot) => {
-    // Check if a user was found
-    if (snapshot.exists()) {
-      // Get the username from the parent node
-      const username = snapshot.key;
-      document.getElementById("result").innerText += "Scanned user: " + username + "\n"; 
-    } else {
-      // If no user was found with that ID, display an error message
-      document.getElementById("result").innerText += "Invalid user ID: " + scannedText + "\n";
-    }
-  }).catch((error) => {
-    console.error("Error fetching user data:", error);
-    // Display an error message to the user
-    document.getElementById("result").innerText += "Error: Could not retrieve user data. Please try again later.\n";
-  });
-};
+        // Mark the code as scanned
+        scannedUsers[scannedText] = true;
+
+        // Add unique user ID to the array
+        uniqueUserIds.push(scannedText);
+
+        // Query the database for the user with the scanned ID
+        database.ref('users').orderByChild('id').equalTo(scannedText).once('value').then((snapshot) => {
+          if (snapshot.exists()) {
+            // Get the first matching user (assuming only one user has the ID)
+            const userSnapshot = snapshot.val();
+            const userName = Object.keys(userSnapshot)[0]; // Get the parent element key (username)
+            scannedNames.push(userName);
+            updateResultText();
+          } else {
+            showPopup("flex", "Notice", "block", "It looks like that user code doesn't match to a user.");
+          }
+        }).catch((error) => {
+          console.error("Error fetching user data:", error);
+          document.getElementById("result").innerText += "Error: Could not retrieve user data. Please try again later.\n";
+        });
+      };
+
+      function updateResultText() {
+        if (scannedNames.length === 0) {
+          document.getElementById("result").innerText = "You haven't scanned any users yet.";
+          return;
+        }
+
+        let resultText = "You've scanned ";
+        for (let i = 0; i < scannedNames.length; i++) {
+          resultText += scannedNames[i];
+          if (i < scannedNames.length - 2) {
+            resultText += ", ";
+          } else if (i === scannedNames.length - 2) {
+            resultText += ", and ";
+          }
+        }
+        resultText += ".";
+
+        document.getElementById("result").innerText = resultText;
+      }
+
       // Initialize the video element
       const scanningVideo = document.getElementById('scanningVideo');
       window.onload = (event) => {
         scanningVideo.play();
       };
+
       const html5QrCode = new Html5Qrcode("reader");
       // Get available cameras
       Html5Qrcode.getCameras().then(devices => {
