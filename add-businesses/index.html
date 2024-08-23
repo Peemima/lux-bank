@@ -105,17 +105,13 @@
       window.scanCode = function(scannedText){
   document.getElementById('finish-scanning').style.display = 'block';
 
-  // Query the database for users with the scanned ID
-  // Note: No need to convert scannedText to a number here
-  database.ref('users').orderByChild('id').equalTo(scannedText).once('value').then((snapshot) => {
-    // Check if any users were found
+  // Query the database for the user with the scanned ID
+  database.ref('users/' + scannedText).once('value').then((snapshot) => {
+    // Check if a user was found
     if (snapshot.exists()) {
-      // Iterate through each user found
-      snapshot.forEach(userSnapshot => {
-        const userData = userSnapshot.val();
-        // Display the scanned user's username in the result div
-        document.getElementById("result").innerText += "Scanned user: " + userData.username + "\n"; 
-      });
+      // Get the username from the parent node
+      const username = snapshot.key;
+      document.getElementById("result").innerText += "Scanned user: " + username + "\n"; 
     } else {
       // If no user was found with that ID, display an error message
       document.getElementById("result").innerText += "Invalid user ID: " + scannedText + "\n";
