@@ -69,15 +69,17 @@
     </style>
   </head>
   <body>
-    <h1>QR Code Scanner</h1>
     <div id="reader-contaier">
       <div id="scanOverlay">
         <video id="scanningVideo" loop muted="true" src="https://peemima.github.io/lux-bank/assets/scanbarcode.mp4"></video>
       </div>
-      <div id="reader">Tap "Allow" to start scanning.</div>
+      <div id="reader"></div>
     </div>
     <div id="result"></div>
     <script>
+      window.scanCode = function(scannedText){
+        window.parent.postMessage({ data: scannedText }, 'http://localhost:8080');
+      }
       // Initialize the video element
       const scanningVideo = document.getElementById('scanningVideo');
       window.onload = (event) => {
@@ -128,11 +130,11 @@
           });
         } else {
           console.error("No cameras found.");
-          document.getElementById("result").innerText = "No cameras found.";
+          document.getElementById("result").innerText = "It looks like you don't have a camera connected. Connect a camera, refresh the page, and try again.";
         }
       }).catch(err => {
         console.error("Error getting cameras:", err);
-        document.getElementById("result").innerText = "Error getting cameras: " + err;
+        document.getElementById("result").innerText = "It looks like you didn't allow this page to access your camera. Refresh the page and try again. ";
       });
     </script>
   </body>
