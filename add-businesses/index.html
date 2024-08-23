@@ -6,6 +6,8 @@
     <title>QR Code Scanner</title>
     <script src="https://unpkg.com/html5-qrcode@2.0.9/dist/html5-qrcode.min.js"></script>
     <link href="https://peemima.github.io/lux-bank/assets/styles.css" rel="stylesheet" />
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
     <style>
       #barcode-reader {
         width: 100%;
@@ -84,8 +86,6 @@
       <div id="result"></div>
       <button style="display: none;" id="finish-scanning">Next</button>
     </div>
-    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database-compat.js"></script>
     <script>
       const firebaseConfig = {
         apiKey: "AIzaSyASd5JOikXTlRp8eA2j_26Z1NWatZMjZds",
@@ -98,22 +98,18 @@
         measurementId: "G-JQ7CWEJS9N"
       };
 
-      // Initialize Firebase BEFORE using it
-      firebase.initializeApp(firebaseConfig);
+      const app = firebase.initializeApp(firebaseConfig);
       const database = firebase.database();
 
       const users = [];
       window.scanCode = function(scannedText){
         document.getElementById('finish-scanning').style.display = 'block';
-        document.getElementById("result").innerText += "Scanned user: " + scannedText;
-
-        // Get user data from Firebase
-        database.ref(`users/${scannedText}`).once('value').then((snapshot) => {
-          if (snapshot.exists()) {
-            const user = snapshot.val();
-            document.getElementById("result").innerText += ` - Name: ${user.username}`;
+        database.ref('users/' + scannedText).once('value').then((snapshot) => {
+          const userData = snapshot.val();
+          if (userData) {
+            document.getElementById("result").innerText += "Scanned user: " + userData.username;
           } else {
-            document.getElementById("result").innerText += ` - User not found`;
+            document.getElementById("result").innerText += "Scanned user: Invalid user ID";
           }
         });
       }
