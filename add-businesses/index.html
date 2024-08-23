@@ -7,9 +7,12 @@
     <script src="https://unpkg.com/html5-qrcode@2.0.9/dist/html5-qrcode.min.js"></script>
     <link href="https://peemima.github.io/lux-bank/assets/styles.css" rel="stylesheet" />
     <style>
+      #barcode-reader {
+        width: 250px;
+      }
       #reader-contaier {
         position: relative;
-        width: 50%;
+        width: 100%;
         overflow: hidden;
         border-radius: 40px;
       }
@@ -69,13 +72,15 @@
     </style>
   </head>
   <body>
-    <div id="reader-contaier">
-      <div id="scanOverlay">
-        <video id="scanningVideo" loop muted="true" src="https://peemima.github.io/lux-bank/assets/scanbarcode.mp4"></video>
+    <div id="barcode-reader">
+      <div id="reader-contaier">
+        <div id="scanOverlay">
+          <video id="scanningVideo" loop muted="true" src="https://peemima.github.io/lux-bank/assets/scanbarcode.mp4"></video>
+        </div>
+        <div id="reader"></div>
       </div>
-      <div id="reader"></div>
+      <div id="result"></div>
     </div>
-    <div id="result"></div>
     <script>
       window.scanCode = function(scannedText){
         window.parent.postMessage({ data: scannedText }, 'http://localhost:8080');
