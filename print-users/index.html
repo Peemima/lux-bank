@@ -4,10 +4,12 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Lux Banking Inerface to Print Users</title>
-  <link rel="stylesheet" href="/lux-bank/assets/styles.css">
+  <link rel="stylesheet" href="https://peemima.github.io/lux-bank/assets/styles.css">
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js" defer></script>
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js" defer></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+  <style>
+</style>
 </head>
 <body>
   <div style="display: none;" id="printableContent">
@@ -46,12 +48,12 @@ document.addEventListener('DOMContentLoaded', function() {
       const userCard = document.createElement('div');
       userCard.classList.add('user-card');
       userCard.innerHTML = `
-        <p1>Show this number to businesses to pay for things, ${key}.</p1>
-        <h1>${users[key].id}</h1>
+        <img class="usercode-container" src="https://barcodeapi.org/api/aztec/${users[key].id}"></img><br>
+        <p1>${key}</p1>
       `;
 
       // Create a new sheet if it's the first card or the current sheet is full
-      if (!currentSheet || userCount === 18) { 
+      if (!currentSheet || userCount === 12) { 
         currentSheet = document.createElement('div');
         currentSheet.classList.add('user-sheet');
         usersPrintSheet.appendChild(currentSheet);
@@ -65,7 +67,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Print the list 
     document.getElementById("printableContent").style.display = "block";
-    window.print();
+    //window.print();
     document.getElementById("printableContent").style.display = "block";
   });
 });
