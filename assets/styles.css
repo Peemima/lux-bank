@@ -454,3 +454,12 @@ form {
 .jiggle {
   animation: jiggle 0.5s ease;
 }
+
+textarea {
+    height 36px;
+    max-width: 300px;
+    max-height: 500px;
+    min-width: 300px;
+    min-height: 37px;
+    max-height: 235px;
+}
