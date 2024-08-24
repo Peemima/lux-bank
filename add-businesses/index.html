@@ -10,11 +10,6 @@
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
     <script src="https://peemima.github.io/lux-bank/assets/popup-code.js"></script>
     <style>
-      body {
-        display: block;
-        text-align: -webkit-center;
-        unicode-bidi: isolate;
-      }
       #barcode-reader {
         width: 100%;
         max-width: 500px;
@@ -89,8 +84,8 @@
         margin: 20px auto;
         padding: 20px;
         border-radius: 40px;
-        box-shadow:  20px 20px 60px #d9d9d9,
-             -20px -20px 60px #ffffff;
+        box-shadow:  41px 41px 82px #f2f2f2,
+             -41px -41px 82px #ffffff;
       }
 
       #form-container label {
@@ -115,6 +110,7 @@
   <img class="logo" src="/lux-bank/assets/Lux_Logo.svg">
   <span id="businessBalance" style="float: right; text-align: right;">Input Businesses</span>
   </div>
+    <div class="center-container">
     <div id="barcode-reader">
       <h2 style="font-family: Poppins, sans serif;">How to scan</h2>
       <p style="font-family: Poppins, sans serif;">Scan the student id's of everyone that work at the business.</p>
@@ -127,11 +123,12 @@
       <div id="result"></div>
       <button style="display: none;" id="finish-scanning">Next</button>
     </div>
+    </div>
 
     <!-- The form -->
     <div id="form-container">
       <h2 style="font-family: Poppins, sans serif;">Business Information</h2>
-      <form id="business-form" style="text-align: left; align-items: left;">
+      <form id="business-form">
         <label for="business-name">Name of Business:</label>
         <input placeholder="Nancy's Snacks" type="text" id="business-name" name="business-name" required>
 
