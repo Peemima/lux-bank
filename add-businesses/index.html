@@ -75,6 +75,43 @@
         border-radius: 23%;
         margin: 0px;
       }
+
+      #form-container {
+        display: none;
+        /* Initially hidden */
+        width: 100%;
+        max-width: 500px;
+        margin: 20px auto;
+        padding: 20px;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+      }
+
+      #form-container label {
+        display: block;
+        margin-top: 10px;
+      }
+
+      #form-container input[type="text"],
+      #form-container input[type="number"],
+      #form-container textarea {
+        width: 100%;
+        padding: 8px;
+        margin-top: 5px;
+        border: 1px solid #ccc;
+        border-radius: 3px;
+        box-sizing: border-box;
+      }
+
+      #form-container input[type="submit"] {
+        background-color: #4CAF50;
+        color: white;
+        padding: 10px 20px;
+        margin-top: 20px;
+        border: none;
+        border-radius: 3px;
+        cursor: pointer;
+      }
     </style>
   </head>
   <body>
@@ -88,6 +125,46 @@
       <div id="result"></div>
       <button style="display: none;" id="finish-scanning">Next</button>
     </div>
+
+    <!-- The form -->
+    <div id="form-container">
+      <h2>Business Information</h2>
+      <form id="business-form">
+        <label for="business-name">Name of Business:</label>
+        <input placeholder="Nancy's Snacks" type="text" id="business-name" name="business-name" required>
+
+        <label for="product-service">Product/Service:</label>
+        <input placeholder="Cookies and Lemonade" type="text" id="product-service" name="product-service" required>
+
+        <label for="additional-items">Additional Items Needed:</label>
+        <textarea placeholder="Electricity, Microwave, Extention Cord, etc." id="additional-items" name="additional-items"></textarea>
+
+        <label for="supply-cost">Supply Costs (in $USD):</label>
+        <input type="number" id="supply-cost" name="supply-cost" required>
+
+        <label for="revenue-he">Revenue (HE):</label>
+        <input type="number" id="revenue-he" name="revenue-he" required>
+
+        <h3>Marketing Needs</h3>
+        <input type="checkbox" id="tv-commercial" name="marketing" value="TV Commercial">
+        <label for="tv-commercial">TV Commercial (9 HE)</label><br>
+
+        <input type="checkbox" id="class-announcement" name="marketing" value="Class Announcement">
+        <label for="class-announcement">Class Announcement (9 HE)</label><br>
+
+        <input type="checkbox" id="radio-announcement" name="marketing" value="Radio Announcement">
+        <label for="radio-announcement">Radio Announcement (9 HE)</label><br>
+
+        <input type="checkbox" id="poster" name="marketing" value="Poster">
+        <label for="poster">Poster (9 HE)</label><br>
+
+        <input type="checkbox" id="flyer" name="marketing" value="Flyer or Dig. Flyer">
+        <label for="flyer">Flyer or Dig. Flyer (9 HE)</label><br>
+
+        <input type="submit" value="Submit">
+      </form>
+    </div>
+
     <script>
       const firebaseConfig = {
         apiKey: "AIzaSyASd5JOikXTlRp8eA2j_26Z1NWatZMjZds",
@@ -105,6 +182,15 @@
       const uniqueUserIds = []; // Array to store unique user IDs
       let scannedNames = []; // Array to store scanned user names
       const finishScanningButton = document.getElementById('finish-scanning');
+      const barcodeReader = document.getElementById('barcode-reader');
+      const formContainer = document.getElementById('form-container');
+      const businessForm = document.getElementById('business-form');
+      let businessIdCounter = 10000; // Start with a unique ID
+
+      function generateBusinessId() {
+        businessIdCounter++;
+        return businessIdCounter.toString().padStart(5, '0');
+      }
 
       window.scanCode = function(scannedText) {
         // Check if the code has already been scanned
@@ -214,6 +300,68 @@
       }).catch(err => {
         console.error("Error getting cameras:", err);
         document.getElementById("result").innerText = "It looks like you didn't allow this page to access your camera. Refresh the page and try again. ";
+      });
+
+      finishScanningButton.addEventListener('click', function() {
+        barcodeReader.style.display = "none"; // Hide scanning elements
+        finishScanningButton.style.display = "none";
+        formContainer.style.display = "block"; // Show the form
+      });
+
+      businessForm.addEventListener('submit', function(event) {
+        event.preventDefault(); // Prevent default form submission
+
+        // Get the form data
+        const businessName = document.getElementById('business-name').value;
+        const productService = document.getElementById('product-service').value;
+        const additionalItems = document.getElementById('additional-items').value;
+        const supplyCost = document.getElementById('supply-cost').value;
+        const revenueHE = document.getElementById('revenue-he').value;
+
+        // Get selected marketing options
+        const marketingOptions = Array.from(document.querySelectorAll('input[name="marketing"]:checked'))
+          .map(checkbox => checkbox.value);
+
+        // Generate a unique business ID
+        const businessId = generateBusinessId();
+
+        // Create new business object
+        const newBusiness = {
+          name: businessName,
+          productService: productService,
+          additionalItems: additionalItems,
+          supplyCost: supplyCost,
+          revenueHE: revenueHE,
+          marketing: marketingOptions,
+          balance: 0, // Initial balance set to 0
+          businessId: businessId
+        };
+
+        // Add new business to Firebase database
+        database.ref('/businesses/' + businessId).set(newBusiness).then(function() {
+          // Update users in the business with the business ID
+          uniqueUserIds.forEach(userId => {
+            database.ref('users').orderByChild('id').equalTo(userId).once('value').then(snapshot => {
+              const userKeys = Object.keys(snapshot.val());
+              userKeys.forEach(userName => {
+                database.ref('users/' + userName + '/businessInfo').set({
+                  businessId: businessId,
+                  businessName: businessName
+                }).catch(error => {
+                  console.error("Error updating user with business information:", error);
+                });
+              });
+            }).catch(error => {
+              console.error("Error fetching user data:", error);
+            });
+          });
+
+          showPopup("flex", "Success", "block", "Business information saved successfully!");
+          businessForm.reset(); // Clear the form
+        }).catch(function(error) {
+          showPopup("flex", "Error", "block", "An error occurred while saving business information.");
+          console.error('Error writing new business to Firebase:', error);
+        });
       });
     </script>
   </body>
