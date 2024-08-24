@@ -228,29 +228,40 @@
 .users-print-sheet {
   display: grid; 
   grid-template-columns: repeat(1, 1fr); 
-  grid-gap: 20px; 
+  grid-gap: 25px; 
   width: 8.5in;
-  height: 11in;
   /*border: solid, 2px, black;*/
   -webkit-print-color-adjust: exact;
   /* Add this to control row height */
   grid-auto-rows: min-content; /* Makes each row only as tall as its content */
   page-break-after: always;
+  overflow: hidden; /* Prevent content from overflowing the container */
 }
 
 .user-sheet {
    display: grid; /* Ensure cards within a sheet are arranged properly */
-   grid-template-columns: repeat(3, 1fr);
-   grid-gap: 20px;
+   grid-template-columns: repeat(3, 1fr); /* Make 3 columns */
+   grid-gap: 25px;
    page-break-after: always; /* Start a new page after each sheet */
 }
 .user-card {
-  background-color: #B4F2FE;
-  color: #0680E4;
-  font-family: Arial, sans-serif;
+  color: black; /* Text color set to black */
+  font-family: monospace; /* Monospace font applied */
   padding: 25px;
-  border-radius: 25px;
+  border-radius: 45px;
   -webkit-print-color-adjust: exact;
+  border: 1px solid black;
+  /* Make the card a square */
+  display: flex; /* Enable flexbox for centering */
+  flex-direction: column; /* Arrange items vertically */
+  align-items: center; /* Center items horizontally */
+  justify-content: center; /* Center items vertically */
+}
+.usercode-container {
+    width: 80%;
+}
+.user-card p1 {
+  font-size: 1.2em; /* Increase font size */
 }
 .center-container {
   font-family: "Poppins", sans-serif;
