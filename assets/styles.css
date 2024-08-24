@@ -259,7 +259,6 @@
   left: 50%;
   transform: translate(-50%, -50%);
   text-align: center;
-  font-weight: 100;
   font-style: normal;
   /* Make it a flex container */
   display: flex;
