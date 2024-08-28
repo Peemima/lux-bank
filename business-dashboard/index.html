@@ -13,6 +13,115 @@
   <link rel="stylesheet" href="/lux-bank/assets/styles.css">
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js" defer></script>
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js" defer></script>
+  <style>
+      #barcode-reader {
+        width: 100%;
+        max-width: 500px;
+      }
+
+      #reader-contaier {
+        position: relative;
+        width: 100%;
+        overflow: hidden;
+        border-radius: 40px;
+      }
+
+      #reader {
+        position: relative;
+        -webkit-transform: scaleX(-1);
+        transform: scaleX(-1);
+      }
+
+      #scanOverlay {
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        top: 0;
+        left: 0;
+        z-index: 2;
+        background-color: rgba(0, 0, 0, 0.5);
+        /* Darken the video */
+        //animation: blurInOut 6s infinite;
+        backdrop-filter: blur(10px);
+        display: flex;
+        align-items: center;
+        vertical-align: center;
+        justify-content: center;
+      }
+
+      /* Define the keyframes for the blur animation */
+      @keyframes blurInOut {
+        0% {
+          backdrop-filter: blur(10px);
+        }
+
+        50% {
+          backdrop-filter: blur(5px);
+        }
+
+        100% {
+          backdrop-filter: blur(10px);
+        }
+      }
+
+      #result {
+        margin-top: 10px;
+        font-size: 18px;
+      }
+
+      scan-area {
+        box-shadow: rgba(149, 157, 165, 0.2) 0px 8px 24px;
+      }
+
+      #scanningVideo {
+        width: 175px;
+        max-width: 30%;
+        border-radius: 23%;
+        margin: 0px;
+      }
+
+      #form-container {
+        display: none;
+        /* Initially hidden */
+        width: 100%;
+        max-width: 500px;
+        margin: 20px auto;
+        padding: 20px;
+        border-radius: 40px;
+        box-shadow:  41px 41px 82px #f2f2f2,
+             -41px -41px 82px #ffffff;
+      }
+
+      #form-container label {
+        display: block;
+        margin-top: 10px;
+      }
+
+      #form-container input[type="submit"] {
+        background-color: #4CAF50;
+        color: white;
+        padding: 10px 20px;
+        margin-top: 20px;
+        border: none;
+        border-radius: 3px;
+        cursor: pointer;
+      }
+      
+      .barcode-container {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    max-width: 100%;
+    text-align: center;
+    font-size: 19px;
+                position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+      }
+    </style>
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
     import { getDatabase, ref, set, get } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
