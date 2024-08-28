@@ -259,27 +259,31 @@
           });
       }
 
-      function updateBusinessBalance(amountToAdd) {
-        const businessRef = ref(database, `businesses/${businessValue}/balance`);
-        get(businessRef).then((snapshot) => {
-          let newBalance;
-          let currentBalance = snapshot.exists() ? snapshot.val() : 0; 
-          newBalance = currentBalance + amountToAdd;
-          set(businessRef, newBalance).then(() => {
-            console.log(`Business balance updated to ${newBalance}`);
-            fetchAndDisplayBusinessBalance(); 
-          }).catch((error) => {
-            console.error('Error updating business balance:', error);
-          });
-        }).catch((error) => {
-          console.error('Error fetching business balance:', error);
-          set(businessRef, amountToAdd).then(() => {
-            console.log('Business balance initialized and set to:', amountToAdd);
-          }).catch((initError) => {
-            console.error('Error initializing business balance:', initError);
-          });
-        });
-      }
+function updateBusinessBalance(amountToAdd) {
+  const businessRef = ref(database, `businesses/${businessValue}/balance`);
+  get(businessRef).then((snapshot) => {
+    let newBalance;
+    // Fetch the balance from Firebase and convert it to a number
+    let currentBalance = snapshot.exists() ? parseInt(snapshot.val(), 10) : 0; 
+    newBalance = currentBalance + amountToAdd;
+
+    // Store the updated balance back in Firebase (store as a number directly)
+    set(businessRef, newBalance).then(() => {
+      console.log(`Business balance updated to ${newBalance}`);
+      fetchAndDisplayBusinessBalance(); 
+    }).catch((error) => {
+      console.error('Error updating business balance:', error);
+    });
+  }).catch((error) => {
+    console.error('Error fetching business balance:', error);
+    // Initialize the balance with amountToAdd if it doesn't exist 
+    set(businessRef, amountToAdd).then(() => {
+      console.log('Business balance initialized and set to:', amountToAdd);
+    }).catch((initError) => {
+      console.error('Error initializing business balance:', initError);
+    });
+  });
+}
 
       function fetchAndDisplayBusinessBalance() {
         const businessRef = ref(database, `businesses/${businessValue}`);
