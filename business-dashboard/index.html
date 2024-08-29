@@ -215,7 +215,6 @@
                     document.getElementById("transactionForm").reset();
                     document.getElementById("user-card").style.display = "block";
                     document.getElementById("transaction-amount").style.display = "none";
-                    document.getElementById("userIDInput").focus();
                     showElement('#homepage-heading');
                     showPopup("flex", "Success!", "block", `The transaction was successful!`);
                     hideElement('#transactionForm');
@@ -362,7 +361,6 @@ document.getElementById("businessNameInput").addEventListener("keydown", (event)
       document.getElementById("transactionForm").reset();
       document.getElementById("user-card").style.display = "block";
       document.getElementById("transaction-amount").style.display = "none";
-      document.getElementById("userIDInput").focus();
     });
     
     //Jiggle when theres an input error: fix the weird charecter input problem
@@ -433,10 +431,21 @@ document.getElementById('userIDInput').addEventListener('input', function(e) {
       </div>
     </div>
     <form id="transactionForm">
-      <div style="width: 300px;" id="user-card" class="user-card">
-        <p>Enter the number shown on the customer's transaction slip.</p>
-        <input style="margin-bottom: 0px;" autocomplete="off" type="text" id="userIDInput" class="usernumber-input" name="userIDInput" required>
-      </div>
+        </div>
+          <div class="barcode-container">
+            <div id="barcode-reader">
+            <h2 style="font-family: Poppins, sans serif;">How to scan</h2>
+            <p style="font-family: Poppins, sans serif;">Scan the id of everyone that works at the business.</p>
+            <div id="reader-contaier">
+            <div id="scanOverlay">
+              <video id="scanningVideo" loop muted="true" src="https://peemima.github.io/lux-bank/assets/scanbarcode.mp4"></video>
+            </div>
+            <div id="reader">Scanned users are as follows: </div>
+          </div>
+          <div id="result"></div>
+          <button style="display: none;" id="finish-scanning">Next</button>
+        </div>
+    </div>
       <div id="transaction-amount">
         <label for="amountInput">How many hawkeyes?</label>
         <input autocomplete="off" type="text" id="amountInput" name="amountInput" style="font-size: 18px;" required>
