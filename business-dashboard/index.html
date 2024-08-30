@@ -190,7 +190,40 @@
         processTransaction(userID, amount);
       });
       let userCard  = document.getElementsByClassName("user-card");
-      function processTransaction(userID, amount) {
+      //
+      //
+      //
+      //
+      //
+      //
+      //
+      //
+      //
+      //
+      //
+      //
+      //
+      //
+      //
+      //
+      //
+      //
+      //
+      //
+      //
+      //
+      //
+      //
+      //
+      //
+      //
+      //
+      //
+      //
+      // BEFORE PUSHING TO PRODUCTION, MAKE PROCESSTRANSACTION A NON WINDOW FUNCTION
+      //
+      //
+      window.processTransaction = function(userID, amount) {
   get(ref(database, 'users')).then((snapshot) => {
     if (snapshot.exists()) {
       const users = snapshot.val();
