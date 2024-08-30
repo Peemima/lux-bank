@@ -317,7 +317,7 @@
       });
 
       finishScanningButton.addEventListener('click', function() {
-        barcodeReader.style.display = "none"; // Hide scanning elements
+        document.getElementById('barcode-container').style.display = "none"; // Hide scanning elements
         finishScanningButton.style.display = "none";
         formContainer.style.display = "block"; // Show the form
       });
