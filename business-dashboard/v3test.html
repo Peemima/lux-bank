@@ -425,7 +425,7 @@ document.getElementById("businessNameInput").addEventListener("keydown", (event)
     const barcodeReader = document.getElementById('barcode-reader');
     const formContainer = document.getElementById('form-container');
     const userIDInput = document.getElementById('userIDInput'); // Get the input field
-    const transactionAmount = document.getElementById('transaction-amount');
+    const transactionAmount = document.getElementById('transaction-amount'); // Get the "How many hawkeyes" screen
     const scanningVideo = document.getElementById('scanningVideo');
 
     window.onload = (event) => {
@@ -454,11 +454,12 @@ document.getElementById("businessNameInput").addEventListener("keydown", (event)
           scannedNames.push(userName);
           updateResultText();
 
-          // Immediately proceed to "How many hawkeyes?" screen after successful scan
+          // Move to the "How many hawkeyes" screen
           document.querySelector('.barcode-container').style.display = "none"; // Hide scanning elements
           finishScanningButton.style.display = "none";
-          transactionAmount.style.display = "block"; // Show the form
+          formContainer.style.display = "block"; // Show the form
           userIDInput.value = uniqueUserIds[uniqueUserIds.length - 1]; // Set the input field value
+          transactionAmount.style.display = "block"; // Show the "How many hawkeyes" screen
         } else {
           showPopup("flex", "Notice", "block", "It looks like that user code doesn't match to a user.");
         }
@@ -580,7 +581,7 @@ document.getElementById("businessNameInput").addEventListener("keydown", (event)
           <button style="display: none;" id="finish-scanning">Next</button>
         </div>
     </div>
-      <div id="transaction-amount" style="display: none;">
+      <div id="transaction-amount">
         <label for="amountInput">How many hawkeyes?</label>
         <input autocomplete="off" type="text" id="amountInput" name="amountInput" style="font-size: 18px;" required>
         <button id="cancel-button" class="outline-button">Back</button>
