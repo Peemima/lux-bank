@@ -352,7 +352,7 @@
         };
 
         // Add new business to Firebase database
-        database.ref('/businesses/' + businessId).set(newBusiness).then(function() {
+        database.ref('/businesses/' + businessName).set(newBusiness).then(function() {
           // Update users in the business with the business ID
           uniqueUserIds.forEach(userId => {
             database.ref('users').orderByChild('id').equalTo(userId).once('value').then(snapshot => {
