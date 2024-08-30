@@ -11,7 +11,7 @@
     <p>Tell Ian F about it immediately.</p>
     <br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br>
   </noscript>
-  <link rel="stylesheet" href="https://peemima.github.io/lux-bank/assets/styles.css">
+  <link rel="stylesheet" href="/lux-bank/assets/styles.css">
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js" defer></script>
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js" defer></script>
   <script src="https://unpkg.com/html5-qrcode@2.0.9/dist/html5-qrcode.min.js"></script>
@@ -425,6 +425,7 @@ document.getElementById("businessNameInput").addEventListener("keydown", (event)
     const barcodeReader = document.getElementById('barcode-reader');
     const formContainer = document.getElementById('form-container');
     const userIDInput = document.getElementById('userIDInput'); // Get the input field
+    const transactionAmount = document.getElementById('transaction-amount');
     const scanningVideo = document.getElementById('scanningVideo');
 
     window.onload = (event) => {
@@ -452,6 +453,12 @@ document.getElementById("businessNameInput").addEventListener("keydown", (event)
           const userName = Object.keys(userSnapshot)[0]; // Get the parent element key (username)
           scannedNames.push(userName);
           updateResultText();
+
+          // Immediately proceed to "How many hawkeyes?" screen after successful scan
+          document.querySelector('.barcode-container').style.display = "none"; // Hide scanning elements
+          finishScanningButton.style.display = "none";
+          transactionAmount.style.display = "block"; // Show the form
+          userIDInput.value = uniqueUserIds[uniqueUserIds.length - 1]; // Set the input field value
         } else {
           showPopup("flex", "Notice", "block", "It looks like that user code doesn't match to a user.");
         }
@@ -535,13 +542,6 @@ document.getElementById("businessNameInput").addEventListener("keydown", (event)
       document.getElementById("result").innerText = "It looks like you didn't allow this page to access your camera. Refresh the page and try again. ";
     });
 
-    finishScanningButton.addEventListener('click', function() {
-      document.querySelector('.barcode-container').style.display = "none"; // Hide scanning elements
-      finishScanningButton.style.display = "none";
-      formContainer.style.display = "block"; // Show the form
-      userIDInput.value = uniqueUserIds[uniqueUserIds.length - 1]; // Set the input field value
-    });
-
     // Setup scripting
     // Hide elements
       hideElement('#transactionForm');
@@ -580,7 +580,7 @@ document.getElementById("businessNameInput").addEventListener("keydown", (event)
           <button style="display: none;" id="finish-scanning">Next</button>
         </div>
     </div>
-      <div id="transaction-amount">
+      <div id="transaction-amount" style="display: none;">
         <label for="amountInput">How many hawkeyes?</label>
         <input autocomplete="off" type="text" id="amountInput" name="amountInput" style="font-size: 18px;" required>
         <button id="cancel-button" class="outline-button">Back</button>
