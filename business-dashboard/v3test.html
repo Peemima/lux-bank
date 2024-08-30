@@ -155,6 +155,136 @@
     
     window.businessValue = new URLSearchParams(window.location.search).get('businessvalue');
 
+    // Html5Qr Stuff
+    const scannedUsers = {}; // Store scanned user IDs
+    const uniqueUserIds = []; // Array to store unique user IDs
+    let scannedNames = []; // Array to store scanned user names
+    const finishScanningButton = document.getElementById('finish-scanning');
+    const barcodeReader = document.getElementById('barcode-reader');
+    const formContainer = document.getElementById('form-container');
+    const userIDInput = document.getElementById('userIDInput'); // Get the input field
+    const transactionAmount = document.getElementById('transaction-amount'); // Get the "How many hawkeyes" screen
+    const scanningVideo = document.getElementById('scanningVideo');
+
+    window.onload = (event) => {
+      scanningVideo.play();
+      setupScanner(); // Initialize the scanner when the page loads
+    };
+
+    function setupScanner() {
+      const html5QrCode = new Html5Qrcode("reader");
+      // Get available cameras
+      Html5Qrcode.getCameras().then(devices => {
+        if (devices && devices.length) {
+          console.log(devices.length);
+          console.log(devices);
+          // Start scanning with selected camera
+          html5QrCode.start({
+              facingMode: {
+                exact: "environment"
+              }
+            }, {
+              fps: 60,
+            },
+            (decodedText, decodedResult) => {
+              window.latestScan = decodedText;
+              scanCode(decodedText);
+            },
+            (errorMessage) => {
+              //console.error("Error during scanning:", errorMessage);
+              //document.getElementById("result").innerText = "Error during scanning: " + errorMessage;
+            }).catch((err) => {
+            console.error("Error starting scan:", err);
+            // Start scanning with selected camera
+            html5QrCode.start({
+                facingMode: {
+                  exact: "user"
+                }
+              }, {
+                fps: 60,
+              },
+              (decodedText, decodedResult) => {
+                console.log('Successfully scanned');
+                scanCode(decodedText);
+              },
+              (errorMessage) => {
+                //console.error("Error during scanning:", errorMessage);
+                //document.getElementById("result").innerText = "Error during scanning: " + errorMessage;
+              }).catch((err) => {
+              console.error("Error starting scan:", err);
+              document.getElementById("result").innerText = "Error starting scan: " + err;
+            });
+          });
+        } else {
+          console.error("No cameras found.");
+          document.getElementById("result").innerText = "It looks like you don't have a camera connected. Connect a camera, refresh the page, and try again.";
+        }
+      }).catch(err => {
+        console.error("Error getting cameras:", err);
+        document.getElementById("result").innerText = "It looks like you didn't allow this page to access your camera. Refresh the page and try again. ";
+      });
+    }
+
+    function scanCode(scannedText) {
+      // Check if the code has already been scanned
+      if (scannedUsers[scannedText]) {
+        // Don't display a duplicate message, just return
+        return;
+      }
+
+      // Mark the code as scanned
+      scannedUsers[scannedText] = true;
+
+      // Add unique user ID to the array
+      uniqueUserIds.push(scannedText);
+
+      // Query the database for the user with the scanned ID
+      database.ref('users').orderByChild('id').equalTo(scannedText).once('value').then((snapshot) => {
+        if (snapshot.exists()) {
+          // Get the first matching user (assuming only one user has the ID)
+          const userSnapshot = snapshot.val();
+          const userName = Object.keys(userSnapshot)[0]; // Get the parent element key (username)
+          scannedNames.push(userName);
+          updateResultText();
+
+          // Move to the "How many hawkeyes" screen
+          document.querySelector('.barcode-container').style.display = "none"; // Hide scanning elements
+          finishScanningButton.style.display = "none";
+          formContainer.style.display = "block"; // Show the form
+          userIDInput.value = uniqueUserIds[uniqueUserIds.length - 1]; // Set the input field value
+          transactionAmount.style.display = "block"; // Show the "How many hawkeyes" screen
+        } else {
+          showPopup("flex", "Notice", "block", "It looks like that user code doesn't match to a user.");
+        }
+      }).catch((error) => {
+        console.error("Error fetching user data:", error);
+        document.getElementById("result").innerText += "Error: Could not retrieve user data. Please try again later.\n";
+      });
+    }
+
+    function updateResultText() {
+      if (scannedNames.length === 0) {
+        document.getElementById("result").innerText = "You haven't scanned any users yet.";
+        finishScanningButton.style.display = "none"; // Hide the button
+        return;
+      }
+
+      let resultText = "You've scanned ";
+      for (let i = 0; i < scannedNames.length; i++) {
+        resultText += scannedNames[i];
+        if (i < scannedNames.length - 2) {
+          resultText += ", ";
+        } else if (i === scannedNames.length - 2) {
+          resultText += ", and ";
+        }
+      }
+      resultText += ".";
+
+      document.getElementById("result").innerText = resultText;
+      finishScanningButton.style.display = "inline-flex"; // Show the button
+    }
+
+
     if (businessValue) {
       document.getElementById("businessName").innerText = businessValue;
 
@@ -415,132 +545,6 @@ document.getElementById("businessNameInput").addEventListener("keydown", (event)
       hideElement('#homepage-heading'); // Hide the 'What would the customer like to do?' heading
       hideElement('#transactionForm'); // Hide the transaction form
       showElement('#bidScreen'); // Show the bid screen
-    });
-
-    // Html5Qr Stuff
-    const scannedUsers = {}; // Store scanned user IDs
-    const uniqueUserIds = []; // Array to store unique user IDs
-    let scannedNames = []; // Array to store scanned user names
-    const finishScanningButton = document.getElementById('finish-scanning');
-    const barcodeReader = document.getElementById('barcode-reader');
-    const formContainer = document.getElementById('form-container');
-    const userIDInput = document.getElementById('userIDInput'); // Get the input field
-    const transactionAmount = document.getElementById('transaction-amount'); // Get the "How many hawkeyes" screen
-    const scanningVideo = document.getElementById('scanningVideo');
-
-    window.onload = (event) => {
-      scanningVideo.play();
-    };
-
-    function scanCode(scannedText) {
-      // Check if the code has already been scanned
-      if (scannedUsers[scannedText]) {
-        // Don't display a duplicate message, just return
-        return;
-      }
-
-      // Mark the code as scanned
-      scannedUsers[scannedText] = true;
-
-      // Add unique user ID to the array
-      uniqueUserIds.push(scannedText);
-
-      // Query the database for the user with the scanned ID
-      database.ref('users').orderByChild('id').equalTo(scannedText).once('value').then((snapshot) => {
-        if (snapshot.exists()) {
-          // Get the first matching user (assuming only one user has the ID)
-          const userSnapshot = snapshot.val();
-          const userName = Object.keys(userSnapshot)[0]; // Get the parent element key (username)
-          scannedNames.push(userName);
-          updateResultText();
-
-          // Move to the "How many hawkeyes" screen
-          document.querySelector('.barcode-container').style.display = "none"; // Hide scanning elements
-          finishScanningButton.style.display = "none";
-          formContainer.style.display = "block"; // Show the form
-          userIDInput.value = uniqueUserIds[uniqueUserIds.length - 1]; // Set the input field value
-          transactionAmount.style.display = "block"; // Show the "How many hawkeyes" screen
-        } else {
-          showPopup("flex", "Notice", "block", "It looks like that user code doesn't match to a user.");
-        }
-      }).catch((error) => {
-        console.error("Error fetching user data:", error);
-        document.getElementById("result").innerText += "Error: Could not retrieve user data. Please try again later.\n";
-      });
-    }
-
-    function updateResultText() {
-      if (scannedNames.length === 0) {
-        document.getElementById("result").innerText = "You haven't scanned any users yet.";
-        finishScanningButton.style.display = "none"; // Hide the button
-        return;
-      }
-
-      let resultText = "You've scanned ";
-      for (let i = 0; i < scannedNames.length; i++) {
-        resultText += scannedNames[i];
-        if (i < scannedNames.length - 2) {
-          resultText += ", ";
-        } else if (i === scannedNames.length - 2) {
-          resultText += ", and ";
-        }
-      }
-      resultText += ".";
-
-      document.getElementById("result").innerText = resultText;
-      finishScanningButton.style.display = "inline-flex"; // Show the button
-    }
-
-    const html5QrCode = new Html5Qrcode("reader");
-    // Get available cameras
-    Html5Qrcode.getCameras().then(devices => {
-      if (devices && devices.length) {
-        console.log(devices.length);
-        console.log(devices);
-        // Start scanning with selected camera
-        html5QrCode.start({
-            facingMode: {
-              exact: "environment"
-            }
-          }, {
-            fps: 60,
-          },
-          (decodedText, decodedResult) => {
-            window.latestScan = decodedText;
-            scanCode(decodedText);
-          },
-          (errorMessage) => {
-            //console.error("Error during scanning:", errorMessage);
-            //document.getElementById("result").innerText = "Error during scanning: " + errorMessage;
-          }).catch((err) => {
-          console.error("Error starting scan:", err);
-          // Start scanning with selected camera
-          html5QrCode.start({
-              facingMode: {
-                exact: "user"
-              }
-            }, {
-              fps: 60,
-            },
-            (decodedText, decodedResult) => {
-              console.log('Successfully scanned');
-              scanCode(decodedText);
-            },
-            (errorMessage) => {
-              //console.error("Error during scanning:", errorMessage);
-              //document.getElementById("result").innerText = "Error during scanning: " + errorMessage;
-            }).catch((err) => {
-            console.error("Error starting scan:", err);
-            document.getElementById("result").innerText = "Error starting scan: " + err;
-          });
-        });
-      } else {
-        console.error("No cameras found.");
-        document.getElementById("result").innerText = "It looks like you don't have a camera connected. Connect a camera, refresh the page, and try again.";
-      }
-    }).catch(err => {
-      console.error("Error getting cameras:", err);
-      document.getElementById("result").innerText = "It looks like you didn't allow this page to access your camera. Refresh the page and try again. ";
     });
 
     // Setup scripting
