@@ -416,6 +416,64 @@ document.getElementById("businessNameInput").addEventListener("keydown", (event)
     });
 
     // Html5Qr Stuff
+
+          // Initialize the video element
+      const scanningVideo = document.getElementById('scanningVideo');
+      window.onload = (event) => {
+        scanningVideo.play();
+      };
+
+      const html5QrCode = new Html5Qrcode("reader");
+      // Get available cameras
+      Html5Qrcode.getCameras().then(devices => {
+        if (devices && devices.length) {
+          console.log(devices.length);
+          console.log(devices);
+          // Start scanning with selected camera
+          html5QrCode.start({
+              facingMode: {
+                exact: "environment"
+              }
+            }, {
+              fps: 60,
+            },
+            (decodedText, decodedResult) => {
+              window.latestScan = decodedText;
+              scanCode(decodedText);
+            },
+            (errorMessage) => {
+              //console.error("Error during scanning:", errorMessage);
+              //document.getElementById("result").innerText = "Error during scanning: " + errorMessage;
+            }).catch((err) => {
+            console.error("Error starting scan:", err);
+            // Start scanning with selected camera
+            html5QrCode.start({
+                facingMode: {
+                  exact: "user"
+                }
+              }, {
+                fps: 60,
+              },
+              (decodedText, decodedResult) => {
+                console.log('Successfully scanned');
+                scanCode(decodedText);
+              },
+              (errorMessage) => {
+                //console.error("Error during scanning:", errorMessage);
+                //document.getElementById("result").innerText = "Error during scanning: " + errorMessage;
+              }).catch((err) => {
+              console.error("Error starting scan:", err);
+              document.getElementById("result").innerText = "Error starting scan: " + err;
+            });
+          });
+        } else {
+          console.error("No cameras found.");
+          document.getElementById("result").innerText = "It looks like you don't have a camera connected. Connect a camera, refresh the page, and try again.";
+        }
+      }).catch(err => {
+        console.error("Error getting cameras:", err);
+        document.getElementById("result").innerText = "It looks like you didn't allow this page to access your camera. Refresh the page and try again. ";
+      });
     
     
     // Setup scripting
