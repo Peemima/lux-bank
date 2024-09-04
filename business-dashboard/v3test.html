@@ -406,6 +406,84 @@ document.getElementById('userIDInput').addEventListener('input', function(e) {
     formContainer.style.display = "block";
   });
   </script>
+   <style>
+    #barcode-reader {
+      width: 100%;
+      max-width: 500px;
+    }
+
+    #reader-contaier {
+      position: relative;
+      width: 100%;
+      overflow: hidden;
+      border-radius: 40px;
+    }
+
+    #reader {
+      position: relative;
+      -webkit-transform: scaleX(-1);
+      transform: scaleX(-1);
+    }
+
+    #scanOverlay {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      top: 0;
+      left: 0;
+      z-index: 2;
+      background-color: rgba(0, 0, 0, 0.5);
+      backdrop-filter: blur(10px);
+      display: flex;
+      align-items: center;
+      vertical-align: center;
+      justify-content: center;
+    }
+
+    @keyframes blurInOut {
+      0% {
+        backdrop-filter: blur(10px);
+      }
+
+      50% {
+        backdrop-filter: blur(5px);
+      }
+
+      100% {
+        backdrop-filter: blur(10px);
+      }
+    }
+
+    #result {
+      margin-top: 10px;
+      font-size: 18px;
+    }
+
+    scan-area {
+      box-shadow: rgba(149, 157, 165, 0.2) 0px 8px 24px;
+    }
+
+    #scanningVideo {
+      width: 175px;
+      max-width: 30%;
+      border-radius: 23%;
+      margin: 0px;
+    }
+    
+    .barcode-container {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      max-width: 100%;
+      text-align: center;
+      font-size: 19px;
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+    }
+  </style>
 </head>
 <body>
   <div id="main-content"> 
