@@ -14,85 +14,7 @@
   <link rel="stylesheet" href="/lux-bank/assets/styles.css">
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js" defer></script>
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js" defer></script>
-  <script src="https://unpkg.com/html5-qrcode@2.0.9/dist/html5-qrcode.min.js" defer></script>
-  <style>
-    #barcode-reader {
-      width: 100%;
-      max-width: 500px;
-    }
-
-    #reader-contaier {
-      position: relative;
-      width: 100%;
-      overflow: hidden;
-      border-radius: 40px;
-    }
-
-    #reader {
-      position: relative;
-      -webkit-transform: scaleX(-1);
-      transform: scaleX(-1);
-    }
-
-    #scanOverlay {
-      position: absolute;
-      width: 100%;
-      height: 100%;
-      top: 0;
-      left: 0;
-      z-index: 2;
-      background-color: rgba(0, 0, 0, 0.5);
-      backdrop-filter: blur(10px);
-      display: flex;
-      align-items: center;
-      vertical-align: center;
-      justify-content: center;
-    }
-
-    @keyframes blurInOut {
-      0% {
-        backdrop-filter: blur(10px);
-      }
-
-      50% {
-        backdrop-filter: blur(5px);
-      }
-
-      100% {
-        backdrop-filter: blur(10px);
-      }
-    }
-
-    #result {
-      margin-top: 10px;
-      font-size: 18px;
-    }
-
-    scan-area {
-      box-shadow: rgba(149, 157, 165, 0.2) 0px 8px 24px;
-    }
-
-    #scanningVideo {
-      width: 175px;
-      max-width: 30%;
-      border-radius: 23%;
-      margin: 0px;
-    }
-    
-    .barcode-container {
-      width: 100%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      max-width: 100%;
-      text-align: center;
-      font-size: 19px;
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-    }
-  </style>
+  <script src="https://unpkg.com/html5-qrcode@2.0.9/dist/html5-qrcode.min.js"></script>
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
     import { getDatabase, ref, set, get } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
@@ -115,25 +37,26 @@
 
     // Make hideElement a window function
     window.hideElement = function(identifier) {
-      document.querySelectorAll(identifier).forEach(item => { item.style.display = 'none'; });
+      document.querySelectorAll(identifier).forEach(item => { item.style.display= 'none'; });
     };
 
     // Make showElement a window function
     window.showElement = function(identifier) {
       document.querySelectorAll(identifier).forEach(item => { item.attributeStyleMap.delete('display') });
     };
-
+    
     window.businessValue = new URLSearchParams(window.location.search).get('businessvalue');
 
     if (businessValue) {
       document.getElementById("businessName").innerText = businessValue;
 
+      // Function to check if business account exists and redirect if not
       function ensureBusinessAccountExists() {
         if (businessValue != null) {
-          const businessRef = ref(database, `businesses/${businessValue}`);
+          const businessRef = ref(database, 'businesses/' + businessValue);
           get(businessRef).then((snapshot) => {
             if (!snapshot.exists()) {
-              window.location.href = `?businessvalue=`;
+              window.location.href = '?businessvalue=';
             }
           }).catch((error) => {
             console.error('Error checking for business existence:', error);
@@ -141,6 +64,7 @@
         }
       }
 
+      // Call the function to ensure business account exists on load
       document.addEventListener("DOMContentLoaded", function() {
         ensureBusinessAccountExists();
         fetchAndDisplayBusinessBalance();
@@ -149,33 +73,32 @@
       document.getElementById("transactionForm").addEventListener("submit", function(event) {
         event.preventDefault(); 
 
+        const userID = document.getElementById("userIDInput").value;
         const amount = parseFloat(document.getElementById("amountInput").value);
 
-        if (isNaN(amount) || amount <= 0) {
+        if (isNaN(userID) || isNaN(amount) || amount <= 0) {
           showPopup("flex", "Notice", "block", "Please enter a valid price for this product");
           return;
         }
 
-        processTransaction(amount);
+        processTransaction(userID, amount);
       });
-
       let userCard  = document.getElementsByClassName("user-card");
+      function processTransaction(userID, amount) {
+  get(ref(database, 'users')).then((snapshot) => {
+    if (snapshot.exists()) {
+      const users = snapshot.val();
+      for (let userKey in users) {
+        // Check if the user ID matches 
+        if (users[userKey].id === userID) {
+          // Access the user's first name, which is the key of the user object
+          const userName = userKey.split(' ')[0]; // Extract only the first word
 
-      function processTransaction(amount) {
-        get(ref(database, 'users')).then((snapshot) => {
-          if (snapshot.exists()) {
-            const users = snapshot.val();
-            const userID = window.latestScan; // Use the latest scanned QR code
-
-            for (let userKey in users) {
-              if (users[userKey].id === userID) {
-                const userName = userKey.split(' ')[0]; 
-
-                let currentBalance = users[userKey].balance;
-                if (amount > currentBalance) {
-                  showPopup("flex", "Not enough hawkeyes", "block", `It looks like there aren't enough hawkeyes to buy that.`);
-                  return;
-                }
+          let currentBalance = users[userKey].balance;
+          if (amount > currentBalance) {
+            showPopup("flex", "Not enough hawkeyes", "block", "It looks like there aren't enough hawkeyes to buy that.");
+            return;
+          }
 
                 let newBalance = currentBalance - amount; 
                 set(ref(database, 'users/' + userKey + '/balance'), newBalance)
@@ -185,8 +108,9 @@
                     document.getElementById("transactionForm").reset();
                     document.getElementById("user-card").style.display = "block";
                     document.getElementById("transaction-amount").style.display = "none";
+                    document.getElementById("userIDInput").focus();
                     showElement('#homepage-heading');
-                    showPopup("flex", "Success!", "block", `The transaction was successful!`);
+                    showPopup("flex", "Success!", "block", "The transaction was successful!");
                     hideElement('#transactionForm');
                   })
                   .catch((error) => {
@@ -229,63 +153,310 @@
       }
 
       function updateBusinessBalance(amountToAdd) {
-        const businessRef = ref(database, `businesses/${businessValue}/balance`);
+        const businessRef = ref(database, 'businesses/' + businessValue + '/balance');
         get(businessRef).then((snapshot) => {
           let newBalance;
           let currentBalance = snapshot.exists() ? snapshot.val() : 0; 
           newBalance = currentBalance + amountToAdd;
           set(businessRef, newBalance).then(() => {
-            console.log("Business balance updated successfully.");
+            console.log(`Business balance updated to ${newBalance}`);
+            fetchAndDisplayBusinessBalance(); 
           }).catch((error) => {
-            console.error("Error updating business balance:", error);
+            console.error('Error updating business balance:', error);
           });
         }).catch((error) => {
           console.error('Error fetching business balance:', error);
+          set(businessRef, amountToAdd).then(() => {
+            console.log('Business balance initialized and set to:', amountToAdd);
+          }).catch((initError) => {
+            console.error('Error initializing business balance:', initError);
+          });
         });
       }
 
       function fetchAndDisplayBusinessBalance() {
-        const businessRef = ref(database, `businesses/${businessValue}/balance`);
+        const businessRef = ref(database, 'businesses/' + businessValue);
         get(businessRef).then((snapshot) => {
           if (snapshot.exists()) {
-            document.getElementById("businessBalance").innerText = `$${snapshot.val().toFixed(2)}`;
+            window.businessData = snapshot.val();
+            document.getElementById('businessBalance').innerText = `Balance: $${businessData.balance}`;
           } else {
-            document.getElementById("businessBalance").innerText = "$0.00";
+            console.error('Business data not found');
           }
         }).catch((error) => {
           console.error('Error fetching business balance:', error);
         });
       }
+
+      setInterval(fetchAndDisplayBusinessBalance, 200);
+
     } else {
-      window.location.href = "?businessvalue=";
+      document.getElementById("main-content").style.display = 'none'; 
+      document.getElementById("login-screen").style.display = 'block'; 
+
+      let businessSuggestions = [];
+
+      document.getElementById("businessNameInput").addEventListener("mousedown", function() {
+        document.getElementById("businessNameInput").placeholder = "Business Name";
+      });
+
+      document.getElementById("businessNameInput").addEventListener("blur", function() {
+        document.getElementById("businessNameInput").placeholder = "";
+      });
+
+      document.getElementById("businessNameInput").addEventListener("input", function() {
+  const inputValue = this.value.trim().toLowerCase();
+  get(ref(database, 'businesses')).then(snapshot => {
+    if (snapshot.exists()) {
+      const businesses = snapshot.val();
+      businessSuggestions = Object.keys(businesses).filter(business => 
+        business.toLowerCase().includes(inputValue)
+      );
+
+      // Show suggestions ONLY if there's exactly one match
+      if (businessSuggestions.length === 1) { 
+        updateSuggestions(businessSuggestions[0]); // Pass the single suggestion
+      } else {
+        // Hide suggestions if there are zero or multiple matches
+        document.getElementById('suggestions').style.display = 'none'; 
+      }
+    } else {
+      console.error('No businesses found in the database.');
     }
+  }).catch(error => {
+    console.error('Error fetching businesses:', error);
+  });
+});
+
+function updateSuggestions(suggestion) {
+  const suggestionList = document.getElementById('suggestions');
+  if (suggestion) {
+    suggestionList.style.display = 'block'; 
+    suggestionList.innerText = 'Press Enter to login to ' + suggestion;
+  } else {
+    suggestionList.innerText = 'No businesses found';
+  }
+}
+
+// Add event listener to the input field for Enter key press
+document.getElementById("businessNameInput").addEventListener("keydown", (event) => {
+  if (event.key === 'Enter') {
+    const suggestion = document.getElementById('suggestions').innerText.replace('Press Enter to login to ', '');
+    window.location.href = '?businessvalue=' + suggestion;
+  }
+});
+    };
+
+    //Reset the forum when cancel button is pressed
+    document.getElementById("cancel-button").addEventListener('click', function() {
+      document.getElementById("transactionForm").reset();
+      document.getElementById("user-card").style.display = "block";
+      document.getElementById("transaction-amount").style.display = "none";
+      document.getElementById("userIDInput").focus();
+    });
+    
+    //Jiggle when theres an input error: fix the weird charecter input problem
+document.getElementById('userIDInput').addEventListener('input', function(e) {
+  // Remove any non-digit characters from the input.
+  const validValue = this.value.replace(/[^0-9]/g, '');
+  
+  // Check if the input value is not solely composed of digits.
+  if (this.value !== validValue) {
+    // Replace the input value with the cleaned, digit-only version.
+    this.value = validValue;
+    
+    // Add the 'jiggle' class to trigger the animation.
+    this.classList.add('jiggle');
+    
+    // Automatically remove the 'jiggle' class after the animation ends (500ms) to reset the state.
+    setTimeout(() => {
+      this.classList.remove('jiggle');
+    }, 500);
+  }
+  if (this.value.length === 4) {
+      document.getElementById("user-card").style.display = "none";
+      document.getElementById("transaction-amount").style.display = "block";
+      document.getElementById("amountInput").focus();
+  }
+});
+
+    // Set the navbar variables
+    window.buyButton = document.getElementById('transaction-option'); 
+    window.bidButton = document.getElementById('auction-option'); 
+
+    // Event listeners for the navbar options
+    buyButton.addEventListener("click", function() { // Start listening for a click
+      bidButton.classList.remove('menu-item-selected'); // Remove the 'selected' styling from the bid button
+      buyButton.classList.add('menu-item-selected'); // Give it the 'selected' styling
+      hideElement('#homepage-heading'); // Hide the 'What would the customer like to do?' heading
+      hideElement('#bidScreen'); // Hide the bid screen
+      showElement('#transactionForm'); // Show the transaction form
+    });
+    bidButton.addEventListener("click", function() { // Start listening for a click
+      buyButton.classList.remove('menu-item-selected'); // Remove the 'selected' styling from the buy button
+      bidButton.classList.add('menu-item-selected'); // Give it the 'selected' styling
+      hideElement('#homepage-heading'); // Hide the 'What would the customer like to do?' heading
+      hideElement('#transactionForm'); // Hide the transaction form
+      showElement('#bidScreen'); // Show the bid screen
+    });
+    
+    // Setup scripting
+    // Hide elements
+      hideElement('#transactionForm');
+      hideElement('#bidScreen')
+      hideElement('#transaction-amount');
+      // hideElement('#login-screen');
+
+  const scannedUsers = {}; // Store scanned user IDs
+  const uniqueUserIds = []; // Array to store unique user IDs
+  let scannedNames = []; // Array to store scanned user names
+  const finishScanningButton = document.getElementById('finish-scanning');
+  const barcodeReader = document.getElementById('barcode-reader');
+  const formContainer = document.getElementById('form-container');
+  const businessForm = document.getElementById('business-form');
+  let businessIdCounter = 10000; // Start with a unique ID
+
+  function generateBusinessId() {
+    businessIdCounter++;
+    return businessIdCounter.toString().padStart(5, '0');
+  }
+
+  function scanCode(scannedText) {
+    if (scannedUsers[scannedText]) {
+      return;
+    }
+
+    scannedUsers[scannedText] = true;
+    uniqueUserIds.push(scannedText);
+
+    database.ref('users').orderByChild('id').equalTo(scannedText).once('value').then((snapshot) => {
+      if (snapshot.exists()) {
+        const userSnapshot = snapshot.val();
+        const userName = Object.keys(userSnapshot)[0];
+        scannedNames.push(userName);
+        updateResultText();
+      } else {
+        showPopup("flex", "Notice", "block", "It looks like that user code doesn't match to a user.");
+      }
+    }).catch((error) => {
+      console.error("Error fetching user data:", error);
+      document.getElementById("result").innerText += "Error: Could not retrieve user data. Please try again later.\n";
+    });
+  }
+
+  function updateResultText() {
+    if (scannedNames.length === 0) {
+      document.getElementById("result").innerText = "You haven't scanned any users yet.";
+      finishScanningButton.style.display = "none";
+      return;
+    }
+
+    let resultText = "You've scanned ";
+    for (let i = 0; i < scannedNames.length; i++) {
+      resultText += scannedNames[i];
+      if (i < scannedNames.length - 2) {
+        resultText += ", ";
+      } else if (i === scannedNames.length - 2) {
+        resultText += ", and ";
+      }
+    }
+    resultText += ".";
+
+    document.getElementById("result").innerText = resultText;
+    finishScanningButton.style.display = "inline-flex";
+  }
+
+  const scanningVideo = document.getElementById('scanningVideo');
+  window.onload = (event) => {
+    scanningVideo.play();
+  };
+
+  const html5QrCode = new Html5Qrcode("reader");
+  Html5Qrcode.getCameras().then(devices => {
+    if (devices && devices.length) {
+      html5QrCode.start({ facingMode: { exact: "environment" } }, { fps: 60 }, (decodedText, decodedResult) => {
+        window.latestScan = decodedText;
+        scanCode(decodedText);
+      }, (errorMessage) => {
+        //console.error("Error during scanning:", errorMessage);
+      }).catch((err) => {
+        console.error("Error starting scan:", err);
+        html5QrCode.start({ facingMode: { exact: "user" } }, { fps: 60 }, (decodedText, decodedResult) => {
+          console.log('Successfully scanned');
+          scanCode(decodedText);
+        }, (errorMessage) => {
+          //console.error("Error during scanning:", errorMessage);
+        }).catch((err) => {
+          console.error("Error starting scan:", err);
+          document.getElementById("result").innerText = "Error starting scan: " + err;
+        });
+      });
+    } else {
+      console.error("No cameras found.");
+      document.getElementById("result").innerText = "It looks like you don't have a camera connected. Connect a camera, refresh the page, and try again.";
+    }
+  }).catch(err => {
+    console.error("Error getting cameras:", err);
+    document.getElementById("result").innerText = "It looks like you didn't allow this page to access your camera. Refresh the page and try again.";
+  });
+
+  finishScanningButton.addEventListener('click', function() {
+    document.querySelector('.barcode-container').style.display = "none";
+    finishScanningButton.style.display = "none";
+    formContainer.style.display = "block";
+  });
   </script>
 </head>
 <body>
-  <div id="barcode-reader">
-    <h2 style="font-family: Poppins, sans serif;">How to scan</h2>
-    <p style="font-family: Poppins, sans serif;">Scan the ID of the customer.</p>
-    <div id="reader-contaier">
-      <div id="scanOverlay">
-        <video id="scanningVideo" loop muted="true" src="https://peemima.github.io/lux-bank/assets/scanbarcode.mp4"></video>
-      </div>
-      <div id="reader">Scanned users are as follows: </div>
+  <div id="main-content"> 
+    <div id="businessInfo" style="display: grid; grid-template-columns: 1fr auto 1fr;">
+      <span id="businessName" style="float: left;">...</span>
+      <img class="logo" src="/lux-bank/assets/Lux_Logo.svg">
+      <span id="businessBalance" style="float: right; text-align: right;">...</span>
     </div>
-    <div id="result"></div>
-    <button style="display: none;" id="finish-scanning">Next</button>
+    <div id="homepage">
+      <h2 id="homepage-heading">What would the customer like to do?</h2>
+      <div class="menu-container">
+        <p id="transaction-option" class="menu-item">Buy something</p>
+        <p id="auction-option" class="menu-item">Place a bid</p>
+      </div>
+    </div>
+    <div id="form-container" style="display: none;">
+      <form id="transactionForm">
+        <div id="barcode-reader">
+          <h2 style="font-family: Poppins, sans serif;">How to scan</h2>
+          <p style="font-family: Poppins, sans serif;">Scan the ID of the customer.</p>
+          <div id="reader-contaier">
+            <div id="scanOverlay">
+              <video id="scanningVideo" loop muted="true" src="https://peemima.github.io/lux-bank/assets/scanbarcode.mp4"></video>
+            </div>
+            <div id="reader">Scanned users are as follows: </div>
+          </div>
+          <div id="result"></div>
+          <button style="display: none;" id="finish-scanning">Next</button>
+        </div>
+        <div style="width: 300px;" id="user-card" class="user-card">
+          <p>Enter the number shown on the customer's transaction slip.</p>
+          <input style="margin-bottom: 0px;" autocomplete="off" type="text" id="userIDInput" class="usernumber-input" name="userIDInput" required>
+        </div>
+        <div id="transaction-amount">
+          <label for="amountInput">How many hawkeyes?</label>
+          <input autocomplete="off" type="text" id="amountInput" name="amountInput" style="font-size: 18px;" required>
+          <button id="cancel-button" class="outline-button">Back</button>
+          <button type="submit" class="fill-button">Process</button>
+        </div>
+      </form>
+    </div>
+    <div id="bidScreen">
+      Bid screen content
+    </div>
   </div>
-
-  <div id="form-container" style="display: none;">
-    <h1 id="businessName">Business Name</h1>
-    <p>Your current balance: <span id="businessBalance">$0.00</span></p>
-    <form id="transactionForm">
-      <label for="amountInput">Amount:</label>
-      <input type="number" id="amountInput" name="amount" required>
-      <button type="submit">Submit</button>
+  <div id="login-screen" class="center-container" style="display: none;">
+    <h1 style="font-family: 'Poppins', sans-serif; font-weight: 500">Login to your business</h1>
+    <form onSubmit="return false;">
+      <input autocomplete="off" id="businessNameInput" type="text" placeholder="">
     </form>
+    <div id="suggestions"></div>
   </div>
-
-  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js" defer></script>
-  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js" defer></script>
 </body>
 </html>
