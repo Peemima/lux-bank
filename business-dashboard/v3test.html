@@ -307,55 +307,9 @@ document.getElementById('userIDInput').addEventListener('input', function(e) {
       hideElement('#transaction-amount');
       // hideElement('#login-screen');
   </script>
-</head>
-<body>
-  <div id="main-content"> 
-    <div id="businessInfo" style="display: grid; grid-template-columns: 1fr auto 1fr;">
-      <span id="businessName" style="float: left;">...</span>
-      <img class="logo" src="/lux-bank/assets/Lux_Logo.svg">
-      <span id="businessBalance" style="float: right; text-align: right;">...</span>
-    </div>
-    <div id="homepage">
-      <h2 id="homepage-heading">What would the customer like to do?</h2>
-      <div class="menu-container">
-        <p id="transaction-option" class="menu-item">Buy something</p>
-        <p id="auction-option" class="menu-item">Place a bid</p>
-      </div>
-    </div>
-    <form id="transactionForm">
-      <div style="width: 300px;" id="user-card" class="user-card">
-        <p>Scan the customer's transaction slip.</p>
-        <div id="barcode-reader">
-          <div id="reader-contaier">
-            <div id="scanOverlay">
-              <video id="scanningVideo" loop muted="true" src="https://peemima.github.io/lux-bank/assets/scanbarcode.mp4"></video>
-            </div>
-            <div id="reader">Scanned users are as follows: </div>
-          </div>
-          <div id="result"></div>
-          <button style="display: none;" id="finish-scanning">Next</button>
-        </div>
-      </div>
-      <div id="transaction-amount">
-        <label for="amountInput">How many hawkeyes?</label>
-        <input autocomplete="off" type="text" id="amountInput" name="amountInput" style="font-size: 18px;" required>
-        <button id="cancel-button" class="outline-button">Back</button>
-        <button type="submit" class="fill-button">Process</button>
-      </div>
-    </form>
-    <div id="bidScreen">
-      Bid screen content
-    </div>
-  </div>
-  <div id="login-screen" class="center-container" style="display: none;">
-    <h1 style="font-family: 'Poppins', sans-serif; font-weight: 500">Login to your business</h1>
-    <form onSubmit="return false;">
-      <input autocomplete="off" id="businessNameInput" type="text" placeholder="">
-    </form>
-    <div id="suggestions"></div>
-  </div>
 
   <script>
+    // QR Code Scanner Code
     const firebaseConfig = {
       apiKey: "AIzaSyASd5JOikXTlRp8eA2j_26Z1NWatZMjZds",
       authDomain: "lux-bank.firebaseapp.com",
