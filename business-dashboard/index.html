@@ -418,6 +418,12 @@ document.getElementById("businessNameInput").addEventListener("keydown", (event)
 
     // Html5Qr Stuff
 
+    window.submitBarcode = function(userid){
+      hideElement('.barcode-container');
+      showElement('#transaction-amount');
+      window.latestCode = userid;
+    }
+
           // Initialize the video element
       const scanningVideo = document.getElementById('scanningVideo');
       window.onload = (event) => {
@@ -439,8 +445,7 @@ document.getElementById("businessNameInput").addEventListener("keydown", (event)
               fps: 60,
             },
             (decodedText, decodedResult) => {
-              window.latestScan = decodedText;
-              scanCode(decodedText);
+              submitBarcode(decodedText);
             },
             (errorMessage) => {
               //console.error("Error during scanning:", errorMessage);
@@ -456,8 +461,7 @@ document.getElementById("businessNameInput").addEventListener("keydown", (event)
                 fps: 60,
               },
               (decodedText, decodedResult) => {
-                console.log('Successfully scanned');
-                scanCode(decodedText);
+                submitBarcode(decodedText);
               },
               (errorMessage) => {
                 //console.error("Error during scanning:", errorMessage);
