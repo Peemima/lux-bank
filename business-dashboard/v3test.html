@@ -14,115 +14,6 @@
   <link rel="stylesheet" href="/lux-bank/assets/styles.css">
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js" defer></script>
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js" defer></script>
-  <script src="https://unpkg.com/html5-qrcode@2.0.9/dist/html5-qrcode.min.js"></script>
-  <style>
-      #barcode-reader {
-        width: 100%;
-        max-width: 500px;
-      }
-
-      #reader-contaier {
-        position: relative;
-        width: 100%;
-        overflow: hidden;
-        border-radius: 40px;
-      }
-
-      #reader {
-        position: relative;
-        -webkit-transform: scaleX(-1);
-        transform: scaleX(-1);
-      }
-
-      #scanOverlay {
-        position: absolute;
-        width: 100%;
-        height: 100%;
-        top: 0;
-        left: 0;
-        z-index: 2;
-        background-color: rgba(0, 0, 0, 0.5);
-        /* Darken the video */
-        //animation: blurInOut 6s infinite;
-        backdrop-filter: blur(10px);
-        display: flex;
-        align-items: center;
-        vertical-align: center;
-        justify-content: center;
-      }
-
-      /* Define the keyframes for the blur animation */
-      @keyframes blurInOut {
-        0% {
-          backdrop-filter: blur(10px);
-        }
-
-        50% {
-          backdrop-filter: blur(5px);
-        }
-
-        100% {
-          backdrop-filter: blur(10px);
-        }
-      }
-
-      #result {
-        margin-top: 10px;
-        font-size: 18px;
-      }
-
-      scan-area {
-        box-shadow: rgba(149, 157, 165, 0.2) 0px 8px 24px;
-      }
-
-      #scanningVideo {
-        width: 175px;
-        max-width: 30%;
-        border-radius: 23%;
-        margin: 0px;
-      }
-
-      #form-container {
-        display: none;
-        /* Initially hidden */
-        width: 100%;
-        max-width: 500px;
-        margin: 20px auto;
-        padding: 20px;
-        border-radius: 40px;
-        box-shadow:  41px 41px 82px #f2f2f2,
-             -41px -41px 82px #ffffff;
-      }
-
-      #form-container label {
-        display: block;
-        margin-top: 10px;
-      }
-
-      #form-container input[type="submit"] {
-        background-color: #4CAF50;
-        color: white;
-        padding: 10px 20px;
-        margin-top: 20px;
-        border: none;
-        border-radius: 3px;
-        cursor: pointer;
-      }
-      
-      .barcode-container {
-    width: 100%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    max-width: 100%;
-    text-align: center;
-    font-size: 19px;
-                position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-      }
-    </style>
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
     import { getDatabase, ref, set, get } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
@@ -154,136 +45,6 @@
     };
     
     window.businessValue = new URLSearchParams(window.location.search).get('businessvalue');
-
-    // Html5Qr Stuff
-    const scannedUsers = {}; // Store scanned user IDs
-    const uniqueUserIds = []; // Array to store unique user IDs
-    let scannedNames = []; // Array to store scanned user names
-    const finishScanningButton = document.getElementById('finish-scanning');
-    const barcodeReader = document.getElementById('barcode-reader');
-    const formContainer = document.getElementById('form-container');
-    const userIDInput = document.getElementById('userIDInput'); // Get the input field
-    const transactionAmount = document.getElementById('transaction-amount'); // Get the "How many hawkeyes" screen
-    const scanningVideo = document.getElementById('scanningVideo');
-
-    window.onload = (event) => {
-      scanningVideo.play();
-      setupScanner(); // Initialize the scanner when the page loads
-    };
-
-    function setupScanner() {
-      const html5QrCode = new Html5Qrcode("reader");
-      // Get available cameras
-      Html5Qrcode.getCameras().then(devices => {
-        if (devices && devices.length) {
-          console.log(devices.length);
-          console.log(devices);
-          // Start scanning with selected camera
-          html5QrCode.start({
-              facingMode: {
-                exact: "environment"
-              }
-            }, {
-              fps: 60,
-            },
-            (decodedText, decodedResult) => {
-              window.latestScan = decodedText;
-              scanCode(decodedText);
-            },
-            (errorMessage) => {
-              //console.error("Error during scanning:", errorMessage);
-              //document.getElementById("result").innerText = "Error during scanning: " + errorMessage;
-            }).catch((err) => {
-            console.error("Error starting scan:", err);
-            // Start scanning with selected camera
-            html5QrCode.start({
-                facingMode: {
-                  exact: "user"
-                }
-              }, {
-                fps: 60,
-              },
-              (decodedText, decodedResult) => {
-                console.log('Successfully scanned');
-                scanCode(decodedText);
-              },
-              (errorMessage) => {
-                //console.error("Error during scanning:", errorMessage);
-                //document.getElementById("result").innerText = "Error during scanning: " + errorMessage;
-              }).catch((err) => {
-              console.error("Error starting scan:", err);
-              document.getElementById("result").innerText = "Error starting scan: " + err;
-            });
-          });
-        } else {
-          console.error("No cameras found.");
-          document.getElementById("result").innerText = "It looks like you don't have a camera connected. Connect a camera, refresh the page, and try again.";
-        }
-      }).catch(err => {
-        console.error("Error getting cameras:", err);
-        document.getElementById("result").innerText = "It looks like you didn't allow this page to access your camera. Refresh the page and try again. ";
-      });
-    }
-
-    function scanCode(scannedText) {
-      // Check if the code has already been scanned
-      if (scannedUsers[scannedText]) {
-        // Don't display a duplicate message, just return
-        return;
-      }
-
-      // Mark the code as scanned
-      scannedUsers[scannedText] = true;
-
-      // Add unique user ID to the array
-      uniqueUserIds.push(scannedText);
-
-      // Query the database for the user with the scanned ID
-      database.ref('users').orderByChild('id').equalTo(scannedText).once('value').then((snapshot) => {
-        if (snapshot.exists()) {
-          // Get the first matching user (assuming only one user has the ID)
-          const userSnapshot = snapshot.val();
-          const userName = Object.keys(userSnapshot)[0]; // Get the parent element key (username)
-          scannedNames.push(userName);
-          updateResultText();
-
-          // Move to the "How many hawkeyes" screen
-          document.querySelector('.barcode-container').style.display = "none"; // Hide scanning elements
-          finishScanningButton.style.display = "none";
-          formContainer.style.display = "block"; // Show the form
-          userIDInput.value = uniqueUserIds[uniqueUserIds.length - 1]; // Set the input field value
-          transactionAmount.style.display = "block"; // Show the "How many hawkeyes" screen
-        } else {
-          showPopup("flex", "Notice", "block", "It looks like that user code doesn't match to a user.");
-        }
-      }).catch((error) => {
-        console.error("Error fetching user data:", error);
-        document.getElementById("result").innerText += "Error: Could not retrieve user data. Please try again later.\n";
-      });
-    }
-
-    function updateResultText() {
-      if (scannedNames.length === 0) {
-        document.getElementById("result").innerText = "You haven't scanned any users yet.";
-        finishScanningButton.style.display = "none"; // Hide the button
-        return;
-      }
-
-      let resultText = "You've scanned ";
-      for (let i = 0; i < scannedNames.length; i++) {
-        resultText += scannedNames[i];
-        if (i < scannedNames.length - 2) {
-          resultText += ", ";
-        } else if (i === scannedNames.length - 2) {
-          resultText += ", and ";
-        }
-      }
-      resultText += ".";
-
-      document.getElementById("result").innerText = resultText;
-      finishScanningButton.style.display = "inline-flex"; // Show the button
-    }
-
 
     if (businessValue) {
       document.getElementById("businessName").innerText = businessValue;
@@ -322,40 +83,7 @@
         processTransaction(userID, amount);
       });
       let userCard  = document.getElementsByClassName("user-card");
-      //
-      //
-      //
-      //
-      //
-      //
-      //
-      //
-      //
-      //
-      //
-      //
-      //
-      //
-      //
-      //
-      //
-      //
-      //
-      //
-      //
-      //
-      //
-      //
-      //
-      //
-      //
-      //
-      //
-      //
-      // BEFORE PUSHING TO PRODUCTION, MAKE PROCESSTRANSACTION A NON WINDOW FUNCTION
-      //
-      //
-      window.processTransaction = function(userID, amount) {
+      function processTransaction(userID, amount) {
   get(ref(database, 'users')).then((snapshot) => {
     if (snapshot.exists()) {
       const users = snapshot.val();
@@ -379,6 +107,7 @@
                     document.getElementById("transactionForm").reset();
                     document.getElementById("user-card").style.display = "block";
                     document.getElementById("transaction-amount").style.display = "none";
+                    document.getElementById("userIDInput").focus();
                     showElement('#homepage-heading');
                     showPopup("flex", "Success!", "block", `The transaction was successful!`);
                     hideElement('#transactionForm');
@@ -422,31 +151,27 @@
           });
       }
 
-function updateBusinessBalance(amountToAdd) {
-  const businessRef = ref(database, `businesses/${businessValue}/balance`);
-  get(businessRef).then((snapshot) => {
-    let newBalance;
-    // Fetch the balance from Firebase and convert it to a number
-    let currentBalance = snapshot.exists() ? parseInt(snapshot.val(), 10) : 0; 
-    newBalance = currentBalance + amountToAdd;
-
-    // Store the updated balance back in Firebase (store as a number directly)
-    set(businessRef, newBalance).then(() => {
-      console.log(`Business balance updated to ${newBalance}`);
-      fetchAndDisplayBusinessBalance(); 
-    }).catch((error) => {
-      console.error('Error updating business balance:', error);
-    });
-  }).catch((error) => {
-    console.error('Error fetching business balance:', error);
-    // Initialize the balance with amountToAdd if it doesn't exist 
-    set(businessRef, amountToAdd).then(() => {
-      console.log('Business balance initialized and set to:', amountToAdd);
-    }).catch((initError) => {
-      console.error('Error initializing business balance:', initError);
-    });
-  });
-}
+      function updateBusinessBalance(amountToAdd) {
+        const businessRef = ref(database, `businesses/${businessValue}/balance`);
+        get(businessRef).then((snapshot) => {
+          let newBalance;
+          let currentBalance = snapshot.exists() ? snapshot.val() : 0; 
+          newBalance = currentBalance + amountToAdd;
+          set(businessRef, newBalance).then(() => {
+            console.log(`Business balance updated to ${newBalance}`);
+            fetchAndDisplayBusinessBalance(); 
+          }).catch((error) => {
+            console.error('Error updating business balance:', error);
+          });
+        }).catch((error) => {
+          console.error('Error fetching business balance:', error);
+          set(businessRef, amountToAdd).then(() => {
+            console.log('Business balance initialized and set to:', amountToAdd);
+          }).catch((initError) => {
+            console.error('Error initializing business balance:', initError);
+          });
+        });
+      }
 
       function fetchAndDisplayBusinessBalance() {
         const businessRef = ref(database, `businesses/${businessValue}`);
@@ -462,7 +187,8 @@ function updateBusinessBalance(amountToAdd) {
         });
       }
 
-      setInterval(fetchAndDisplayBusinessBalance, 5000);
+      setInterval(fetchAndDisplayBusinessBalance, 200);
+
     } else {
       document.getElementById("main-content").style.display = 'none'; 
       document.getElementById("login-screen").style.display = 'block'; 
@@ -525,7 +251,33 @@ document.getElementById("businessNameInput").addEventListener("keydown", (event)
       document.getElementById("transactionForm").reset();
       document.getElementById("user-card").style.display = "block";
       document.getElementById("transaction-amount").style.display = "none";
+      document.getElementById("userIDInput").focus();
     });
+    
+    //Jiggle when theres an input error: fix the weird charecter input problem
+document.getElementById('userIDInput').addEventListener('input', function(e) {
+  // Remove any non-digit characters from the input.
+  const validValue = this.value.replace(/[^0-9]/g, '');
+  
+  // Check if the input value is not solely composed of digits.
+  if (this.value !== validValue) {
+    // Replace the input value with the cleaned, digit-only version.
+    this.value = validValue;
+    
+    // Add the 'jiggle' class to trigger the animation.
+    this.classList.add('jiggle');
+    
+    // Automatically remove the 'jiggle' class after the animation ends (500ms) to reset the state.
+    setTimeout(() => {
+      this.classList.remove('jiggle');
+    }, 500);
+  }
+  if (this.value.length === 4) {
+      document.getElementById("user-card").style.display = "none";
+      document.getElementById("transaction-amount").style.display = "block";
+      document.getElementById("amountInput").focus();
+  }
+});
 
     // Set the navbar variables
     window.buyButton = document.getElementById('transaction-option'); 
@@ -546,7 +298,7 @@ document.getElementById("businessNameInput").addEventListener("keydown", (event)
       hideElement('#transactionForm'); // Hide the transaction form
       showElement('#bidScreen'); // Show the bid screen
     });
-
+    
     // Setup scripting
     // Hide elements
       hideElement('#transactionForm');
@@ -570,21 +322,20 @@ document.getElementById("businessNameInput").addEventListener("keydown", (event)
       </div>
     </div>
     <form id="transactionForm">
-      <input type="hidden" id="userIDInput" name="userIDInput">
-          <div class="barcode-container">
-            <div id="barcode-reader">
-            <h2 style="font-family: Poppins, sans serif;">How to scan</h2>
-            <p style="font-family: Poppins, sans serif;">Scan the id of everyone that works at the business.</p>
+      <div style="width: 300px;" id="user-card" class="user-card">
+        <p>Enter the number shown on the customer's transaction slip.</p>
+        <!-- This is where the scanner code will be injected -->
+        <div id="barcode-reader" style="display: flex; flex-direction: column; align-items: center; justify-content: center;">
             <div id="reader-contaier">
-            <div id="scanOverlay">
-              <video id="scanningVideo" loop muted="true" src="https://peemima.github.io/lux-bank/assets/scanbarcode.mp4"></video>
+              <div id="scanOverlay">
+                <video id="scanningVideo" loop muted="true" src="https://peemima.github.io/lux-bank/assets/scanbarcode.mp4"></video>
+              </div>
+              <div id="reader">Scanned users are as follows: </div>
             </div>
-            <div id="reader">Scanned users are as follows: </div>
-          </div>
-          <div id="result"></div>
-          <button style="display: none;" id="finish-scanning">Next</button>
+            <div id="result"></div>
+            <button style="display: none;" id="finish-scanning">Next</button>
         </div>
-    </div>
+      </div>
       <div id="transaction-amount">
         <label for="amountInput">How many hawkeyes?</label>
         <input autocomplete="off" type="text" id="amountInput" name="amountInput" style="font-size: 18px;" required>
@@ -603,5 +354,151 @@ document.getElementById("businessNameInput").addEventListener("keydown", (event)
     </form>
     <div id="suggestions"></div>
   </div>
+  <script>
+      // ... your existing Javascript code ...
+
+      // The scanner code starts here
+      const firebaseConfig = {
+        apiKey: "AIzaSyASd5JOikXTlRp8eA2j_26Z1NWatZMjZds",
+        authDomain: "lux-bank.firebaseapp.com",
+        databaseURL: "https://lux-bank-default-rtdb.firebaseio.com",
+        projectId: "lux-bank",
+        storageBucket: "lux-bank.appspot.com",
+        messagingSenderId: "764922032293",
+        appId: "1:764922032293:web:573599b6116f025ee15d4c",
+        measurementId: "G-JQ7CWEJS9N"
+      };
+      const app = firebase.initializeApp(firebaseConfig);
+      const database = firebase.database();
+      const scannedUsers = {}; // Store scanned user IDs
+      const uniqueUserIds = []; // Array to store unique user IDs
+      let scannedNames = []; // Array to store scanned user names
+      const finishScanningButton = document.getElementById('finish-scanning');
+      const barcodeReader = document.getElementById('barcode-reader');
+      const formContainer = document.getElementById('form-container');
+      const businessForm = document.getElementById('business-form');
+      let businessIdCounter = 10000; // Start with a unique ID
+
+      function generateBusinessId() {
+        businessIdCounter++;
+        return businessIdCounter.toString().padStart(5, '0');
+      }
+
+      window.scanCode = function(scannedText) {
+        // Check if the code has already been scanned
+        if (scannedUsers[scannedText]) {
+          // Don't display a duplicate message, just return
+          return;
+        }
+
+        // Mark the code as scanned
+        scannedUsers[scannedText] = true;
+
+        // Add unique user ID to the array
+        uniqueUserIds.push(scannedText);
+
+        // Query the database for the user with the scanned ID
+        database.ref('users').orderByChild('id').equalTo(scannedText).once('value').then((snapshot) => {
+          if (snapshot.exists()) {
+            // Get the first matching user (assuming only one user has the ID)
+            const userSnapshot = snapshot.val();
+            const userName = Object.keys(userSnapshot)[0]; // Get the parent element key (username)
+            scannedNames.push(userName);
+            updateResultText();
+          } else {
+            showPopup("flex", "Notice", "block", "It looks like that user code doesn't match to a user.");
+          }
+        }).catch((error) => {
+          console.error("Error fetching user data:", error);
+          document.getElementById("result").innerText += "Error: Could not retrieve user data. Please try again later.\n";
+        });
+      };
+
+      function updateResultText() {
+        if (scannedNames.length === 0) {
+          document.getElementById("result").innerText = "You haven't scanned any users yet.";
+          finishScanningButton.style.display = "none"; // Hide the button
+          return;
+        }
+
+        let resultText = "You've scanned ";
+        for (let i = 0; i < scannedNames.length; i++) {
+          resultText += scannedNames[i];
+          if (i < scannedNames.length - 2) {
+            resultText += ", ";
+          } else if (i === scannedNames.length - 2) {
+            resultText += ", and ";
+          }
+        }
+        resultText += ".";
+
+        document.getElementById("result").innerText = resultText;
+        finishScanningButton.style.display = "inline-flex"; // Show the button
+      }
+
+      // Initialize the video element
+      const scanningVideo = document.getElementById('scanningVideo');
+      window.onload = (event) => {
+        scanningVideo.play();
+      };
+
+      const html5QrCode = new Html5Qrcode("reader");
+      // Get available cameras
+      Html5Qrcode.getCameras().then(devices => {
+        if (devices && devices.length) {
+          console.log(devices.length);
+          console.log(devices);
+          // Start scanning with selected camera
+          html5QrCode.start({
+              facingMode: {
+                exact: "environment"
+              }
+            }, {
+              fps: 60,
+            },
+            (decodedText, decodedResult) => {
+              window.latestScan = decodedText;
+              scanCode(decodedText);
+            },
+            (errorMessage) => {
+              //console.error("Error during scanning:", errorMessage);
+              //document.getElementById("result").innerText = "Error during scanning: " + errorMessage;
+            }).catch((err) => {
+            console.error("Error starting scan:", err);
+            // Start scanning with selected camera
+            html5QrCode.start({
+                facingMode: {
+                  exact: "user"
+                }
+              }, {
+                fps: 60,
+              },
+              (decodedText, decodedResult) => {
+                console.log('Successfully scanned');
+                scanCode(decodedText);
+              },
+              (errorMessage) => {
+                //console.error("Error during scanning:", errorMessage);
+                //document.getElementById("result").innerText = "Error during scanning: " + errorMessage;
+              }).catch((err) => {
+              console.error("Error starting scan:", err);
+              document.getElementById("result").innerText = "Error starting scan: " + err;
+            });
+          });
+        } else {
+          console.error("No cameras found.");
+          document.getElementById("result").innerText = "It looks like you don't have a camera connected. Connect a camera, refresh the page, and try again.";
+        }
+      }).catch(err => {
+        console.error("Error getting cameras:", err);
+        document.getElementById("result").innerText = "It looks like you didn't allow this page to access your camera. Refresh the page and try again. ";
+      });
+
+      finishScanningButton.addEventListener('click', function() {
+        document.querySelector('.barcode-container').style.display = "none"; // Hide scanning elements
+        finishScanningButton.style.display = "none";
+        formContainer.style.display = "block"; // Show the form
+      });
+    </script>
 </body>
 </html>
