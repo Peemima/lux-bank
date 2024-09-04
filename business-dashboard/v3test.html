@@ -14,6 +14,7 @@
   <link rel="stylesheet" href="/lux-bank/assets/styles.css">
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js" defer></script>
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js" defer></script>
+  <script src="https://unpkg.com/html5-qrcode@2.0.9/dist/html5-qrcode.min.js"></script>
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
     import { getDatabase, ref, set, get } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
@@ -323,17 +324,16 @@ document.getElementById('userIDInput').addEventListener('input', function(e) {
     </div>
     <form id="transactionForm">
       <div style="width: 300px;" id="user-card" class="user-card">
-        <p>Enter the number shown on the customer's transaction slip.</p>
-        <!-- This is where the scanner code will be injected -->
-        <div id="barcode-reader" style="display: flex; flex-direction: column; align-items: center; justify-content: center;">
-            <div id="reader-contaier">
-              <div id="scanOverlay">
-                <video id="scanningVideo" loop muted="true" src="https://peemima.github.io/lux-bank/assets/scanbarcode.mp4"></video>
-              </div>
-              <div id="reader">Scanned users are as follows: </div>
+        <p>Scan the customer's transaction slip.</p>
+        <div id="barcode-reader">
+          <div id="reader-contaier">
+            <div id="scanOverlay">
+              <video id="scanningVideo" loop muted="true" src="https://peemima.github.io/lux-bank/assets/scanbarcode.mp4"></video>
             </div>
-            <div id="result"></div>
-            <button style="display: none;" id="finish-scanning">Next</button>
+            <div id="reader">Scanned users are as follows: </div>
+          </div>
+          <div id="result"></div>
+          <button style="display: none;" id="finish-scanning">Next</button>
         </div>
       </div>
       <div id="transaction-amount">
@@ -354,110 +354,125 @@ document.getElementById('userIDInput').addEventListener('input', function(e) {
     </form>
     <div id="suggestions"></div>
   </div>
+
   <script>
-      // ... your existing Javascript code ...
+    const firebaseConfig = {
+      apiKey: "AIzaSyASd5JOikXTlRp8eA2j_26Z1NWatZMjZds",
+      authDomain: "lux-bank.firebaseapp.com",
+      databaseURL: "https://lux-bank-default-rtdb.firebaseio.com",
+      projectId: "lux-bank",
+      storageBucket: "lux-bank.appspot.com",
+      messagingSenderId: "764922032293",
+      appId: "1:764922032293:web:573599b6116f025ee15d4c",
+      measurementId: "G-JQ7CWEJS9N"
+    };
+    const app = firebase.initializeApp(firebaseConfig);
+    const database = firebase.database();
+    const scannedUsers = {}; // Store scanned user IDs
+    const uniqueUserIds = []; // Array to store unique user IDs
+    let scannedNames = []; // Array to store scanned user names
+    const finishScanningButton = document.getElementById('finish-scanning');
+    const barcodeReader = document.getElementById('barcode-reader');
+    const formContainer = document.getElementById('form-container');
+    const businessForm = document.getElementById('business-form');
+    let businessIdCounter = 10000; // Start with a unique ID
 
-      // The scanner code starts here
-      const firebaseConfig = {
-        apiKey: "AIzaSyASd5JOikXTlRp8eA2j_26Z1NWatZMjZds",
-        authDomain: "lux-bank.firebaseapp.com",
-        databaseURL: "https://lux-bank-default-rtdb.firebaseio.com",
-        projectId: "lux-bank",
-        storageBucket: "lux-bank.appspot.com",
-        messagingSenderId: "764922032293",
-        appId: "1:764922032293:web:573599b6116f025ee15d4c",
-        measurementId: "G-JQ7CWEJS9N"
-      };
-      const app = firebase.initializeApp(firebaseConfig);
-      const database = firebase.database();
-      const scannedUsers = {}; // Store scanned user IDs
-      const uniqueUserIds = []; // Array to store unique user IDs
-      let scannedNames = []; // Array to store scanned user names
-      const finishScanningButton = document.getElementById('finish-scanning');
-      const barcodeReader = document.getElementById('barcode-reader');
-      const formContainer = document.getElementById('form-container');
-      const businessForm = document.getElementById('business-form');
-      let businessIdCounter = 10000; // Start with a unique ID
+    function generateBusinessId() {
+      businessIdCounter++;
+      return businessIdCounter.toString().padStart(5, '0');
+    }
 
-      function generateBusinessId() {
-        businessIdCounter++;
-        return businessIdCounter.toString().padStart(5, '0');
+    window.scanCode = function(scannedText) {
+      // Check if the code has already been scanned
+      if (scannedUsers[scannedText]) {
+        // Don't display a duplicate message, just return
+        return;
       }
 
-      window.scanCode = function(scannedText) {
-        // Check if the code has already been scanned
-        if (scannedUsers[scannedText]) {
-          // Don't display a duplicate message, just return
-          return;
+      // Mark the code as scanned
+      scannedUsers[scannedText] = true;
+
+      // Add unique user ID to the array
+      uniqueUserIds.push(scannedText);
+
+      // Query the database for the user with the scanned ID
+      database.ref('users').orderByChild('id').equalTo(scannedText).once('value').then((snapshot) => {
+        if (snapshot.exists()) {
+          // Get the first matching user (assuming only one user has the ID)
+          const userSnapshot = snapshot.val();
+          const userName = Object.keys(userSnapshot)[0]; // Get the parent element key (username)
+          scannedNames.push(userName);
+          updateResultText();
+        } else {
+          showPopup("flex", "Notice", "block", "It looks like that user code doesn't match to a user.");
         }
+      }).catch((error) => {
+        console.error("Error fetching user data:", error);
+        document.getElementById("result").innerText += "Error: Could not retrieve user data. Please try again later.\n";
+      });
+    };
 
-        // Mark the code as scanned
-        scannedUsers[scannedText] = true;
-
-        // Add unique user ID to the array
-        uniqueUserIds.push(scannedText);
-
-        // Query the database for the user with the scanned ID
-        database.ref('users').orderByChild('id').equalTo(scannedText).once('value').then((snapshot) => {
-          if (snapshot.exists()) {
-            // Get the first matching user (assuming only one user has the ID)
-            const userSnapshot = snapshot.val();
-            const userName = Object.keys(userSnapshot)[0]; // Get the parent element key (username)
-            scannedNames.push(userName);
-            updateResultText();
-          } else {
-            showPopup("flex", "Notice", "block", "It looks like that user code doesn't match to a user.");
-          }
-        }).catch((error) => {
-          console.error("Error fetching user data:", error);
-          document.getElementById("result").innerText += "Error: Could not retrieve user data. Please try again later.\n";
-        });
-      };
-
-      function updateResultText() {
-        if (scannedNames.length === 0) {
-          document.getElementById("result").innerText = "You haven't scanned any users yet.";
-          finishScanningButton.style.display = "none"; // Hide the button
-          return;
-        }
-
-        let resultText = "You've scanned ";
-        for (let i = 0; i < scannedNames.length; i++) {
-          resultText += scannedNames[i];
-          if (i < scannedNames.length - 2) {
-            resultText += ", ";
-          } else if (i === scannedNames.length - 2) {
-            resultText += ", and ";
-          }
-        }
-        resultText += ".";
-
-        document.getElementById("result").innerText = resultText;
-        finishScanningButton.style.display = "inline-flex"; // Show the button
+    function updateResultText() {
+      if (scannedNames.length === 0) {
+        document.getElementById("result").innerText = "You haven't scanned any users yet.";
+        finishScanningButton.style.display = "none"; // Hide the button
+        return;
       }
 
-      // Initialize the video element
-      const scanningVideo = document.getElementById('scanningVideo');
-      window.onload = (event) => {
-        scanningVideo.play();
-      };
+      let resultText = "You've scanned ";
+      for (let i = 0; i < scannedNames.length; i++) {
+        resultText += scannedNames[i];
+        if (i < scannedNames.length - 2) {
+          resultText += ", ";
+        } else if (i === scannedNames.length - 2) {
+          resultText += ", and ";
+        }
+      }
+      resultText += ".";
 
-      const html5QrCode = new Html5Qrcode("reader");
-      // Get available cameras
-      Html5Qrcode.getCameras().then(devices => {
-        if (devices && devices.length) {
-          console.log(devices.length);
-          console.log(devices);
+      document.getElementById("result").innerText = resultText;
+      finishScanningButton.style.display = "inline-flex"; // Show the button
+    }
+
+    // Initialize the video element
+    const scanningVideo = document.getElementById('scanningVideo');
+    window.onload = (event) => {
+      scanningVideo.play();
+    };
+
+    const html5QrCode = new Html5Qrcode("reader");
+    // Get available cameras
+    Html5Qrcode.getCameras().then(devices => {
+      if (devices && devices.length) {
+        console.log(devices.length);
+        console.log(devices);
+        // Start scanning with selected camera
+        html5QrCode.start({
+            facingMode: {
+              exact: "environment"
+            }
+          }, {
+            fps: 60,
+          },
+          (decodedText, decodedResult) => {
+            window.latestScan = decodedText;
+            scanCode(decodedText);
+          },
+          (errorMessage) => {
+            //console.error("Error during scanning:", errorMessage);
+            //document.getElementById("result").innerText = "Error during scanning: " + errorMessage;
+          }).catch((err) => {
+          console.error("Error starting scan:", err);
           // Start scanning with selected camera
           html5QrCode.start({
               facingMode: {
-                exact: "environment"
+                exact: "user"
               }
             }, {
               fps: 60,
             },
             (decodedText, decodedResult) => {
-              window.latestScan = decodedText;
+              console.log('Successfully scanned');
               scanCode(decodedText);
             },
             (errorMessage) => {
@@ -465,40 +480,24 @@ document.getElementById('userIDInput').addEventListener('input', function(e) {
               //document.getElementById("result").innerText = "Error during scanning: " + errorMessage;
             }).catch((err) => {
             console.error("Error starting scan:", err);
-            // Start scanning with selected camera
-            html5QrCode.start({
-                facingMode: {
-                  exact: "user"
-                }
-              }, {
-                fps: 60,
-              },
-              (decodedText, decodedResult) => {
-                console.log('Successfully scanned');
-                scanCode(decodedText);
-              },
-              (errorMessage) => {
-                //console.error("Error during scanning:", errorMessage);
-                //document.getElementById("result").innerText = "Error during scanning: " + errorMessage;
-              }).catch((err) => {
-              console.error("Error starting scan:", err);
-              document.getElementById("result").innerText = "Error starting scan: " + err;
-            });
+            document.getElementById("result").innerText = "Error starting scan: " + err;
           });
-        } else {
-          console.error("No cameras found.");
-          document.getElementById("result").innerText = "It looks like you don't have a camera connected. Connect a camera, refresh the page, and try again.";
-        }
-      }).catch(err => {
-        console.error("Error getting cameras:", err);
-        document.getElementById("result").innerText = "It looks like you didn't allow this page to access your camera. Refresh the page and try again. ";
-      });
+        });
+      } else {
+        console.error("No cameras found.");
+        document.getElementById("result").innerText = "It looks like you don't have a camera connected. Connect a camera, refresh the page, and try again.";
+      }
+    }).catch(err => {
+      console.error("Error getting cameras:", err);
+      document.getElementById("result").innerText = "It looks like you didn't allow this page to access your camera. Refresh the page and try again. ";
+    });
 
-      finishScanningButton.addEventListener('click', function() {
-        document.querySelector('.barcode-container').style.display = "none"; // Hide scanning elements
-        finishScanningButton.style.display = "none";
-        formContainer.style.display = "block"; // Show the form
-      });
-    </script>
+    finishScanningButton.addEventListener('click', function() {
+      document.querySelector('.barcode-container').style.display = "none"; // Hide scanning elements
+      finishScanningButton.style.display = "none";
+      formContainer.style.display = "block"; // Show the form
+    });
+
+  </script>
 </body>
 </html>
