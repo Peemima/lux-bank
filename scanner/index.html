@@ -58,7 +58,7 @@
         max-width: 30%;
         border-radius: 23%;
         margin: 0px;
-        transition: all 1s;
+        transition: all 1s ease-in-out;
       }
 
       #scanningVideo:hover {
@@ -66,8 +66,19 @@
       }
 
       @keyframes checkmark {
-        0% { width: 175px; border-radius: 23%; } /* Initial state */
-        100% { width: 200px; border-radius: 999px; } /* Final state */
+        0% {
+            opacity: 100%;
+            filter: blur(0px);
+        }
+        30% {
+            opacity: 100%;
+            filter: blur(0px);
+        } 
+        100% {
+            opacity: 0%;
+            filter: blur(35px);
+            transform: scale(0.90);
+        }
       }
     </style>
   </head>
@@ -160,8 +171,8 @@
             // Get the first matching user (assuming only one user has the ID)
             const userSnapshot = snapshot.val();
             const userName = Object.keys(userSnapshot)[0]; // Get the parent element key (username)
-            document.getElementById('scanningVideo').style.animation = 'checkmark 0.5s ease-in-out';
-            alert(`User ID: ${scannedText}\nUsername: ${userName}`);
+            document.getElementById('barcode-reader').style.animation = 'checkmark 1s ease-in-out';
+             sendToParent(scannedText);
           } else {
             alert(`User ID: ${scannedText} not found in the database.`);
           }
@@ -170,7 +181,10 @@
           document.getElementById("result").innerText += "Error: Could not retrieve user data. Please try again later.\n";
         });
       }
-
+      
+      function sendToParent(userID) {
+          window.top.postMessage(userID, '*');
+      }
     </script>
   </body>
 </html>
