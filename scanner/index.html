@@ -64,6 +64,11 @@
       #scanningVideo:hover {
         width: 100px;
       }
+
+      @keyframes checkmark {
+        0% {  } 
+        100% { width: 200px; border-radius: 999px; } 
+      }
     </style>
   </head>
   <body>
@@ -155,6 +160,7 @@
             // Get the first matching user (assuming only one user has the ID)
             const userSnapshot = snapshot.val();
             const userName = Object.keys(userSnapshot)[0]; // Get the parent element key (username)
+            document.getElementById('scanningVideo').style.animation = 'checkmark 0.5s ease-in-out';
             alert(`User ID: ${scannedText}\nUsername: ${userName}`);
           } else {
             alert(`User ID: ${scannedText} not found in the database.`);
