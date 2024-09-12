@@ -23,7 +23,6 @@
 
       #reader {
         position: relative;
-        -webkit-transform: scaleX(-1);
         transform: scaleX(-1);
       }
 
@@ -128,7 +127,7 @@
               fps: 60,
             },
             (decodedText, decodedResult) => {
-              // Check if the code has already been scanned
+              document.getElementById('#reader').style.transform = 'scaleX(1)';
               checkUser(decodedText);
             },
             (errorMessage) => {
@@ -145,7 +144,6 @@
                 fps: 60,
               },
               (decodedText, decodedResult) => {
-                console.log('Successfully scanned');
                 checkUser(decodedText);
               },
               (errorMessage) => {
