@@ -252,31 +252,7 @@ document.getElementById("businessNameInput").addEventListener("keydown", (event)
       document.getElementById("transaction-amount").style.display = "none";
       document.getElementById("userIDInput").focus();
     });
-    
-    //Jiggle when theres an input error: fix the weird charecter input problem
-document.getElementById('userIDInput').addEventListener('input', function(e) {
-  // Remove any non-digit characters from the input.
-  const validValue = this.value.replace(/[^0-9]/g, '');
-  
-  // Check if the input value is not solely composed of digits.
-  if (this.value !== validValue) {
-    // Replace the input value with the cleaned, digit-only version.
-    this.value = validValue;
-    
-    // Add the 'jiggle' class to trigger the animation.
-    this.classList.add('jiggle');
-    
-    // Automatically remove the 'jiggle' class after the animation ends (500ms) to reset the state.
-    setTimeout(() => {
-      this.classList.remove('jiggle');
-    }, 500);
-  }
-  if (this.value.length === 4) {
-      document.getElementById("user-card").style.display = "none";
-      document.getElementById("transaction-amount").style.display = "block";
-      document.getElementById("amountInput").focus();
-  }
-});
+
 
     // Set the navbar variables
     window.buyButton = document.getElementById('transaction-option'); 
