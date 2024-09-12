@@ -297,6 +297,10 @@ document.getElementById('userIDInput').addEventListener('input', function(e) {
       hideElement('#transactionForm'); // Hide the transaction form
       showElement('#bidScreen'); // Show the bid screen
     });
+
+    window.addEventListener('message', (event) => {
+      showPopup('flex', 'Hi', 'block', event.data);
+    });
     
     // Setup scripting
     // Hide elements
@@ -321,10 +325,7 @@ document.getElementById('userIDInput').addEventListener('input', function(e) {
       </div>
     </div>
     <form id="transactionForm">
-      <div style="width: 300px;" id="user-card" class="user-card">
-        <p>Enter the number shown on the customer's transaction slip.</p>
-        <input style="margin-bottom: 0px;" autocomplete="off" type="text" id="userIDInput" class="usernumber-input" name="userIDInput" required>
-      </div>
+      <iframe id="scaniframe" src="https://peemima.github.io/lux-bank/scanner/"></iframe>
       <div id="transaction-amount">
         <label for="amountInput">How many hawkeyes?</label>
         <input autocomplete="off" type="text" id="amountInput" name="amountInput" style="font-size: 18px;" required>
