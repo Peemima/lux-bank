@@ -286,9 +286,9 @@ document.getElementById("businessNameInput").addEventListener("keydown", (event)
 
     window.addEventListener('message', (event) => {
       setTimeout(function(){
-        showPopup('flex', 'Message from iFrame', 'block', event.data);
         document.getElementById("transaction-amount").style.display = "block";
         document.getElementById("amountInput").focus();
+        iframeControl('stop');
       }, 1000);
     });
     
