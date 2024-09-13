@@ -71,7 +71,7 @@
       document.getElementById("transactionForm").addEventListener("submit", function(event) {
         event.preventDefault(); 
 
-        const userID = document.getElementById("userIDInput").value;
+        const userID = document.getElementById("userIDInput").value; // MAKE THIS THE SCANNER VARIABLE!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
         const amount = parseFloat(document.getElementById("amountInput").value);
 
         if (isNaN(userID) || isNaN(amount) || amount <= 0) {
@@ -81,7 +81,7 @@
 
         processTransaction(userID, amount);
       });
-      let userCard  = document.getElementsByClassName("user-card");
+      let userCard  = document.getElementsByClassName("scaniframe");
       function processTransaction(userID, amount) {
   get(ref(database, 'users')).then((snapshot) => {
     if (snapshot.exists()) {
@@ -104,9 +104,8 @@
                     updateBusinessBalance(amount);
                     logTransaction(userKey, userID, -amount, newBalance, businessValue, businessData.balance); 
                     document.getElementById("transactionForm").reset();
-                    document.getElementById("user-card").style.display = "block";
+                    document.getElementById("scaniframe").style.display = "block";
                     document.getElementById("transaction-amount").style.display = "none";
-                    document.getElementById("userIDInput").focus();
                     showElement('#homepage-heading');
                     showPopup("flex", "Success!", "block", `The transaction was successful!`);
                     hideElement('#transactionForm');
@@ -248,9 +247,8 @@ document.getElementById("businessNameInput").addEventListener("keydown", (event)
     //Reset the forum when cancel button is pressed
     document.getElementById("cancel-button").addEventListener('click', function() {
       document.getElementById("transactionForm").reset();
-      document.getElementById("user-card").style.display = "block";
+      document.getElementById("scaniframe").style.display = "block";
       document.getElementById("transaction-amount").style.display = "none";
-      document.getElementById("userIDInput").focus();
     });
 
 
@@ -273,6 +271,16 @@ document.getElementById("businessNameInput").addEventListener("keydown", (event)
       hideElement('#transactionForm'); // Hide the transaction form
       showElement('#bidScreen'); // Show the bid screen
     });
+
+    window.iframeControl = function(status) {
+      if (status == "start") {
+        document.getElementById('scaniframe').src = 'https://peemima.gihub.io/lux-bank/scanner/';
+        document.getElementById('scaniframe').style.display = 'block';
+      } else if (status == "stop") {
+        document.getElementById('scaniframe').style.display = 'none';
+        document.getElementById('scaniframe').src = 'about:blank';
+      }
+    }
 
     window.addEventListener('message', (event) => {
       showPopup('flex', 'Hi', 'block', event.data);
@@ -301,7 +309,7 @@ document.getElementById("businessNameInput").addEventListener("keydown", (event)
       </div>
     </div>
     <form id="transactionForm">
-      <iframe id="scaniframe" height="500px" src="https://peemima.github.io/lux-bank/scanner/"></iframe>
+      <iframe id="scaniframe" height="500px" src="about:blank"></iframe>
       <div id="transaction-amount">
         <label for="amountInput">How many hawkeyes?</label>
         <input autocomplete="off" type="text" id="amountInput" name="amountInput" style="font-size: 18px;" required>
