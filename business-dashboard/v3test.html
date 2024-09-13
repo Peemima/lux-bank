@@ -260,6 +260,7 @@ document.getElementById("businessNameInput").addEventListener("keydown", (event)
     buyButton.addEventListener("click", function() { // Start listening for a click
       bidButton.classList.remove('menu-item-selected'); // Remove the 'selected' styling from the bid button
       buyButton.classList.add('menu-item-selected'); // Give it the 'selected' styling
+      iframeControl('start');
       hideElement('#homepage-heading'); // Hide the 'What would the customer like to do?' heading
       hideElement('#bidScreen'); // Hide the bid screen
       showElement('#transactionForm'); // Show the transaction form
@@ -267,6 +268,7 @@ document.getElementById("businessNameInput").addEventListener("keydown", (event)
     bidButton.addEventListener("click", function() { // Start listening for a click
       buyButton.classList.remove('menu-item-selected'); // Remove the 'selected' styling from the buy button
       bidButton.classList.add('menu-item-selected'); // Give it the 'selected' styling
+      iframeControl('stop');
       hideElement('#homepage-heading'); // Hide the 'What would the customer like to do?' heading
       hideElement('#transactionForm'); // Hide the transaction form
       showElement('#bidScreen'); // Show the bid screen
@@ -284,7 +286,9 @@ document.getElementById("businessNameInput").addEventListener("keydown", (event)
 
     window.addEventListener('message', (event) => {
       setTimeout(function(){
-        showPopup('flex', 'Message from iFrame', 'block', event.data) 
+        showPopup('flex', 'Message from iFrame', 'block', event.data);
+        document.getElementById("transaction-amount").style.display = "block";
+        document.getElementById("amountInput").focus();
       }, 1000);
     });
     
