@@ -247,7 +247,7 @@ document.getElementById("businessNameInput").addEventListener("keydown", (event)
     //Reset the forum when cancel button is pressed
     document.getElementById("cancel-button").addEventListener('click', function() {
       document.getElementById("transactionForm").reset();
-      document.getElementById("scaniframe").style.display = "block";
+      iframeControl('start');
       document.getElementById("transaction-amount").style.display = "none";
     });
 
@@ -283,7 +283,9 @@ document.getElementById("businessNameInput").addEventListener("keydown", (event)
     }
 
     window.addEventListener('message', (event) => {
-      showPopup('flex', 'Hi', 'block', event.data);
+      setTimeout(function(){
+        showPopup('flex', 'Message from iFrame', 'block', event.data) 
+      }, 1000);
     });
     
     // Setup scripting
