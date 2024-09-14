@@ -127,10 +127,10 @@
               fps: 60,
             },
             (decodedText, decodedResult) => {
-              document.getElementById('reader').style.transform = 'scaleX(1)';
               checkUser(decodedText);
             },
             (errorMessage) => {
+              document.getElementById('reader').style.transform = 'scaleX(1)';
               //console.error("Error during scanning:", errorMessage);
               //document.getElementById("result").innerText = "Error during scanning: " + errorMessage;
             }).catch((err) => {
