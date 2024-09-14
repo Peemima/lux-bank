@@ -341,6 +341,11 @@
   margin-left: 10px;
 }
 
+transactionForm {
+    width: 500px;
+    max-width: 95%
+}
+
 .user-info {
   display: flex;
   align-items: center;
