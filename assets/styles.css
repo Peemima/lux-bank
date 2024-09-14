@@ -341,7 +341,7 @@
   margin-left: 10px;
 }
 
-transactionForm {
+#transactionForm {
     width: 500px;
     max-width: 95%
 }
