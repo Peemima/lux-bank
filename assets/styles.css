@@ -263,6 +263,11 @@
 .user-card p1 {
   font-size: 1.2em; /* Increase font size */
 }
+.center {
+    display: block;
+    text-align: -webkit-center;
+    unicode-bidi: isolate;
+}
 .center-container {
   font-family: "Poppins", sans-serif;
   position: absolute;
