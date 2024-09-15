@@ -151,7 +151,7 @@
               (errorMessage) => {
                 //console.error("Error during scanning:", errorMessage);
                 //document.getElementById("result").innerText = "Error during scanning: " + errorMessage;
-                document.getElementByID('barcode-reader').style.display = 'block';
+                document.getElementById('barcode-reader').style.display = 'block';
               }).catch((err) => {
               console.error("Error starting scan:", err);
               document.getElementById("result").innerText = "Error starting scan: " + err;
