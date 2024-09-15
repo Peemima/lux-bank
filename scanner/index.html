@@ -12,7 +12,6 @@
       #barcode-reader {
         width: 100%;
         max-width: 500px;
-        display: none;
       }
 
       #reader-contaier {
@@ -138,7 +137,6 @@
               document.getElementById('reader').style.transform = 'scaleX(1)';
               //console.error("Error during scanning:", errorMessage);
               //document.getElementById("result").innerText = "Error during scanning: " + errorMessage;
-              document.getElementById('barcode-reader').style.display = 'block';
             }).catch((err) => {
             console.error("Error starting scan:", err);
             // Start scanning with selected camera
@@ -155,7 +153,6 @@
               (errorMessage) => {
                 //console.error("Error during scanning:", errorMessage);
                 //document.getElementById("result").innerText = "Error during scanning: " + errorMessage;
-                document.getElementById('barcode-reader').style.display = 'block';
               }).catch((err) => {
               console.error("Error starting scan:", err);
               document.getElementById("result").innerText = "Error starting scan: " + err;
