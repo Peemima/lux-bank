@@ -174,7 +174,10 @@
             const userSnapshot = snapshot.val();
             const userName = Object.keys(userSnapshot)[0]; // Get the parent element key (username)
             document.getElementById('barcode-reader').style.animation = 'checkmark 1s ease-in-out';
-             sendToParent(scannedText);
+            setTimeout(function(){
+              document.getElementById('barcode-reader').style.display = 'none';
+            }, 1000);
+            sendToParent(scannedText);
           } else {
             alert(`User ID: ${scannedText} not found in the database.`);
           }
