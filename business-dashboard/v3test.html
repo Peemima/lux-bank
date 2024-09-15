@@ -71,7 +71,7 @@
       document.getElementById("transactionForm").addEventListener("submit", function(event) {
         event.preventDefault(); 
 
-        const userID = document.getElementById("userIDInput").value; // MAKE THIS THE SCANNER VARIABLE!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+        const userID = latestUserID;
         const amount = parseFloat(document.getElementById("amountInput").value);
 
         if (isNaN(userID) || isNaN(amount) || amount <= 0) {
@@ -80,6 +80,7 @@
         }
 
         processTransaction(userID, amount);
+        latestUserID = '0';
       });
       let userCard  = document.getElementsByClassName("scaniframe");
       function processTransaction(userID, amount) {
