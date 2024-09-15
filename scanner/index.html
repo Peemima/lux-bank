@@ -176,7 +176,7 @@
             document.getElementById('barcode-reader').style.animation = 'checkmark 1s ease-in-out';
             setTimeout(function(){
               document.getElementById('barcode-reader').style.display = 'none';
-            }, 1000);
+            }, 960);
             sendToParent(scannedText);
           } else {
             alert(`User ID: ${scannedText} not found in the database.`);
