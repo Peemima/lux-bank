@@ -67,8 +67,6 @@
       document.addEventListener("DOMContentLoaded", function() {
         ensureBusinessAccountExists();
         fetchAndDisplayBusinessBalance();
-        fetchAndDisplayAuctions();
-        fetchAndDisplayUsers(); 
       });
 
       document.getElementById("transactionForm").addEventListener("submit", function(event) {
@@ -191,259 +189,6 @@
 
       setInterval(fetchAndDisplayBusinessBalance, 200);
 
-      // ------- Auctions -------
-      function fetchAndDisplayAuctions() {
-        const auctionsRef = ref(database, `businesses/${businessValue}/auctions`);
-        onValue(auctionsRef, (snapshot) => {
-          if (snapshot.exists()) {
-            const auctions = snapshot.val();
-            const auctionList = document.getElementById('auctionList');
-            auctionList.innerHTML = ''; // Clear previous auctions
-
-            for (let auctionID in auctions) {
-              const auction = auctions[auctionID];
-              const auctionElement = document.createElement('div');
-              auctionElement.classList.add('auction-item');
-              auctionElement.setAttribute('data-auction-id', auctionID);
-
-              auctionElement.innerHTML = `
-                <h3>${auction.itemName}</h3>
-                <div class="auction-details">
-                  <p>Starting Bid: $${auction.startingBid}</p>
-                </div>
-                <button class="view-auction-button">View Bids</button>
-              `;
-
-              auctionList.appendChild(auctionElement);
-
-              auctionElement.querySelector('.view-auction-button').addEventListener('click', () => {
-                displayAuctionBids(auctionID, auction); 
-              });
-            }
-          } else {
-            document.getElementById('auctionList').innerHTML = '<p>No active auctions.</p>';
-          }
-        });
-      }
-
-      function displayAuctionBids(auctionID, auction) {
-        const bidsRef = ref(database, `businesses/${businessValue}/auctions/${auctionID}/bids`);
-        const auctionDetails = document.getElementById('auctionDetails');
-
-        onValue(bidsRef, (snapshot) => {
-          if (snapshot.exists()) {
-            const bids = snapshot.val();
-            const bidsTable = document.getElementById('bidsTable'); 
-            bidsTable.innerHTML = `
-              <thead>
-                <tr>
-                  <th>User</th>
-                  <th>Bid</th>
-                  <th>Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-            `;
-
-            for (let bidKey in bids) {
-              const bid = bids[bidKey];
-              const userRef = ref(database, `users/${bid.userKey}`); 
-
-              get(userRef).then(userSnapshot => {
-                if (userSnapshot.exists()) {
-                  const user = userSnapshot.val();
-                  const row = bidsTable.insertRow(); 
-                  const userCell = row.insertCell(); 
-                  const bidCell = row.insertCell(); 
-                  const actionCell = row.insertCell();
-
-                  userCell.textContent = user.firstName; // Assuming user has a 'firstName' property
-                  bidCell.textContent = `$${bid.amount}`; 
-                  actionCell.innerHTML = `
-                    <button class="delete-bid" data-bid-key="${bidKey}">Delete</button>
-                  `;
-
-                  // Event listener for delete button
-                  actionCell.querySelector('.delete-bid').addEventListener('click', () => {
-                    deleteBid(auctionID, bidKey, auction);
-                  });
-                }
-              });
-            }
-
-            bidsTable.innerHTML += `
-              </tbody>
-            `;
-
-            // Add a new bid button
-            const newBidButton = document.createElement('button');
-            newBidButton.classList.add('fill-button');
-            newBidButton.innerText = 'Add New Bid';
-            newBidButton.addEventListener('click', () => {
-              openBidForm(auctionID, auction); 
-            });
-            auctionDetails.appendChild(newBidButton);
-
-            auctionDetails.style.display = 'block';
-          } else {
-            auctionDetails.innerHTML = '<p>No bids yet.</p>';
-            auctionDetails.style.display = 'block'; 
-          }
-        });
-      }
-
-      function deleteBid(auctionID, bidKey, auction) {
-        const bidsRef = ref(database, `businesses/${businessValue}/auctions/${auctionID}/bids/${bidKey}`);
-        remove(bidsRef).then(() => {
-          showPopup('flex', 'Success', 'block', 'Bid deleted successfully'); 
-        }).catch(error => {
-          console.error('Error deleting bid:', error);
-          showPopup('flex', 'Error', 'block', 'Failed to delete bid.');
-        });
-      }
-
-      function openBidForm(auctionID, auction) {
-        hideElement('#auctionList'); // Hide the auctions list
-        showElement('#bidForm'); // Show the bid form
-
-        const bidForm = document.getElementById('bidForm');
-        const currentAuction = document.getElementById('currentAuctionName');
-        const bidAmountInput = document.getElementById('bidAmountInput');
-        currentAuction.textContent = auction.itemName;
-        bidForm.setAttribute('data-auction-id', auctionID); 
-        bidAmountInput.value = ''; // Reset the bid amount input
-
-        // Add event listener to the submit button
-        bidForm.addEventListener('submit', (event) => {
-          event.preventDefault();
-
-          const bidAmount = parseFloat(bidAmountInput.value);
-
-          if (isNaN(bidAmount) || bidAmount <= 0) {
-            showPopup('flex', 'Error', 'block', 'Please enter a valid bid amount.');
-            return;
-          }
-
-          // Check for valid user ID
-          if (latestUserID === '0' || latestUserID === undefined || latestUserID === null) {
-            showPopup('flex', 'Notice', 'block', 'Please scan a valid user ID.');
-            return;
-          }
-
-          // Get the user's information
-          get(ref(database, 'users/' + latestUserID)).then(userSnapshot => {
-            if (userSnapshot.exists()) {
-              const user = userSnapshot.val();
-
-              // Check if user has enough balance
-              if (bidAmount > user.balance) {
-                showPopup('flex', 'Not enough hawkeyes', 'block', 'User does not have enough hawkeyes to place this bid.');
-                return;
-              }
-
-              // Add the bid to the database
-              addBid(auctionID, latestUserID, bidAmount, auction); 
-
-              // Reset the form
-              bidForm.reset();
-            } else {
-              showPopup('flex', 'Notice', 'block', 'User ID not found.');
-            }
-          }).catch(error => {
-            console.error('Error getting user information:', error);
-            showPopup('flex', 'Error', 'block', 'Failed to get user information.');
-          });
-        });
-      }
-
-      function addBid(auctionID, userID, bidAmount, auction) {
-        const bidsRef = ref(database, `businesses/${businessValue}/auctions/${auctionID}/bids`);
-
-        // Create the bid data
-        const newBidData = {
-          userKey: userID,
-          amount: bidAmount
-        };
-
-        set(ref(bidsRef, Date.now().toString()), newBidData).then(() => {
-          showPopup('flex', 'Success', 'block', 'Bid added successfully!');
-          // You might want to update the auction list here
-          // Alternatively, you can just use the onValue listener to update
-          // the list automatically
-        }).catch(error => {
-          console.error('Error adding bid:', error);
-          showPopup('flex', 'Error', 'block', 'Failed to add bid.');
-        });
-      }
-
-      // ------- New Auction -------
-      document.getElementById('newAuctionButton').addEventListener('click', () => {
-        hideElement('#auctionList'); // Hide the auctions list
-        showElement('#newAuctionForm'); // Show the new auction form
-      });
-
-      document.getElementById('newAuctionForm').addEventListener('submit', (event) => {
-        event.preventDefault();
-
-        const itemNameInput = document.getElementById('itemNameInput');
-        const startingBidInput = document.getElementById('startingBidInput');
-
-        const itemName = itemNameInput.value.trim();
-        const startingBid = parseFloat(startingBidInput.value);
-
-        if (itemName === '' || isNaN(startingBid) || startingBid <= 0) {
-          showPopup('flex', 'Error', 'block', 'Please fill in all fields correctly.');
-          return;
-        }
-
-        // Create new auction
-        createNewAuction(itemName, startingBid);
-
-        // Reset the form
-        document.getElementById('newAuctionForm').reset();
-      });
-
-      function createNewAuction(itemName, startingBid) {
-        const auctionsRef = ref(database, `businesses/${businessValue}/auctions`);
-        const newAuctionData = {
-          itemName: itemName,
-          startingBid: startingBid,
-        };
-
-        set(ref(auctionsRef, Date.now().toString()), newAuctionData).then(() => {
-          showPopup('flex', 'Success', 'block', 'New auction created!');
-        }).catch(error => {
-          console.error('Error creating new auction:', error);
-          showPopup('flex', 'Error', 'block', 'Failed to create new auction.');
-        });
-      }
-
-      // ------ User Management ------
-      function fetchAndDisplayUsers() {
-        const usersRef = ref(database, 'users');
-        onValue(usersRef, (snapshot) => {
-          if (snapshot.exists()) {
-            const users = snapshot.val();
-            const userList = document.getElementById('userList');
-            userList.innerHTML = '';
-
-            for (let userKey in users) {
-              const user = users[userKey];
-              const userElement = document.createElement('div');
-              userElement.classList.add('user-info'); 
-              userElement.setAttribute('data-user-key', userKey); // Store the user key
-              userElement.innerHTML = `
-                <p>${user.firstName} (${user.id})</p>
-                <p>Balance: $${user.balance}</p>
-              `;
-              userList.appendChild(userElement);
-            }
-          } else {
-            document.getElementById('userList').innerHTML = '<p>No users found.</p>';
-          }
-        });
-      }
-
     } else {
       document.getElementById("main-content").style.display = 'none'; 
       document.getElementById("login-screen").style.display = 'block'; 
@@ -521,9 +266,6 @@ document.getElementById("businessNameInput").addEventListener("keydown", (event)
       hideElement('#homepage-heading'); // Hide the 'What would the customer like to do?' heading
       hideElement('#bidScreen'); // Hide the bid screen
       hideElement('#transaction-amount'); // Hide the 'How many hawkeyes' screen
-      hideElement('#newAuctionForm'); // Hide the 'new auction form'
-      hideElement('#bidForm'); // Hide the 'bid form'
-      hideElement('#auctionDetails'); // Hide the 'auction details'
       showElement('#transactionForm'); // Show the transaction form
     });
     bidButton.addEventListener("click", function() { // Start listening for a click
@@ -532,10 +274,6 @@ document.getElementById("businessNameInput").addEventListener("keydown", (event)
       iframeControl('stop');
       hideElement('#homepage-heading'); // Hide the 'What would the customer like to do?' heading
       hideElement('#transactionForm'); // Hide the transaction form
-      hideElement('#transaction-amount'); // Hide the 'How many hawkeyes' screen
-      hideElement('#newAuctionForm'); // Hide the 'new auction form'
-      hideElement('#bidForm'); // Hide the 'bid form'
-      hideElement('#auctionDetails'); // Hide the 'auction details'
       showElement('#bidScreen'); // Show the bid screen
     });
 
@@ -561,11 +299,8 @@ document.getElementById("businessNameInput").addEventListener("keydown", (event)
     // Setup scripting
     // Hide elements
       hideElement('#transactionForm');
-      hideElement('#bidScreen');
+      hideElement('#bidScreen')
       hideElement('#transaction-amount');
-      hideElement('#newAuctionForm'); // Hide the 'new auction form'
-      hideElement('#bidForm'); // Hide the 'bid form'
-      hideElement('#auctionDetails'); // Hide the 'auction details'
       // hideElement('#login-screen');
   </script>
 </head>
@@ -592,32 +327,23 @@ document.getElementById("businessNameInput").addEventListener("keydown", (event)
         <button type="submit" class="fill-button">Process</button>
       </div>
     </form>
-
     <div id="bidScreen">
-      <div id="auctionList">
-        </div>
-      <button id="newAuctionButton" class="fill-button">New Auction</button>
-
-      <form id="newAuctionForm" class="center" style="display: none;">
-        <input autocomplete="off" type="text" id="itemNameInput" placeholder="Item Name" required>
-        <input autocomplete="off" type="text" id="startingBidInput" placeholder="Starting Bid" required>
-        <button type="submit" class="fill-button">Create Auction</button>
-      </form>
-
+      <div id="auctions-container">
+        <h2>Ongoing Auctions</h2>
+        <button id="newAuctionButton" class="fill-button">New Auction</button>
+        <div id="auctionList"></div> </div>
       <div id="auctionDetails" style="display: none;">
-        <h3 id="currentAuctionName"></h3>
-        <table id="bidsTable"></table>
+        <h2 id="auctionName"></h2>
+        <div id="biddersTable"></div> 
+        <iframe id="bidScaniframe" style="border: 0px;" width="100%" height="500px" src="about:blank"></iframe>
+        <div id="bidForm" style="display: none;">
+          <label for="bidAmountInput">How much would the user like to bid?</label>
+          <input autocomplete="off" type="text" id="bidAmountInput" name="bidAmountInput" style="font-size: 18px;" required>
+          <button id="bidCancelButton" class="outline-button">Back</button>
+          <button type="submit" id="bidSubmitButton" class="fill-button">Submit Bid</button>
+        </div>
       </div>
-
-      <form id="bidForm" class="center" style="display: none;">
-        <h3>Bid on <span id="currentAuctionName"></span></h3>
-        <input autocomplete="off" type="text" id="bidAmountInput" placeholder="Bid Amount" required>
-        <button type="submit" class="fill-button">Place Bid</button>
-      </form>
     </div>
-
-    <div id="userList" style="display: none;"> 
-      </div>
   </div>
   <div id="login-screen" class="center-container" style="display: none;">
     <h1 style="font-family: 'Poppins', sans-serif; font-weight: 500">Login to your business</h1>
@@ -626,5 +352,198 @@ document.getElementById("businessNameInput").addEventListener("keydown", (event)
     </form>
     <div id="suggestions"></div>
   </div>
+
+  <script>
+    // ... (Your existing Firebase code) ...
+
+    // Auction-related logic
+    let currentAuction = null;
+
+    const newAuctionButton = document.getElementById('newAuctionButton');
+    const auctionList = document.getElementById('auctionList');
+    const auctionName = document.getElementById('auctionName');
+    const biddersTable = document.getElementById('biddersTable');
+    const bidForm = document.getElementById('bidForm');
+    const bidAmountInput = document.getElementById('bidAmountInput');
+    const bidSubmitButton = document.getElementById('bidSubmitButton');
+    const bidCancelButton = document.getElementById('bidCancelButton');
+    const bidScaniframe = document.getElementById('bidScaniframe');
+
+    newAuctionButton.addEventListener('click', () => {
+      showPopup("flex", "New Auction", "block", `
+        <label for="newAuctionName">Auction Name:</label>
+        <input type="text" id="newAuctionName" required><br><br>
+        <label for="newAuctionStartingPrice">Starting Price:</label>
+        <input type="number" id="newAuctionStartingPrice" required>
+      `);
+
+      const popupCloseButton = document.getElementById('popup-close-button');
+      popupCloseButton.addEventListener('click', () => {
+        hideElement('#popup-overlay');
+      });
+
+      const popupContent = document.getElementById('popup-content');
+      popupContent.addEventListener('click', (event) => {
+        if (event.target.id === 'popup-content') {
+          hideElement('#popup-overlay');
+        }
+      });
+
+      document.getElementById('popup-content').addEventListener('submit', (event) => {
+        event.preventDefault();
+        const auctionName = document.getElementById('newAuctionName').value;
+        const startingPrice = parseInt(document.getElementById('newAuctionStartingPrice').value);
+        if (auctionName && !isNaN(startingPrice)) {
+          createAuction(auctionName, startingPrice);
+          hideElement('#popup-overlay');
+        } else {
+          showPopup("flex", "Notice", "block", "Please enter a valid auction name and starting price.");
+        }
+      });
+    });
+
+    function createAuction(auctionName, startingPrice) {
+      const auctionRef = ref(database, 'auctions/' + businessValue + '/' + auctionName);
+      const auctionData = {
+        name: auctionName,
+        startingPrice: startingPrice,
+        bidders: {}
+      };
+      set(auctionRef, auctionData)
+        .then(() => {
+          console.log('Auction created successfully.');
+          fetchAuctions();
+        })
+        .catch((error) => {
+          console.error('Error creating auction:', error);
+        });
+    }
+
+    function fetchAuctions() {
+      const auctionRef = ref(database, 'auctions/' + businessValue);
+      onValue(auctionRef, (snapshot) => {
+        if (snapshot.exists()) {
+          const auctions = snapshot.val();
+          auctionList.innerHTML = ''; // Clear existing auctions
+          for (const auctionName in auctions) {
+            const auction = auctions[auctionName];
+            const auctionItem = document.createElement('div');
+            auctionItem.classList.add('auction-item');
+            auctionItem.textContent = auction.name;
+            auctionItem.addEventListener('click', () => {
+              showAuctionDetails(auctionName);
+            });
+            auctionList.appendChild(auctionItem);
+          }
+        } else {
+          auctionList.innerHTML = '<p>No auctions found.</p>';
+        }
+      });
+    }
+
+    function showAuctionDetails(auctionName) {
+      currentAuction = auctionName;
+      auctionName.textContent = auctionName;
+
+      const biddersRef = ref(database, 'auctions/' + businessValue + '/' + auctionName + '/bidders');
+      onValue(biddersRef, (snapshot) => {
+        if (snapshot.exists()) {
+          const bidders = snapshot.val();
+          updateBiddersTable(bidders);
+        } else {
+          biddersTable.innerHTML = '<p>No bidders yet.</p>';
+        }
+      });
+
+      hideElement('#auctions-container');
+      showElement('#auctionDetails');
+    }
+
+    function updateBiddersTable(bidders) {
+      biddersTable.innerHTML = ''; // Clear existing bidders
+      const table = document.createElement('table');
+      const headerRow = table.insertRow();
+      headerRow.insertCell().textContent = 'User';
+      headerRow.insertCell().textContent = 'Bid Amount';
+      headerRow.insertCell().textContent = 'Action';
+      for (const userKey in bidders) {
+        const bidder = bidders[userKey];
+        const row = table.insertRow();
+        row.insertCell().textContent = userKey.split(' ')[0]; // Get user's name
+        row.insertCell().textContent = bidder.amount;
+        const actionCell = row.insertCell();
+        const deleteButton = document.createElement('button');
+        deleteButton.textContent = 'Delete';
+        deleteButton.addEventListener('click', () => {
+          removeBidder(userKey);
+        });
+        actionCell.appendChild(deleteButton);
+      }
+      biddersTable.appendChild(table);
+    }
+
+    function removeBidder(userKey) {
+      const biddersRef = ref(database, 'auctions/' + businessValue + '/' + currentAuction + '/bidders/' + userKey);
+      remove(biddersRef)
+        .then(() => {
+          console.log('Bidder removed successfully.');
+        })
+        .catch((error) => {
+          console.error('Error removing bidder:', error);
+        });
+    }
+
+    bidSubmitButton.addEventListener('click', () => {
+      const bidAmount = parseFloat(bidAmountInput.value);
+      if (!isNaN(bidAmount)) {
+        addBidder(latestUserID, bidAmount);
+      } else {
+        showPopup("flex", "Notice", "block", "Please enter a valid bid amount.");
+      }
+    });
+
+    function addBidder(userID, bidAmount) {
+      get(ref(database, 'users/' + userID)).then((snapshot) => {
+        if (snapshot.exists()) {
+          const user = snapshot.val();
+          if (user.balance >= bidAmount) {
+            const biddersRef = ref(database, 'auctions/' + businessValue + '/' + currentAuction + '/bidders/' + userID);
+            set(biddersRef, { amount: bidAmount })
+              .then(() => {
+                console.log('Bidder added successfully.');
+                bidAmountInput.value = ''; // Clear input field
+                hideElement('#bidForm');
+                showElement('#bidScaniframe');
+              })
+              .catch((error) => {
+                console.error('Error adding bidder:', error);
+              });
+          } else {
+            showPopup("flex", "Notice", "block", "The user does not have enough hawkeyes to place this bid.");
+          }
+        } else {
+          showPopup("flex", "Notice", "block", "That doesn't seem to be a valid user ID.");
+        }
+      });
+    }
+
+    bidCancelButton.addEventListener('click', () => {
+      hideElement('#bidForm');
+      showElement('#bidScaniframe');
+    });
+
+    // Handle bid scan iframe messages
+    window.addEventListener('message', (event) => {
+      if (event.source === bidScaniframe.contentWindow) {
+        latestUserID = event.data;
+        hideElement('#bidScaniframe');
+        showElement('#bidForm');
+        bidAmountInput.focus();
+      }
+    });
+
+    // Call fetchAuctions when the page loads
+    fetchAuctions();
+  </script>
 </body>
 </html>
