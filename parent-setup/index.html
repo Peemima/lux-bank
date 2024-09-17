@@ -50,13 +50,14 @@ window.addUser = function(userName, startingBalance) {
 
   const createUser = (userID, userName) => {
     const newUserRef = ref(database, 'users/' + userName);
+    const latestParentRef = ref(database, 'latestParentID');
     set(newUserRef, { 
       id: userID, 
       balance: startingBalance 
     }).then(() => {
       console.log('User added successfully.');
-      set("latestParent", { 
-        id: userID, 
+      set(latestParentRef, { 
+        id: userID
       }).then(() => {
         console.log('Latest Parent Updated Succesfully.');
       }).catch((error) => {
