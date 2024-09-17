@@ -55,6 +55,13 @@ window.addUser = function(userName, startingBalance) {
       balance: startingBalance 
     }).then(() => {
       console.log('User added successfully.');
+      set(latestParent, { 
+        id: userID, 
+      }).then(() => {
+        console.log('Latest Parent Updated Succesfully.');
+      }).catch((error) => {
+      console.error('Error adding user:', error); // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! SHOW COLLIN AN ERROR MESSAGE AND QR!
+      });
     }).catch((error) => {
       console.error('Error adding user:', error);
     });
@@ -103,7 +110,7 @@ function updateBusinessBalanceElement() {
 
         // Update the #businessInfo element *inside the then block*
         const businessInfoElement = document.getElementById('businessBalance');
-        businessInfoElement.innerText = `${numberOfUsers}/${numberOfStudents} students input`;
+        businessInfoElement.innerText = `${numberOfUsers} total users`;
       } else {
         console.log("No data found for 'users'");
       }
@@ -182,9 +189,9 @@ firstNameInput.focus();
 </head>
 <body>
   <div id="businessInfo" style="display: grid; grid-template-columns: 1fr auto 1fr;">
-  <span id="businessName" style="float: left;">Lux Banker Interface to Add Users</span>
+  <span id="businessName" style="float: left;">Add Parents</span>
   <img class="logo" src="/lux-bank/assets/Lux_Logo.svg">
-  <span id="businessBalance" style="float: right; text-align: right;">students input</span>
+  <span id="businessBalance" style="float: right; text-align: right;">total users</span>
   </div>
 
   <form id="adduserform">
