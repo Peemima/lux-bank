@@ -55,7 +55,7 @@ window.addUser = function(userName, startingBalance) {
       balance: startingBalance 
     }).then(() => {
       console.log('User added successfully.');
-      set(latestParent, { 
+      set("latestParent", { 
         id: userID, 
       }).then(() => {
         console.log('Latest Parent Updated Succesfully.');
