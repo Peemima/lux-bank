@@ -1,0 +1,451 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Blob Animation</title>
+  <style>
+    body, html { margin: 0; }
+
+canvas {
+  position: fixed;
+  touch-action: none;
+  z-index: 1; /* Set z-index for the canvas */
+  cursor: grabbing;
+}
+
+button {
+  position: fixed; /* Use fixed positioning for buttons too */
+  top: 20px;
+  left: 20px;
+  padding: 10px 20px;
+  font-size: 16px;
+  background-color: black;
+  color: white;
+  border: none;
+  cursor: pointer;
+  z-index: 2; /* Set a higher z-index for buttons */
+}
+
+button + button {
+}
+  </style>
+  <script>
+    let canvas, ctx;
+let render, init;
+let blob;
+let isSliced = false; // Flag to indicate if the blob is sliced
+let slicePosition = null; // Store the slice position
+
+class Blob {
+  constructor() {
+    this.points = [];
+  }
+
+  init() {
+    for (let i = 0; i < this.numPoints; i++) {
+      let point = new Point(this.divisional * (i + 1), this);
+      // point.acceleration = -1 + Math.random() * 2;
+      this.push(point);
+    }
+  }
+
+  render() {
+    let canvas = this.canvas;
+    let ctx = this.ctx;
+    let position = this.position;
+    let pointsArray = this.points;
+    let radius = this.radius;
+    let points = this.numPoints;
+    let divisional = this.divisional;
+    let center = this.center;
+
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    if (isSliced && slicePosition) {
+      // Draw the two halves separately
+      let sliceAngle = Math.atan2(slicePosition.y - center.y, slicePosition.x - center.x);
+
+      // Find the two points closest to the slice angle
+      let closestPoints = this.points.reduce((acc, point, index) => {
+        let angleDiff = Math.abs(point.azimuth - sliceAngle);
+        if (angleDiff < acc.angleDiff) {
+          return { angleDiff, index };
+        }
+        return acc;
+      }, { angleDiff: Infinity, index: 0 });
+
+      let startIndex = closestPoints.index;
+      let endIndex = startIndex + Math.floor(this.numPoints / 2);
+      endIndex %= this.numPoints;
+
+      // Draw the first half
+      this.drawHalf(ctx, pointsArray, center, startIndex, endIndex);
+
+      // Draw the second half
+      this.drawHalf(ctx, pointsArray, center, endIndex, startIndex);
+    } else {
+      // Draw the full blob
+      pointsArray[0].solveWith(pointsArray[points - 1], pointsArray[1]);
+
+      let p0 = pointsArray[points - 1].position;
+      let p1 = pointsArray[0].position;
+      let _p2 = p1;
+
+      ctx.beginPath();
+      ctx.moveTo(center.x, center.y);
+      ctx.moveTo((p0.x + p1.x) / 2, (p0.y + p1.y) / 2);
+
+      for (let i = 1; i < points; i++) {
+        pointsArray[i].solveWith(pointsArray[i - 1], pointsArray[i + 1] || pointsArray[0]);
+
+        let p2 = pointsArray[i].position;
+        var xc = (p1.x + p2.x) / 2;
+        var yc = (p1.y + p2.y) / 2;
+        ctx.quadraticCurveTo(p1.x, p1.y, xc, yc);
+        // ctx.lineTo(p2.x, p2.y);
+
+        ctx.fillStyle = '#000000';
+        // ctx.fillRect(p1.x-2.5, p1.y-2.5, 5, 5);
+
+        p1 = p2;
+      }
+
+      var xc = (p1.x + _p2.x) / 2;
+      var yc = (p1.y + _p2.y) / 2;
+      ctx.quadraticCurveTo(p1.x, p1.y, xc, yc);
+      // ctx.lineTo(_p2.x, _p2.y);
+
+      // ctx.closePath();
+      ctx.fillStyle = this.color;
+      ctx.fill();
+      ctx.strokeStyle = '#000000';
+      // ctx.stroke();
+    }
+
+    requestAnimationFrame(this.render.bind(this));
+  }
+
+  drawHalf(ctx, pointsArray, center, startIndex, endIndex) {
+    ctx.beginPath();
+    ctx.moveTo(center.x, center.y);
+
+    let p0 = pointsArray[endIndex].position;
+    let p1 = pointsArray[startIndex].position;
+
+    ctx.moveTo((p0.x + p1.x) / 2, (p0.y + p1.y) / 2);
+
+    for (let i = startIndex; i != endIndex; i = (i + 1) % this.numPoints) {
+      pointsArray[i].solveWith(pointsArray[(i - 1 + this.numPoints) % this.numPoints], pointsArray[(i + 1) % this.numPoints]);
+
+      let p2 = pointsArray[i].position;
+      var xc = (p1.x + p2.x) / 2;
+      var yc = (p1.y + p2.y) / 2;
+      ctx.quadraticCurveTo(p1.x, p1.y, xc, yc);
+
+      p1 = p2;
+    }
+
+    ctx.quadraticCurveTo(p1.x, p1.y, (p0.x + p1.x) / 2, (p0.y + p1.y) / 2);
+
+    ctx.fillStyle = this.color;
+    ctx.fill();
+    ctx.strokeStyle = '#000000';
+    // ctx.stroke();
+  }
+
+  push(item) {
+    if (item instanceof Point) {
+      this.points.push(item);
+    }
+  }
+
+  set color(value) {
+    this._color = value;
+  }
+  get color() {
+    return this._color || '#000000';
+  }
+
+  set canvas(value) {
+    if (value instanceof HTMLElement && value.tagName.toLowerCase() === 'canvas') {
+      this._canvas = canvas;
+      this.ctx = this._canvas.getContext('2d');
+    }
+  }
+  get canvas() {
+    return this._canvas;
+  }
+
+  set numPoints(value) {
+    if (value > 2) {
+      this._points = value;
+    }
+  }
+  get numPoints() {
+    return this._points || 32;
+  }
+
+  set radius(value) {
+    if (value > 0) {
+      this._radius = value;
+    }
+  }
+  get radius() {
+    return this._radius || 150;
+  }
+
+  set position(value) {
+    if (typeof value == 'object' && value.x && value.y) {
+      this._position = value;
+    }
+  }
+  get position() {
+    return this._position || { x: 0.5, y: 0.5 };
+  }
+
+  get divisional() {
+    return Math.PI * 2 / this.numPoints;
+  }
+
+  get center() {
+    return { x: this.canvas.width * this.position.x, y: this.canvas.height * this.position.y };
+  }
+
+  set running(value) {
+    this._running = value === true;
+  }
+  get running() {
+    return this.running !== false;
+  }
+}
+
+class Point {
+  constructor(azimuth, parent) {
+    this.parent = parent;
+    this.azimuth = Math.PI - azimuth;
+    this._components = {
+      x: Math.cos(this.azimuth),
+      y: Math.sin(this.azimuth)
+    };
+
+    this.acceleration = -0.3 + Math.random() * 0.6;
+  }
+
+  solveWith(leftPoint, rightPoint) {
+    this.acceleration = (-0.3 * this.radialEffect + (leftPoint.radialEffect - this.radialEffect) + (rightPoint.radialEffect - this.radialEffect)) * this.elasticity - this.speed * this.friction;
+  }
+
+  set acceleration(value) {
+    if (typeof value == 'number') {
+      this._acceleration = value;
+      this.speed += this._acceleration * 2;
+    }
+  }
+  get acceleration() {
+    return this._acceleration || 0;
+  }
+
+  set speed(value) {
+    if (typeof value == 'number') {
+      this._speed = value;
+      this.radialEffect += this._speed * 5;
+    }
+  }
+  get speed() {
+    return this._speed || 0;
+  }
+
+  set radialEffect(value) {
+    if (typeof value == 'number') {
+      this._radialEffect = value;
+    }
+  }
+  get radialEffect() {
+    return this._radialEffect || 0;
+  }
+
+  get position() {
+    return {
+      x: this.parent.center.x + this.components.x * (this.parent.radius + this.radialEffect),
+      y: this.parent.center.y + this.components.y * (this.parent.radius + this.radialEffect)
+    }
+  }
+
+  get components() {
+    return this._components;
+  }
+
+  set elasticity(value) {
+    if (typeof value === 'number') {
+      this._elasticity = value;
+    }
+  }
+  get elasticity() {
+    return this._elasticity || 0.001;
+  }
+  set friction(value) {
+    if (typeof value === 'number') {
+      this._friction = value;
+    }
+  }
+  get friction() {
+    return this._friction || 0.0085;
+  }
+}
+
+blob = new Blob;
+
+init = function() {
+  canvas = document.createElement('canvas');
+  canvas.setAttribute('touch-action', 'none');
+
+  document.body.appendChild(canvas);
+
+  let resize = function() {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+  }
+  window.addEventListener('resize', resize);
+  resize();
+
+  let oldMousePoint = { x: 0, y: 0 };
+  let hover = false;
+  let mouseMove = function(e) {
+    let pos = blob.center;
+    let diff = { x: e.clientX - pos.x, y: e.clientY - pos.y };
+    let dist = Math.sqrt((diff.x * diff.x) + (diff.y * diff.y));
+    let angle = null;
+
+    blob.mousePos = { x: pos.x - e.clientX, y: pos.y - e.clientY };
+
+    if (dist < blob.radius && hover === false) {
+      let vector = { x: e.clientX - pos.x, y: e.clientY - pos.y };
+      angle = Math.atan2(vector.y, vector.x);
+      hover = true;
+      // blob.color = '#77FF00';
+    } else if (dist > blob.radius && hover === true) {
+      let vector = { x: e.clientX - pos.x, y: e.clientY - pos.y };
+      angle = Math.atan2(vector.y, vector.x);
+      hover = false;
+      blob.color = null;
+    }
+
+    if (typeof angle == 'number') {
+      let nearestPoint = null;
+      let distanceFromPoint = 100;
+
+      blob.points.forEach((point) => {
+        if (Math.abs(angle - point.azimuth) < distanceFromPoint) {
+          // console.log(point.azimuth, angle, distanceFromPoint);
+          nearestPoint = point;
+          distanceFromPoint = Math.abs(angle - point.azimuth);
+        }
+
+      });
+
+      if (nearestPoint) {
+        let strength = { x: oldMousePoint.x - e.clientX, y: oldMousePoint.y - e.clientY };
+        strength = Math.sqrt((strength.x * strength.x) + (strength.y * strength.y)) * 10;
+        if (strength > 100) strength = 100;
+        nearestPoint.acceleration = strength / 100 * (hover ? -1 : 1) * mouseInfluence; // Apply mouseInfluence
+      }
+    }
+
+    oldMousePoint.x = e.clientX;
+    oldMousePoint.y = e.clientY;
+  }
+  // window.addEventListener('mousemove', mouseMove);
+  window.addEventListener('pointermove', mouseMove);
+
+  // Slice detection
+  canvas.addEventListener('pointerdown', (e) => {
+    // Calculate the distance to the center
+    const clickX = e.clientX;
+    const clickY = e.clientY;
+    const distance = Math.sqrt((clickX - blob.center.x) ** 2 + (clickY - blob.center.y) ** 2);
+    if (distance <= blob.radius) {
+      // Set the slice position
+      slicePosition = { x: clickX, y: clickY };
+      // Start the slice timer
+      let sliceTimer = setTimeout(() => {
+        // If the mouse has moved far enough, slice the blob
+        if (Math.sqrt((e.clientX - clickX) ** 2 + (e.clientY - clickY) ** 2) > 100) {
+          isSliced = true;
+        }
+        clearTimeout(sliceTimer);
+      }, 200); // Adjust slice speed
+    }
+  });
+
+  canvas.addEventListener('pointerup', () => {
+    slicePosition = null;
+    clearTimeout(sliceTimer);
+  });
+
+  // Change 'click' to 'mousedown' for immediate effect
+  canvas.addEventListener('mousedown', (e) => {
+    // Check if the click is within the blob
+    const clickX = e.clientX;
+    const clickY = e.clientY;
+    const distance = Math.sqrt((clickX - blob.center.x) ** 2 + (clickY - blob.center.y) ** 2);
+    if (distance <= blob.radius) {
+      // Run the bounce function
+      blob.points.forEach(point => {
+        point.acceleration = (-1 + Math.random() * 2) * bounceInfluence;
+      });
+    }
+  });
+
+  blob.canvas = canvas;
+  blob.init();
+  blob.render();
+
+  // Buttons
+  const bounceButton = document.getElementById('bounceButton');
+  const stopButton = document.getElementById('stopButton');
+
+  bounceButton.addEventListener('click', () => {
+    blob.points.forEach(point => {
+      point.acceleration = (-1 + Math.random() * 2) * bounceInfluence; // Apply bounceInfluence
+    });
+  });
+
+  stopButton.addEventListener('click', () => {
+    // Set a flag to indicate stopping
+    let stopping = true;
+
+    // Gradually decrease speed and radial effect over 0.5 seconds
+    let interval = setInterval(() => {
+      if (stopping) {
+        blob.points.forEach(point => {
+          // Smoothly decrease speed and radial effect
+          point.speed *= 0.9; // Adjust the multiplier for speed reduction
+          point.radialEffect *= 0.9; // Adjust the multiplier for radial effect reduction
+        });
+
+        // If speed and radial effect are close enough to 0, stop the animation
+        if (blob.points.every(point => Math.abs(point.speed) < 0.01 && Math.abs(point.radialEffect) < 0.01)) {
+          clearInterval(interval);
+          stopping = false;
+        }
+      }
+    }, 20); // Update every 10 milliseconds (100 times per second)
+  });
+
+  // Mouse Influence Variable
+  let mouseInfluence = 3; // Adjust this value to change mouse influence
+  let bounceInfluence = 1.5; // Adjust this value to change bounce strength
+
+}
+
+init();
+  </script>
+</head>
+<body>
+  <button id="bounceButton" style="display: none;">Bounce</button>
+  <button id="stopButton">Reset</button>
+
+  <script src="https://code.jquery.com/pep/0.4.3/pep.js"></script>
+</body>
+</html>
