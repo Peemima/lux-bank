@@ -30,7 +30,13 @@ button {
 button + button {
 }
   </style>
-  <script>
+</head>
+<body>
+  <button id="bounceButton" style="display: none;">Bounce</button>
+  <button id="stopButton">Reset</button>
+
+  <script src="https://code.jquery.com/pep/0.4.3/pep.js"></script>
+    <script>
     let canvas, ctx;
 let render, init;
 let blob;
@@ -441,11 +447,5 @@ init = function() {
 
 init();
   </script>
-</head>
-<body>
-  <button id="bounceButton" style="display: none;">Bounce</button>
-  <button id="stopButton">Reset</button>
-
-  <script src="https://code.jquery.com/pep/0.4.3/pep.js"></script>
 </body>
 </html>
