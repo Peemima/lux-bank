@@ -48,12 +48,13 @@ window.addUser = function(userName, startingBalance) {
     });
   };
 
-  const createUser = (userID, userName) => {
+  const createUser = (userID, userName, biweeklyPayroll, startingBalance) => {
     const newUserRef = ref(database, 'users/' + userName);
     set(newUserRef, { 
       id: userID, 
       balance: startingBalance,
-      ogBalance: startingBalance
+      ogBalance: startingBalance,
+      biweeklyPayroll: biweeklyPayroll
     }).then(() => {
       console.log('User added successfully.');
     }).catch((error) => {
@@ -167,17 +168,20 @@ userBalanceInput.onkeydown = function(e){
   if(e.keyCode == 32){
     event.preventDefault();
     console.log("Space key pressed");
-    addUser(firstNameInput.value + " " + lastNameInput.value, userBalanceInput.value)
+    addUser(firstNameInput.value + " " + lastNameInput.value, payRateInput.value, userBalanceInput.value)
     console.log(firstNameInput.value + " " + lastNameInput.value + " " + userBalanceInput.value + " created");
     
     //Clear out the input feilds
     firstNameInput.value = null;
     lastNameInput.value = null;
+    payRateInput.value = null;
     userBalanceInput.value = null;
 
     //Hide all the input feilds, exept first name
     lastNameInput.style.display = "none";
+    payRateInput.style.display = "none";
     userBalanceInput.style.display = "none";
+    
 
     //Select the first name input
     firstNameInput.focus();
@@ -202,7 +206,7 @@ firstNameInput.focus();
   <form id="adduserform">
     <input type="text" id="adduserfirstname" placeholder="First Name..." style="display: block;" oninput="this.value = capitalizeFirstLetter(this.value)">
     <input type="text" id="adduserlastname" placeholder="Last Name..." style="display: none;" oninput="this.value = capitalizeFirstLetter(this.value)">
-    <input type="number" id="addpayrate" placeholder="Bi-weekly payroll..." style="display: none;">
+    <input type="number" id="addpayrate" placeholder="Biweekly payroll..." style="display: none;">
     <input type="number" id="adduserbalance" placeholder="Balance..." style="display: none;">
     <p id="form-instructions">Press space to enter last name</p>
   </form>
