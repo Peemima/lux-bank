@@ -169,16 +169,8 @@ userBalanceInput.onkeydown = function(e){
     event.preventDefault();
     console.log("Space key pressed");
 
-    let balance = parseFloat(userBalanceInput.value);
-    let payRate = parseFloat(payRateInput.value);
-
-    // If the user didn't input a balance or pay rate, default to 0:
-    if (isNaN(balance)) {
-        balance = 0;
-    }
-    if (isNaN(payRate)) {
-        payRate = 0;
-    }
+    let balance = userBalanceInput.value;
+    let payRate = payRateInput.value;
 
     addUser(firstNameInput.value + " " + lastNameInput.value, payRate, balance);
     console.log(firstNameInput.value + " " + lastNameInput.value + " " + userBalanceInput.value + " created");
