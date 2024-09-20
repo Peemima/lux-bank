@@ -129,6 +129,7 @@ window.capitalizeFirstLetter = function(inputString) {
 var firstNameInput = document.getElementById("adduserfirstname");
 var lastNameInput = document.getElementById("adduserlastname");
 var userBalanceInput = document.getElementById("adduserbalance")
+var payRateInput = document.getElementById("addpayrate")
 var saveUserButton = document.getElementById("savenewuser")
 var formInstructions = document.getElementById("form-instructions");
 
@@ -138,11 +139,21 @@ firstNameInput.onkeydown = function(e){
     console.log("Space key pressed");
     lastNameInput.style.display = "block";
     lastNameInput.focus();
-    formInstructions.innerText = "Press space to enter user balance";
+    formInstructions.innerText = "Press space to enter last name";
   }
 }
 
 lastNameInput.onkeydown = function(e){
+  if(e.keyCode == 32){
+    event.preventDefault();
+    console.log("Space key pressed");
+    payRateInput.style.display = "block";
+    payRateInput.focus();
+    formInstructions.innerText = "Press space to enter pay rate";
+  }
+}
+
+payRateInput.onkeydown = function(e){
   if(e.keyCode == 32){
     event.preventDefault();
     console.log("Space key pressed");
@@ -191,6 +202,7 @@ firstNameInput.focus();
   <form id="adduserform">
     <input type="text" id="adduserfirstname" placeholder="First Name..." style="display: block;" oninput="this.value = capitalizeFirstLetter(this.value)">
     <input type="text" id="adduserlastname" placeholder="Last Name..." style="display: none;" oninput="this.value = capitalizeFirstLetter(this.value)">
+    <input type="number" id="addpayrate" placeholder="Bi-weekly payroll..." style="display: none;">
     <input type="number" id="adduserbalance" placeholder="Balance..." style="display: none;">
     <p id="form-instructions">Press space to enter last name</p>
   </form>
