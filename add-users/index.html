@@ -43,7 +43,7 @@
     
 window.addUser = function(userName, lastName, biweeklyPayroll, startingBalance) {
   const generateUserID = () => {
-    return Math.floor(1000 + Math.random() * 9000).toString();
+    return Math.floor(1000 + Math.random() * 9000).toString(); // UserID will remain a string
   };
 
   const checkUserIDUnique = (userID) => {
@@ -53,12 +53,22 @@ window.addUser = function(userName, lastName, biweeklyPayroll, startingBalance) 
   };
 
   const createUser = (userID, userName, biweeklyPayroll, startingBalance) => {
+    // Convert biweeklyPayroll and startingBalance to strings
+    const biweeklyPayrollStr = String(biweeklyPayroll);
+    const startingBalanceStr = String(startingBalance);
+
+    // Ensure userName and lastName are valid before proceeding
+    if (!userName || !lastName) {
+      console.error("User name or last name is missing.");
+      return;
+    }
+
     const newUserRef = ref(database, 'users/' + userName);
     set(newUserRef, { 
       id: userID, 
-      balance: startingBalance,
-      ogBalance: startingBalance,
-      biweeklyPayroll: biweeklyPayroll
+      balance: startingBalanceStr,       // Store balance as a string
+      ogBalance: startingBalanceStr,     // Store original balance as a string
+      biweeklyPayroll: biweeklyPayrollStr // Store biweeklyPayroll as a string
     }).then(() => {
       console.log('User added successfully.');
     }).catch((error) => {
@@ -164,36 +174,48 @@ payRateInput.onkeydown = function(e){
   }
 }
 
-userBalanceInput.onkeydown = function(e){
-  if(e.keyCode == 32){
+userBalanceInput.onkeydown = function(e) {
+  if (e.keyCode == 32) {
     event.preventDefault();
     console.log("Space key pressed");
 
+    let firstName = firstNameInput.value;
+    let lastName = lastNameInput.value;
     let balance = userBalanceInput.value;
     let payRate = payRateInput.value;
 
-    addUser(firstNameInput.value + " " + lastNameInput.value, payRate, balance);
-    console.log(firstNameInput.value + " " + lastNameInput.value + " " + userBalanceInput.value + " created");
-    
-    //Clear out the input feilds
+    // Check if all required inputs are provided
+    if (!firstName || !lastName || !balance || !payRate) {
+      console.error("One or more input fields are empty.");
+      formInstructions.innerText = "Please fill in all fields.";
+      return;
+    }
+
+    // No need to convert balance and pay rate to numbers since we want them as strings
+    // Call the addUser function with the provided values
+    addUser(firstName + " " + lastName, lastName, payRate, balance);
+    console.log(`${firstName} ${lastName} with balance ${balance} created`);
+
+    // Clear out the input fields
     firstNameInput.value = null;
     lastNameInput.value = null;
     payRateInput.value = null;
     userBalanceInput.value = null;
 
-    //Hide all the input feilds, exept first name
+    // Hide all input fields except first name
     lastNameInput.style.display = "none";
     payRateInput.style.display = "none";
     userBalanceInput.style.display = "none";
-    
 
-    //Select the first name input
+    // Select the first name input
     firstNameInput.focus();
 
+    // Update the form instructions and the business balance display
     formInstructions.innerText = "User saved. Add next user.";
     updateBusinessBalanceElement();
   }
 }
+
 
 //Automatically select the first name input feild
 firstNameInput.focus();
