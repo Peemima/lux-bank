@@ -41,7 +41,7 @@
     return inputString.charAt(0).toUpperCase() + inputString.slice(1).toLowerCase();
 }
     
-window.addUser = function(userName, startingBalance, biweeklyPayroll, startingBalance) {
+window.addUser = function(userName, lastName, biweeklyPayroll, startingBalance) {
   const generateUserID = () => {
     return Math.floor(1000 + Math.random() * 9000).toString();
   };
@@ -75,7 +75,7 @@ window.addUser = function(userName, startingBalance, biweeklyPayroll, startingBa
       isUnique = await checkUserIDUnique(userID);
     }
 
-    createUser(userID, userName);
+    createUser(userID, userName, biweeklyPayroll, startingBalance);
   };
 
   addUserWithUniqueID(userName);
