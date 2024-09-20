@@ -36,6 +36,10 @@
     
     let currentSearchQuery = "";
 
+
+    window.capitalizeFirstLetter = function(inputString) {
+    return inputString.charAt(0).toUpperCase() + inputString.slice(1).toLowerCase();
+}
     
 window.addUser = function(userName, startingBalance, biweeklyPayroll, startingBalance) {
   const generateUserID = () => {
@@ -122,10 +126,6 @@ updateBusinessBalanceElement();
 
 // Call the update function every 10 secconds (adjust as needed)
 setInterval(updateBusinessBalanceElement, 100);
-
-window.capitalizeFirstLetter = function(inputString) {
-    return inputString.charAt(0).toUpperCase() + inputString.slice(1).toLowerCase();
-}
 
 var firstNameInput = document.getElementById("adduserfirstname");
 var lastNameInput = document.getElementById("adduserlastname");
