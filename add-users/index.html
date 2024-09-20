@@ -52,7 +52,8 @@ window.addUser = function(userName, startingBalance) {
     const newUserRef = ref(database, 'users/' + userName);
     set(newUserRef, { 
       id: userID, 
-      balance: startingBalance 
+      balance: startingBalance,
+      ogBalance: startingBalance
     }).then(() => {
       console.log('User added successfully.');
     }).catch((error) => {
