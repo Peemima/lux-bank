@@ -19,7 +19,7 @@ function createLoadingScreen() {
   const loadingImage = document.createElement('img');
   loadingImage.id = "loading-image";
   loadingImage.className = "loading-image animate__animated animate__zoomInDown";
-  loadingImage.src = "https://peemima.github.io/lux-bank/assets/market-day-logo.png";
+  loadingImage.src = "https://peemima.github.io/lux-bank/assets/fireryhills.png";
 
   loadingOverlayDiv.appendChild(loadingImage);
   document.body.insertBefore(loadingOverlayDiv, document.body.firstChild);
