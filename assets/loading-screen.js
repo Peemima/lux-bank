@@ -1,6 +1,6 @@
 function hideLoadingScreen() {
-  document.getElementById("loading-image").classList.remove("animate__zoomInDown");
-  document.getElementById("loading-image").classList.add("animate__bounceOutDown");
+  document.getElementById("loading-image").classList.remove("animate__jackInTheBox");
+  document.getElementById("loading-image").classList.add("animate__zoomOut");
   setTimeout(() => { 
     document.getElementById("loading-overlay").classList.add("animate__fadeOut"); 
   }, 400);
@@ -18,7 +18,7 @@ function createLoadingScreen() {
 
   const loadingImage = document.createElement('img');
   loadingImage.id = "loading-image";
-  loadingImage.className = "loading-image animate__animated animate__zoomInDown";
+  loadingImage.className = "loading-image animate__animated animate__jackInTheBox";
   loadingImage.src = "https://peemima.github.io/lux-bank/assets/fireyhills.png";
 
   loadingOverlayDiv.appendChild(loadingImage);
