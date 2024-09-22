@@ -47,8 +47,17 @@
     
     window.businessValue = new URLSearchParams(window.location.search).get('businessvalue');
 
+    window.balanceName = "Balance";
+
     if (businessValue) {
       document.getElementById("businessName").innerText = businessValue;
+
+      if (businessValue == "Firehawk Store") {
+        balanceName = "Total Earned";
+        document.getElementById("homepage-heading").innerText = "Hello, Firehawk Banker";
+        document.getElementById("transaction-option").innerText = "New Sale";
+        document.getElementById("auction-option").style.display = "none";
+      }
 
       // Function to check if business account exists and redirect if not
       function ensureBusinessAccountExists() {
@@ -179,7 +188,7 @@
         get(businessRef).then((snapshot) => {
           if (snapshot.exists()) {
             window.businessData = snapshot.val();
-            document.getElementById('businessBalance').innerText = `Balance: $${businessData.balance}`;
+            document.getElementById('businessBalance').innerText = balanceName + `: $${businessData.balance}`;
           } else {
             console.error('Business data not found');
           }
