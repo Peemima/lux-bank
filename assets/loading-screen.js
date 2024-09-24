@@ -26,5 +26,7 @@ function createLoadingScreen() {
 };
 
 // Ensure the DOM is ready before inserting the loading screen
+document.addEventListener('DOMContentLoaded', () => {
   createLoadingScreen();
   setTimeout(hideLoadingScreen, 1500);
+});
