@@ -10,6 +10,7 @@ function hideLoadingScreen() {
   }, 1400);
 }
 
+// Add loading overlay to the page
 function createLoadingScreen() {
   const loadingOverlayDiv = document.createElement('div');
   loadingOverlayDiv.id = "loading-overlay";
@@ -20,12 +21,9 @@ function createLoadingScreen() {
   loadingImage.className = "loading-image animate__animated animate__jackInTheBox";
   loadingImage.src = "https://peemima.github.io/lux-bank/assets/fireyhills.png";
 
-  // Append the image to the overlay first
-  loadingOverlayDiv.appendChild(loadingImage); 
-
-  // Now, add the loadingOverlayDiv to the document body
-  document.body.appendChild(loadingOverlayDiv);
-}
+  loadingOverlayDiv.appendChild(loadingImage);
+  document.body.insertBefore(loadingOverlayDiv, document.body.firstChild);
+};
 
 // Ensure the DOM is ready before inserting the loading screen
   createLoadingScreen();
