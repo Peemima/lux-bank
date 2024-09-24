@@ -22,7 +22,8 @@ function createLoadingScreen() {
   loadingImage.src = "https://peemima.github.io/lux-bank/assets/fireyhills.png";
 
   loadingOverlayDiv.appendChild(loadingImage);
-  document.body.insertBefore(loadingOverlayDiv, document.body.firstChild);
+  // document.body.insertBefore(loadingOverlayDiv, document.body.firstChild);
+  document.body.appendChild(loadingOverlayDiv);
 };
 
 // Ensure the DOM is ready before inserting the loading screen
