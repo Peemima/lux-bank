@@ -36,29 +36,36 @@
     document.getElementById('send-paychecks').addEventListener('click', async (event) => {
       event.preventDefault(); 
 
-      // Get a reference to the users in the database
       const usersRef = ref(database, 'users');
 
       try {
-        // Get the current data for all users
         const usersSnapshot = await get(usersRef);
         const usersData = usersSnapshot.val();
 
-        // Loop through each user
         for (const userId in usersData) {
           const user = usersData[userId];
-          
-          // Parse to numbers to ensure proper addition
-          const currentBalance = parseFloat(user.balance);
+
+          // Validate the balance values
+          let currentBalance = parseFloat(user.balance);
+          let ogBalance = parseFloat(user.ogBalance);
+
+          // Check for valid numbers (NaN checks)
+          if (isNaN(currentBalance) || isNaN(ogBalance)) {
+            console.error(`Invalid balance values for user ${userId}`);
+            currentBalance = 0; // Set to 0 if invalid
+            ogBalance = 0; // Set to 0 if invalid
+          } 
+
+          // Parse to numbers for accurate calculations
           const weeklyPayroll = parseFloat(user.weeklyPayroll);
 
           // Calculate the new balances
           const newBalance = currentBalance + weeklyPayroll;
-          const newOgBalance = parseFloat(user.ogBalance) + weeklyPayroll;
+          const newOgBalance = ogBalance + weeklyPayroll;
 
           // Update the user's data in the database
           await update(ref(database, `users/${userId}`), {
-            balance: newBalance.toString(), // Convert back to string for Firebase
+            balance: newBalance.toString(), 
             ogBalance: newOgBalance.toString()
           });
         }
