@@ -161,7 +161,7 @@ lastNameInput.onkeydown = function(e){
     event.preventDefault();
     console.log("Space key pressed");
     payRateInput.style.display = "block";
-    payRateInput.focus();
+    payRateInput.select();
     formInstructions.innerText = "Press space to enter grade level";
   }
 }
@@ -171,7 +171,7 @@ payRateInput.onkeydown = function(e){
     event.preventDefault();
     console.log("Space key pressed");
     gradeLevelInput.style.display = "block";
-    gradeLevelInput.focus();
+    gradeLevelInput.select();
     formInstructions.innerText = "Press space to enter user balance";
   }
 }
