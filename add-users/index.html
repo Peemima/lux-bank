@@ -41,7 +41,7 @@
     return inputString.charAt(0).toUpperCase() + inputString.slice(1).toLowerCase();
 }
     
-window.addUser = function(userName, lastName, biweeklyPayroll, startingBalance) {
+window.addUser = function(userName, lastName, biweeklyPayroll, startingBalance, gradeLevel) {
   const generateUserID = () => {
     return Math.floor(1000 + Math.random() * 9000).toString(); // UserID will remain a string
   };
@@ -68,7 +68,8 @@ window.addUser = function(userName, lastName, biweeklyPayroll, startingBalance) 
       id: userID, 
       balance: startingBalanceStr,       // Store balance as a string
       ogBalance: startingBalanceStr,     // Store original balance as a string
-      biweeklyPayroll: biweeklyPayrollStr // Store biweeklyPayroll as a string
+      biweeklyPayroll: biweeklyPayrollStr, // Store biweeklyPayroll as a string
+      gradeLevel: gradeLevel
     }).then(() => {
       console.log('User added successfully.');
     }).catch((error) => {
@@ -139,9 +140,10 @@ setInterval(updateBusinessBalanceElement, 2500);
 
 var firstNameInput = document.getElementById("adduserfirstname");
 var lastNameInput = document.getElementById("adduserlastname");
-var userBalanceInput = document.getElementById("adduserbalance")
-var payRateInput = document.getElementById("addpayrate")
-var saveUserButton = document.getElementById("savenewuser")
+var userBalanceInput = document.getElementById("adduserbalance");
+var payRateInput = document.getElementById("addpayrate");
+var gradeLevelInput = document.getElementById("addgradelevel");
+var saveUserButton = document.getElementById("savenewuser");
 var formInstructions = document.getElementById("form-instructions");
 
 firstNameInput.onkeydown = function(e){
@@ -168,6 +170,16 @@ payRateInput.onkeydown = function(e){
   if(e.keyCode == 32){
     event.preventDefault();
     console.log("Space key pressed");
+    gradeLevelInput.style.display = "block";
+    gradeLevelInput.focus();
+    formInstructions.innerText = "Press space to enter grade level";
+  }
+}
+
+gradeLevelInput.onkeydown = function(e){
+  if(e.keyCode == 32){
+    event.preventDefault();
+    console.log("Space key pressed");
     userBalanceInput.style.display = "block";
     userBalanceInput.focus();
     formInstructions.innerText = "Press space to save user";
@@ -183,9 +195,10 @@ userBalanceInput.onkeydown = function(e) {
     let lastName = lastNameInput.value;
     let balance = userBalanceInput.value;
     let payRate = payRateInput.value;
+    let gradeLevel = gradeLevelInput.value;
 
     // Check if all required inputs are provided
-    if (!firstName || !lastName || !balance || !payRate) {
+    if (!firstName || !lastName || !balance || !payRate || !gradeLevel) {
       console.error("One or more input fields are empty.");
       formInstructions.innerText = "Please fill in all fields.";
       return;
@@ -193,7 +206,7 @@ userBalanceInput.onkeydown = function(e) {
 
     // No need to convert balance and pay rate to numbers since we want them as strings
     // Call the addUser function with the provided values
-    addUser(firstName + " " + lastName, lastName, payRate, balance);
+    addUser(firstName + " " + lastName, lastName, payRate, balance, gradeLevel);
     console.log(`${firstName} ${lastName} with balance ${balance} created`);
 
     // Clear out the input fields
@@ -233,6 +246,7 @@ firstNameInput.focus();
     <input type="text" id="adduserfirstname" placeholder="First Name..." style="display: block;" oninput="this.value = capitalizeFirstLetter(this.value)">
     <input type="text" id="adduserlastname" placeholder="Last Name..." style="display: none;" oninput="this.value = capitalizeFirstLetter(this.value)">
     <input type="number" id="addpayrate" placeholder="Biweekly payroll..." style="display: none;">
+    <input type="number" id="addgradelevel" placeholder="Grade Level..." style="display: none;">
     <input type="number" id="adduserbalance" placeholder="Balance..." style="display: none;">
     <p id="form-instructions">Press space to enter last name</p>
   </form>
