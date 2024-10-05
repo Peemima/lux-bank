@@ -41,7 +41,7 @@
     return inputString.charAt(0).toUpperCase() + inputString.slice(1).toLowerCase();
 }
     
-window.addUser = function(userName, lastName, biweeklyPayroll, startingBalance, gradeLevel) {
+window.addUser = function(userName, lastName, weeklyPayroll, startingBalance, gradeLevel) {
   const generateUserID = () => {
     return Math.floor(1000 + Math.random() * 9000).toString(); // UserID will remain a string
   };
@@ -52,9 +52,9 @@ window.addUser = function(userName, lastName, biweeklyPayroll, startingBalance, 
     });
   };
 
-  const createUser = (userID, userName, biweeklyPayroll, startingBalance) => {
-    // Convert biweeklyPayroll and startingBalance to strings
-    const biweeklyPayrollStr = String(biweeklyPayroll);
+  const createUser = (userID, userName, weeklyPayroll, startingBalance) => {
+    // Convert weeklyPayroll and startingBalance to strings
+    const weeklyPayrollStr = String(weeklyPayroll);
     const startingBalanceStr = String(startingBalance);
 
     // Ensure userName and lastName are valid before proceeding
@@ -68,7 +68,7 @@ window.addUser = function(userName, lastName, biweeklyPayroll, startingBalance, 
       id: userID, 
       balance: startingBalanceStr,       // Store balance as a string
       ogBalance: startingBalanceStr,     // Store original balance as a string
-      biweeklyPayroll: biweeklyPayrollStr, // Store biweeklyPayroll as a string
+      weeklyPayroll: weeklyPayrollStr, // Store weeklyPayroll as a string
       gradeLevel: gradeLevel
     }).then(() => {
       console.log('User added successfully.');
@@ -86,7 +86,7 @@ window.addUser = function(userName, lastName, biweeklyPayroll, startingBalance, 
       isUnique = await checkUserIDUnique(userID);
     }
 
-    createUser(userID, userName, biweeklyPayroll, startingBalance);
+    createUser(userID, userName, weeklyPayroll, startingBalance);
   };
 
   addUserWithUniqueID(userName);
@@ -247,7 +247,7 @@ firstNameInput.focus();
   <form id="adduserform">
     <input type="text" id="adduserfirstname" placeholder="First Name..." style="display: block;" oninput="this.value = capitalizeFirstLetter(this.value)">
     <input type="text" id="adduserlastname" placeholder="Last Name..." style="display: none;" oninput="this.value = capitalizeFirstLetter(this.value)">
-    <input type="number" id="addpayrate" placeholder="Biweekly payroll..." style="display: none;">
+    <input type="number" id="addpayrate" placeholder="Weekly payroll..." style="display: none;">
     <input type="number" id="addgradelevel" placeholder="Grade Level..." style="display: none;">
     <input type="number" id="adduserbalance" placeholder="Balance..." style="display: none;">
     <p id="form-instructions">Press space to enter last name</p>
