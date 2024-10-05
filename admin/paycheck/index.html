@@ -50,11 +50,11 @@
           
           // Parse to numbers to ensure proper addition
           const currentBalance = parseFloat(user.balance);
-          const biweeklyPayroll = parseFloat(user.biweeklyPayroll);
+          const weeklyPayroll = parseFloat(user.weeklyPayroll);
 
           // Calculate the new balances
-          const newBalance = currentBalance + biweeklyPayroll;
-          const newOgBalance = parseFloat(user.ogBalance) + biweeklyPayroll;
+          const newBalance = currentBalance + weeklyPayroll;
+          const newOgBalance = parseFloat(user.ogBalance) + weeklyPayroll;
 
           // Update the user's data in the database
           await update(ref(database, `users/${userId}`), {
