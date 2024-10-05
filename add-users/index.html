@@ -160,19 +160,9 @@ lastNameInput.onkeydown = function(e){
   if(e.keyCode == 32){
     event.preventDefault();
     console.log("Space key pressed");
-    payRateInput.style.display = "block";
-    payRateInput.select();
-    formInstructions.innerText = "Press space to enter grade level";
-  }
-}
-
-payRateInput.onkeydown = function(e){
-  if(e.keyCode == 32){
-    event.preventDefault();
-    console.log("Space key pressed");
     gradeLevelInput.style.display = "block";
     gradeLevelInput.select();
-    formInstructions.innerText = "Press space to enter user balance";
+    formInstructions.innerText = "Press space to enter grade level";
   }
 }
 
@@ -180,9 +170,19 @@ gradeLevelInput.onkeydown = function(e){
   if(e.keyCode == 32){
     event.preventDefault();
     console.log("Space key pressed");
+    payRateInput.style.display = "block";
+    payRateInput.select();
+    formInstructions.innerText = "Press space to save user";
+  }
+}
+
+payRateInput.onkeydown = function(e){
+  if(e.keyCode == 32){
+    event.preventDefault();
+    console.log("Space key pressed");
     userBalanceInput.style.display = "block";
     userBalanceInput.focus();
-    formInstructions.innerText = "Press space to save user";
+    formInstructions.innerText = "Press space to enter user balance";
   }
 }
 
