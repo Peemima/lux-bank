@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Lux Banker Interface to Add Users</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
+  <script src="https://peemima.github.io/lux-bank/assets/loading-screen.js"></script>
+  <noscript>
+    <h1>js_err_noscrpt_popup</h1>
+    <p>A wild error popped out of nowhere!</p>
+    <p>Tell Ian F about it immediately.</p>
+    <br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br>
+  </noscript>
+<link rel="stylesheet" href="/lux-bank/assets/styles.css">
+
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js" defer></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js" defer></script>
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+    import { getDatabase, ref, set, get } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+
+    const firebaseConfig = {
+        apiKey: "AIzaSyASd5JOikXTlRp8eA2j_26Z1NWatZMjZds",
+        authDomain: "lux-bank.firebaseapp.com",
+        databaseURL: "https://lux-bank-default-rtdb.firebaseio.com",
+        projectId: "lux-bank",
+        storageBucket: "lux-bank.appspot.com",
+        messagingSenderId: "764922032293",
+        appId: "1:764922032293:web:573599b6116f025ee15d4c",
+        measurementId: "G-JQ7CWEJS9N"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const database = getDatabase(app);
+    
+    let currentSearchQuery = "";
+
+
+    window.capitalizeFirstLetter = function(inputString) {
+    return inputString.charAt(0).toUpperCase() + inputString.slice(1).toLowerCase();
+}
+    
+window.addUser = function(userName, lastName, biweeklyPayroll, startingBalance, gradeLevel) {
+  const generateUserID = () => {
+    return Math.floor(1000 + Math.random() * 9000).toString(); // UserID will remain a string
+  };
+
+  const checkUserIDUnique = (userID) => {
+    return get(ref(database, 'users/' + userID)).then((snapshot) => {
+      return !snapshot.exists(); // Returns true if userID does not exist
+    });
+  };
+
+  const createUser = (userID, userName, biweeklyPayroll, startingBalance) => {
+    // Convert biweeklyPayroll and startingBalance to strings
+    const biweeklyPayrollStr = String(biweeklyPayroll);
+    const startingBalanceStr = String(startingBalance);
+
+    // Ensure userName and lastName are valid before proceeding
+    if (!userName || !lastName) {
+      console.error("User name or last name is missing.");
+      return;
+    }
+
+    const newUserRef = ref(database, 'users/' + userName);
+    set(newUserRef, { 
+      id: userID, 
+      balance: startingBalanceStr,       // Store balance as a string
+      ogBalance: startingBalanceStr,     // Store original balance as a string
+      biweeklyPayroll: biweeklyPayrollStr, // Store biweeklyPayroll as a string
+      gradeLevel: gradeLevel
+    }).then(() => {
+      console.log('User added successfully.');
+    }).catch((error) => {
+      console.error('Error adding user:', error);
+    });
+  };
+
+  const addUserWithUniqueID = async (userName) => {
+    let userID;
+    let isUnique = false;
+
+    while (!isUnique) {
+      userID = generateUserID();
+      isUnique = await checkUserIDUnique(userID);
+    }
+
+    createUser(userID, userName, biweeklyPayroll, startingBalance);
+  };
+
+  addUserWithUniqueID(userName);
+};
+
+// Make addAmount global
+window.addAmount = function() {
+  const amount = Number(document.getElementById('amountInput').value);
+  updateUserBalance(selectedUserKey, amount); // Positive amount for addition
+};
+
+
+
+// Get the reference to the 'number-of-students' node in the base folder
+const studentsRef = ref(database, 'number-of-students-at-school');
+
+// Get the reference to the 'users' node in the base folder
+const usersRef = ref(database, 'users');
+
+// Function to update the businessBalance text
+function updateBusinessBalanceElement() {
+  Promise.all([
+    get(studentsRef),
+    get(usersRef)
+  ]).then(([studentsSnapshot, usersSnapshot]) => {
+    if (studentsSnapshot.exists()) {
+      const numberOfStudents = studentsSnapshot.val();
+
+      if (usersSnapshot.exists()) {
+        const numberOfUsers = Object.keys(usersSnapshot.val()).length;
+
+        // Update the #businessInfo element *inside the then block*
+        const businessInfoElement = document.getElementById('businessBalance');
+        businessInfoElement.innerText = `${numberOfUsers}/${numberOfStudents} students input`;
+      } else {
+        console.log("No data found for 'users'");
+      }
+    } else {
+      console.log("No data found for 'number-of-students'");
+    }
+  }).catch((error) => {
+    console.error("Error fetching data:", error);
+  });
+}
+
+// Call the update function initially
+updateBusinessBalanceElement();
+
+// Call the update function every 10 secconds (adjust as needed)
+setInterval(updateBusinessBalanceElement, 2500);
+
+var firstNameInput = document.getElementById("adduserfirstname");
+var lastNameInput = document.getElementById("adduserlastname");
+var userBalanceInput = document.getElementById("adduserbalance");
+var payRateInput = document.getElementById("addpayrate");
+var gradeLevelInput = document.getElementById("addgradelevel");
+var saveUserButton = document.getElementById("savenewuser");
+var formInstructions = document.getElementById("form-instructions");
+
+firstNameInput.onkeydown = function(e){
+  if(e.keyCode == 32){
+    event.preventDefault();
+    console.log("Space key pressed");
+    lastNameInput.style.display = "block";
+    lastNameInput.focus();
+    formInstructions.innerText = "Press space to enter pay rate";
+  }
+}
+
+lastNameInput.onkeydown = function(e){
+  if(e.keyCode == 32){
+    event.preventDefault();
+    console.log("Space key pressed");
+    payRateInput.style.display = "block";
+    payRateInput.focus();
+    formInstructions.innerText = "Press space to enter user balance";
+  }
+}
+
+payRateInput.onkeydown = function(e){
+  if(e.keyCode == 32){
+    event.preventDefault();
+    console.log("Space key pressed");
+    gradeLevelInput.style.display = "block";
+    gradeLevelInput.focus();
+    formInstructions.innerText = "Press space to enter grade level";
+  }
+}
+
+gradeLevelInput.onkeydown = function(e){
+  if(e.keyCode == 32){
+    event.preventDefault();
+    console.log("Space key pressed");
+    userBalanceInput.style.display = "block";
+    userBalanceInput.focus();
+    formInstructions.innerText = "Press space to save user";
+  }
+}
+
+userBalanceInput.onkeydown = function(e) {
+  if (e.keyCode == 32) {
+    event.preventDefault();
+    console.log("Space key pressed");
+
+    let firstName = firstNameInput.value;
+    let lastName = lastNameInput.value;
+    let balance = userBalanceInput.value;
+    let payRate = payRateInput.value;
+    let gradeLevel = gradeLevelInput.value;
+
+    // Check if all required inputs are provided
+    if (!firstName || !lastName || !balance || !payRate || !gradeLevel) {
+      console.error("One or more input fields are empty.");
+      formInstructions.innerText = "Please fill in all fields.";
+      return;
+    }
+
+    // No need to convert balance and pay rate to numbers since we want them as strings
+    // Call the addUser function with the provided values
+    addUser(firstName + " " + lastName, lastName, payRate, balance, gradeLevel);
+    console.log(`${firstName} ${lastName} with balance ${balance} created`);
+
+    // Clear out the input fields
+    firstNameInput.value = null;
+    lastNameInput.value = null;
+    payRateInput.value = null;
+    userBalanceInput.value = null;
+
+    // Hide all input fields except first name
+    lastNameInput.style.display = "none";
+    payRateInput.style.display = "none";
+    userBalanceInput.style.display = "none";
+
+    // Select the first name input
+    firstNameInput.focus();
+
+    // Update the form instructions and the business balance display
+    formInstructions.innerText = "User saved. Add next user.";
+    updateBusinessBalanceElement();
+  }
+}
+
+
+//Automatically select the first name input feild
+firstNameInput.focus();
+
+  </script>
+</head>
+<body>
+  <div id="businessInfo" style="display: grid; grid-template-columns: 1fr auto 1fr;">
+  <span id="businessName" style="float: left;">Lux Banker Interface to Add Users</span>
+  <img class="logo" src="/lux-bank/assets/Lux_Logo.svg">
+  <span id="businessBalance" style="float: right; text-align: right;">students input</span>
+  </div>
+
+  <form id="adduserform">
+    <input type="text" id="adduserfirstname" placeholder="First Name..." style="display: block;" oninput="this.value = capitalizeFirstLetter(this.value)">
+    <input type="text" id="adduserlastname" placeholder="Last Name..." style="display: none;" oninput="this.value = capitalizeFirstLetter(this.value)">
+    <input type="number" id="addpayrate" placeholder="Biweekly payroll..." style="display: none;">
+    <input type="number" id="addgradelevel" placeholder="Grade Level..." style="display: none;">
+    <input type="number" id="adduserbalance" placeholder="Balance..." style="display: none;">
+    <p id="form-instructions">Press space to enter last name</p>
+  </form>
+</body>
+</html>
