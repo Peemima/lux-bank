@@ -261,6 +261,9 @@ document.getElementById("businessNameInput").addEventListener("keydown", (event)
       document.getElementById("transactionForm").reset();
       iframeControl('start');
       document.getElementById("transaction-amount").style.display = "none";
+      document.getElementById("how-much").style.display = "none";
+      showElement('#homepage-heading');
+      showElement('#transactionForm');
     });
 
 
@@ -276,6 +279,7 @@ document.getElementById("businessNameInput").addEventListener("keydown", (event)
       hideElement('#homepage-heading'); // Hide the 'What would the customer like to do?' heading
       hideElement('#bidScreen'); // Hide the bid screen
       hideElement('#transaction-amount'); // Hide the 'How many hawkeyes' screen
+      hideElement('#how-much'); // Hide the 'How much' screen
       showElement('#transactionForm'); // Show the transaction form
     });
     bidButton.addEventListener("click", function() { // Start listening for a click
@@ -300,12 +304,15 @@ document.getElementById("businessNameInput").addEventListener("keydown", (event)
     window.addEventListener('message', (event) => {
       setTimeout(function(){
         window.latestUserID = event.data;
-        document.getElementById("transaction-amount").style.display = "block";
-        document.getElementById("amountInput").focus();
-        iframeControl('stop');
-        // Hide the form and show the "How many hawkeyes?" section instead
-        hideElement("#transactionForm"); // Hide the transaction form
-        showElement("#transaction-amount"); 
+
+        if (latestUserID !== '0') { // User ID is valid
+          document.getElementById("transaction-amount").style.display = "none";
+          showElement('#how-much'); // Show the 'How much' section
+          document.getElementById("how-much").innerText = `This user is spending $${event.data}`;
+          iframeControl('stop');
+        } else { // User ID is not valid
+          showPopup("flex", "Notice", "block", "That doesn't seem to be a valid user ID or barcode.");
+        }
       }, 1000);
     });
     
@@ -315,6 +322,7 @@ document.getElementById("businessNameInput").addEventListener("keydown", (event)
       hideElement('#bidScreen')
       hideElement('#transaction-amount');
       // hideElement('#login-screen');
+      hideElement('#how-much');
   </script>
 </head>
 <body>
@@ -338,6 +346,10 @@ document.getElementById("businessNameInput").addEventListener("keydown", (event)
         <input autocomplete="off" type="text" id="amountInput" name="amountInput" style="font-size: 18px;" required>
         <button id="cancel-button" class="outline-button">Back</button>
         <button type="submit" class="fill-button">Process</button>
+      </div>
+      <div id="how-much" style="display: none; text-align: center;">
+        <p id="how-much"></p>
+        <button id="confirm-transaction" class="fill-button">Confirm Transaction</button>
       </div>
     </form>
     <div id="bidScreen">
