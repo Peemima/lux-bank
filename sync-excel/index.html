@@ -65,9 +65,13 @@
                 positionClass = 'user-bottom';
               }
               // Calculate and display difference between current balance and ogBalance
-              // Assuming you have ogBalance stored for each user
-              // You might need to adjust how you fetch and store ogBalance
-              content += `<div class="${positionClass}"><p class="list-name">${key}: $${users[key].balance - users[key].ogBalance}</p><button class="fill-button" onclick="openModal('${key}')">Select</button></div>`;
+              let balanceDiff = users[key].balance - users[key].ogBalance;
+              let button = '';
+              if (balanceDiff != 0) {
+                button = `<button class="fill-button" onclick="markAsCompleted('${key}')">Mark as Completed</button>`;
+              }
+
+              content += `<div class="${positionClass}"><p class="list-name">${key}: $${balanceDiff}</p>${button}</div>`;
             });
             document.getElementById("allUsers").innerHTML = content;
           }
@@ -119,6 +123,31 @@
       };
 
       addUserWithUniqueID(userName);
+    };
+
+    // Function to update the user's balance, setting it to the ogBalance
+    window.markAsCompleted = function(userKey) {
+      const userRef = ref(database, `users/${userKey}`);
+
+      get(userRef).then((snapshot) => {
+        if (snapshot.exists()) {
+          const userData = snapshot.val();
+          const newBalance = userData.ogBalance;
+
+          set(ref(database, `users/${userKey}`), {
+            balance: newBalance
+          }).then(() => {
+            console.log(`User ${userKey} marked as completed`);
+            fetchAndDisplayUsers(currentSearchQuery); // Update the display after marking as completed
+          }).catch((error) => {
+            console.error(`Error marking user ${userKey} as completed:`, error);
+          });
+        } else {
+          console.log(`No user found with the key: ${userKey}`);
+        }
+      }).catch((error) => {
+        console.error(`Error fetching user data: ${error}`);
+      });
     };
 
     let selectedUserKey = ''; 
