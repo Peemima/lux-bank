@@ -142,10 +142,10 @@
       get(userRef).then((snapshot) => {
         if (snapshot.exists()) {
           const userData = snapshot.val();
-          const newBalance = userData.ogBalance;
+          const newBalance = userData.balance;
 
-          set(userRef, {
-            balance: newBalance
+          update(userRef, {
+            ogBalance: newBalance
           }).then(() => {
             console.log(`User ${userKey} marked as completed`);
             fetchAndDisplayUsers(currentSearchQuery); // Update the display after marking as completed
