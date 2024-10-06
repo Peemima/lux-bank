@@ -19,16 +19,16 @@
     import { getDatabase, ref, set, get } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
     // Remove business info
-     const firebaseConfig = { // keep this exaple firebase config the same
-         apiKey: "AIzaSyASd5JOikXTlRp8eA2j_26Z1NWatZMjZds",
-         authDomain: "lux-bank.firebaseapp.com",
-         databaseURL: "https://lux-bank-default-rtdb.firebaseio.com",
-         projectId: "lux-bank",
-         storageBucket: "lux-bank.appspot.com",
-         messagingSenderId: "764922032293",
-         appId: "1:764922032293:web:573599b6116f025ee15d4c",
-         measurementId: "G-JQ7CWEJS9N"
-     };
+    // const firebaseConfig = { // keep this exaple firebase config the same
+    //     apiKey: "AIzaSyASd5JOikXTlRp8eA2j_26Z1NWatZMjZds",
+    //     authDomain: "lux-bank.firebaseapp.com",
+    //     databaseURL: "https://lux-bank-default-rtdb.firebaseio.com",
+    //     projectId: "lux-bank",
+    //     storageBucket: "lux-bank.appspot.com",
+    //     messagingSenderId: "764922032293",
+    //     appId: "1:764922032293:web:573599b6116f025ee15d4c",
+    //     measurementId: "G-JQ7CWEJS9N"
+    // };
 
     const app = initializeApp(firebaseConfig);
     const database = getDatabase(app);
@@ -154,7 +154,7 @@ window.openModal = function(userKey) {
   selectedUserKey = userKey; // Set the selected user key
   document.getElementById('userModal').style.display = 'block'; // Show the modal
   document.getElementById('modal-header').innerText = selectedUserKey;
-  fetchAndDisplayUserBalance(selectedUserKey);
+
 };
 
 // Close the modal
@@ -169,7 +169,31 @@ window.addAmount = function() {
 };
 
 
-// Function to update user balance and log the transaction
+
+
+
+//Jiggle when theres an input error: fix the weird charecter input problem
+document.getElementById('amountInput').addEventListener('input', function(e) {
+  // Remove any non-digit characters from the input.
+  const validValue = this.value.replace(/[^0-9]/g, '');
+  
+  // Check if the input value is not solely composed of digits.
+  if (this.value !== validValue) {
+    // Replace the input value with the cleaned, digit-only version.
+    this.value = validValue;
+    
+    // Add the 'jiggle' class to trigger the animation.
+    this.classList.add('jiggle');
+    
+    // Automatically remove the 'jiggle' class after the animation ends (500ms) to reset the state.
+    setTimeout(() => {
+      this.classList.remove('jiggle');
+    }, 500);
+  }
+});
+
+
+// Update user balance and log the transaction
 function updateUserBalance(userKey, amount) {
     const userRef = ref(database, 'users/' + userKey);
 
@@ -208,23 +232,65 @@ function updateUserBalance(userKey, amount) {
     });
 }
 
-function fetchAndDisplayUserBalance(userKey) {
-    const userRef = ref(database, 'users/' + userKey);
 
-    get(userRef).then((snapshot) => {
-        if (snapshot.exists()) {
-            const userData = snapshot.val();
-            const ogBalance = userData.balance;
-            document.getElementById('currentBalance').innerText = `Current Balance: $${ogBalance}`;
-            document.getElementById('debit').innerText = `Debit: $0`; // Initial debit is $0
 
-        } else {
-            console.error('User data not found');
-        }
-    }).catch((error) => {
-        console.error('Error fetching user balance:', error);
-    });
-}
+
+// Function to log transactions with unique IDs based on timestamp
+// Remove business info
+// function logTransaction(userKey, amount, newBalance, businessValue, businessBalanceAmount) {
+//     const transactionID = `trans_${Date.now()}_${Math.floor(Math.random() * 1000)}`; // Generate a unique ID
+
+//     const transactionRef = ref(database, 'transactions/' + transactionID); // Use the generated ID
+    
+//     const transactionData = {
+//         userKey: userKey,
+//         amount: amount,
+//         newBalance: newBalance,
+//         businessBalance: businessBalanceAmount,
+//         business: businessValue, // Business name is captured here
+//         timestamp: Date.now() // Capturing the timestamp
+//     };
+
+//     set(transactionRef, transactionData)
+//         .then(() => {
+//             console.log('Transaction logged successfully.');
+//         })
+//         .catch((error) => {
+//             console.error('Error logging transaction:', error);
+//         });
+// }
+
+
+
+// Function to update the business's balance: Adds the amount to the current balance
+// Remove business info
+// function updateBusinessBalance(amountToAdd) {
+//     const businessRef = ref(database, `businesses/${businessValue}/balance`);
+
+//     get(businessRef).then((snapshot) => {
+//         let newBalance;
+//         let currentBalance = snapshot.exists() ? snapshot.val() : 0; // Use current balance or default to 0
+
+//         // Addition of the given amount to the business balance
+//         newBalance = currentBalance + amountToAdd;
+
+//         // Update the balance in Firebase
+//         set(businessRef, newBalance).then(() => {
+//             console.log(`Business balance updated to ${newBalance}`);
+//         }).catch((error) => {
+//             console.error('Error updating business balance:', error);
+//         });
+
+//     }).catch((error) => {
+//         console.error('Error fetching business balance:', error);
+//         // Initialize if fetching fails and no balance is found (Handling edge case)
+//         set(businessRef, amountToAdd).then(() => {
+//             console.log('Business balance initialized and set to:', amountToAdd);
+//         }).catch((initError) => {
+//             console.error('Error initializing business balance:', initError);
+//         });
+//     });
+// }
 
 window.withdrawAmount = function() {
     const amountInput = document.getElementById('amountInput');
@@ -274,32 +340,36 @@ window.withdrawAmount = function() {
     });
 };
 
-// Jiggle when theres an input error: fix the weird charecter input problem
-document.getElementById('amountInput').addEventListener('input', function(e) {
-  // Remove any non-digit characters from the input.
-  const validValue = this.value.replace(/[^0-9]/g, '');
-  
-  // Check if the input value is not solely composed of digits.
-  if (this.value !== validValue) {
-    // Replace the input value with the cleaned, digit-only version.
-    this.value = validValue;
-    
-    // Add the 'jiggle' class to trigger the animation.
-    this.classList.add('jiggle');
-    
-    // Automatically remove the 'jiggle' class after the animation ends (500ms) to reset the state.
-    setTimeout(() => {
-      this.classList.remove('jiggle');
-    }, 500);
-  }
-});
+
+
+
+// Remove business info
+// function fetchAndDisplayBusinessBalance() {
+//   const businessRef = ref(database, `businesses/${businessValue}`);
+//   get(businessRef).then((snapshot) => {
+//     if (snapshot.exists()) {
+//       window.businessData = snapshot.val();
+//       document.getElementById('businessBalance').innerText = `Balance: $${businessData.balance}`;
+//     } else {
+//       console.error('Business data not found');
+//     }
+//   }).catch((error) => {
+//     console.error('Error fetching business balance:', error);
+//   });
+// }
 
 //Code to automsticly update users and business balances
+
+// Call this function to initially display the balance and inside updateBusinessBalance to update it
+// Remove business info
+// setInterval(fetchAndDisplayBusinessBalance, 200);
 
 setInterval(() => {
   fetchAndDisplayUsers(currentSearchQuery); // Use the updated query for auto-refresh
 }, 750); // Adjust the timing as necessary
 
+// Remove business info
+// fetchAndDisplayBusinessBalance()
   </script>
 </head>
 <body>
@@ -326,8 +396,6 @@ setInterval(() => {
     <input type="text" id="amountInput" placeholder="Enter amount..." pattern="\d*">
     <button class="fill-button" onclick="addAmount()">Add</button>
     <button class="outline-button" onclick="withdrawAmount()">Withdraw</button>
-    <p id="currentBalance">Current Balance: $0</p>
-    <p id="debit">Debit: $0</p>
   </div>
 </div>
 
