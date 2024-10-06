@@ -347,6 +347,12 @@
   margin-left: 10px;
 }
 
+.grade-header {
+    text-align: left;
+    font-size: 20px;
+    font-family: "Poppins", sans-serif;
+}
+
 #transactionForm {
     width: 500px;
     max-width: 95%
