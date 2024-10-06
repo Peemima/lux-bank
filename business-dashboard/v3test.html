@@ -80,6 +80,7 @@
       });
 
       document.getElementById("transactionForm").addEventListener("submit", function(event) {
+        event.preventDefault();
         hideElement('#transactionForm');
         iframeControl('start');
       });
