@@ -287,7 +287,7 @@ document.getElementById("businessNameInput").addEventListener("keydown", (event)
 
       window.latestUserID = event.data;
 
-      const userID = latestUserID;
+      const userID = event.data;
       const amount = parseFloat(document.getElementById("amountInput").value);
 
       if (isNaN(userID) || isNaN(amount) || amount <= 0) {
