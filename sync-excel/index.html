@@ -145,7 +145,7 @@
     
           // Use set to update the ogBalance property
           set(userRef + "/ogBalance", {
-            newBalance 
+            newBalance
           }).then(() => {
             console.log(`User ${userKey} marked as completed`);
             fetchAndDisplayUsers(currentSearchQuery); 
