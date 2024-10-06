@@ -1,3 +1,4 @@
+<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -79,36 +80,50 @@
         fetchAndDisplayBusinessBalance();
       });
 
+      // Transaction Processing
       document.getElementById("transactionForm").addEventListener("submit", function(event) {
         event.preventDefault(); 
 
-        const userID = latestUserID;
         const amount = parseFloat(document.getElementById("amountInput").value);
 
-        if (isNaN(userID) || isNaN(amount) || amount <= 0) {
+        if (isNaN(amount) || amount <= 0) {
           showPopup("flex", "Notice", "block", "Please enter a valid price for this product");
           return;
         }
 
-        processTransaction(userID, amount);
-        latestUserID = '0';
+        // Hide the amount input and show the scanner
+        document.getElementById("amountInput").style.display = "none";
+        document.getElementById("transaction-amount-text").style.display = "none";
+        document.getElementById("scaniframe").style.display = "block";
+
+        // Store the amount for later use
+        window.transactionAmount = amount; 
       });
+
+      document.getElementById("cancel-button").addEventListener('click', function() {
+        document.getElementById("transactionForm").reset();
+        iframeControl('stop');
+        document.getElementById("amountInput").style.display = "block"; 
+        document.getElementById("transaction-amount-text").style.display = "block"; 
+        document.getElementById("scaniframe").style.display = "none"; 
+      });
+
       let userCard  = document.getElementsByClassName("scaniframe");
       function processTransaction(userID, amount) {
-  get(ref(database, 'users')).then((snapshot) => {
-    if (snapshot.exists()) {
-      const users = snapshot.val();
-      for (let userKey in users) {
-        // Check if the user ID matches 
-        if (users[userKey].id === userID) {
-          // Access the user's first name, which is the key of the user object
-          const userName = userKey.split(' ')[0]; // Extract only the first word
+        get(ref(database, 'users')).then((snapshot) => {
+          if (snapshot.exists()) {
+            const users = snapshot.val();
+            for (let userKey in users) {
+              // Check if the user ID matches 
+              if (users[userKey].id === userID) {
+                // Access the user's first name, which is the key of the user object
+                const userName = userKey.split(' ')[0]; // Extract only the first word
 
-          let currentBalance = users[userKey].balance;
-          if (amount > currentBalance) {
-            showPopup("flex", "Not enough hawkeyes", "block", `It looks like there aren't enough hawkeyes to buy that.`);
-            return;
-          }
+                let currentBalance = users[userKey].balance;
+                if (amount > currentBalance) {
+                  showPopup("flex", "Not enough hawkeyes", "block", `It looks like there aren't enough hawkeyes to buy that.`);
+                  return;
+                }
 
                 let newBalance = currentBalance - amount; 
                 set(ref(database, 'users/' + userKey + '/balance'), newBalance)
@@ -116,8 +131,9 @@
                     updateBusinessBalance(amount);
                     logTransaction(userKey, userID, -amount, newBalance, businessValue, businessData.balance); 
                     document.getElementById("transactionForm").reset();
-                    document.getElementById("scaniframe").style.display = "block";
-                    document.getElementById("transaction-amount").style.display = "none";
+                    document.getElementById("amountInput").style.display = "block"; 
+                    document.getElementById("transaction-amount-text").style.display = "block"; 
+                    document.getElementById("scaniframe").style.display = "none";
                     showElement('#homepage-heading');
                     showPopup("flex", "Success!", "block", `The transaction was successful!`);
                     hideElement('#transactionForm');
@@ -214,53 +230,55 @@
       });
 
       document.getElementById("businessNameInput").addEventListener("input", function() {
-  const inputValue = this.value.trim().toLowerCase();
-  get(ref(database, 'businesses')).then(snapshot => {
-    if (snapshot.exists()) {
-      const businesses = snapshot.val();
-      businessSuggestions = Object.keys(businesses).filter(business => 
-        business.toLowerCase().includes(inputValue)
-      );
+        const inputValue = this.value.trim().toLowerCase();
+        get(ref(database, 'businesses')).then(snapshot => {
+          if (snapshot.exists()) {
+            const businesses = snapshot.val();
+            businessSuggestions = Object.keys(businesses).filter(business => 
+              business.toLowerCase().includes(inputValue)
+            );
 
-      // Show suggestions ONLY if there's exactly one match
-      if (businessSuggestions.length === 1) { 
-        updateSuggestions(businessSuggestions[0]); // Pass the single suggestion
-      } else {
-        // Hide suggestions if there are zero or multiple matches
-        document.getElementById('suggestions').style.display = 'none'; 
+            // Show suggestions ONLY if there's exactly one match
+            if (businessSuggestions.length === 1) { 
+              updateSuggestions(businessSuggestions[0]); // Pass the single suggestion
+            } else {
+              // Hide suggestions if there are zero or multiple matches
+              document.getElementById('suggestions').style.display = 'none'; 
+            }
+          } else {
+            console.error('No businesses found in the database.');
+          }
+        }).catch(error => {
+          console.error('Error fetching businesses:', error);
+        });
+      });
+
+      function updateSuggestions(suggestion) {
+        const suggestionList = document.getElementById('suggestions');
+        if (suggestion) {
+          suggestionList.style.display = 'block'; 
+          suggestionList.innerText = 'Press Enter to login to ' + suggestion;
+        } else {
+          suggestionList.innerText = 'No businesses found';
+        }
       }
-    } else {
-      console.error('No businesses found in the database.');
-    }
-  }).catch(error => {
-    console.error('Error fetching businesses:', error);
-  });
-});
 
-function updateSuggestions(suggestion) {
-  const suggestionList = document.getElementById('suggestions');
-  if (suggestion) {
-    suggestionList.style.display = 'block'; 
-    suggestionList.innerText = 'Press Enter to login to ' + suggestion;
-  } else {
-    suggestionList.innerText = 'No businesses found';
-  }
-}
-
-// Add event listener to the input field for Enter key press
-document.getElementById("businessNameInput").addEventListener("keydown", (event) => {
-  if (event.key === 'Enter') {
-    const suggestion = document.getElementById('suggestions').innerText.replace('Press Enter to login to ', '');
-    window.location.href = `?businessvalue=${suggestion}`;
-  }
-});
+      // Add event listener to the input field for Enter key press
+      document.getElementById("businessNameInput").addEventListener("keydown", (event) => {
+        if (event.key === 'Enter') {
+          const suggestion = document.getElementById('suggestions').innerText.replace('Press Enter to login to ', '');
+          window.location.href = `?businessvalue=${suggestion}`;
+        }
+      });
     };
 
     //Reset the forum when cancel button is pressed
     document.getElementById("cancel-button").addEventListener('click', function() {
       document.getElementById("transactionForm").reset();
-      iframeControl('start');
-      document.getElementById("transaction-amount").style.display = "none";
+      iframeControl('stop');
+      document.getElementById("amountInput").style.display = "block"; 
+      document.getElementById("transaction-amount-text").style.display = "block"; 
+      document.getElementById("scaniframe").style.display = "none"; 
     });
 
 
@@ -272,11 +290,13 @@ document.getElementById("businessNameInput").addEventListener("keydown", (event)
     buyButton.addEventListener("click", function() { // Start listening for a click
       bidButton.classList.remove('menu-item-selected'); // Remove the 'selected' styling from the bid button
       buyButton.classList.add('menu-item-selected'); // Give it the 'selected' styling
-      iframeControl('start');
+      iframeControl('stop'); // Stop the scanner when selecting buy
       hideElement('#homepage-heading'); // Hide the 'What would the customer like to do?' heading
       hideElement('#bidScreen'); // Hide the bid screen
       hideElement('#transaction-amount'); // Hide the 'How many hawkeyes' screen
       showElement('#transactionForm'); // Show the transaction form
+      document.getElementById("amountInput").style.display = "block"; // Show the amount input
+      document.getElementById("transaction-amount-text").style.display = "block"; // Show the text "How many hawkeyes?"
     });
     bidButton.addEventListener("click", function() { // Start listening for a click
       buyButton.classList.remove('menu-item-selected'); // Remove the 'selected' styling from the buy button
@@ -299,18 +319,23 @@ document.getElementById("businessNameInput").addEventListener("keydown", (event)
 
     window.addEventListener('message', (event) => {
       setTimeout(function(){
-        window.latestUserID = event.data;
-        document.getElementById("transaction-amount").style.display = "block";
-        document.getElementById("amountInput").focus();
-        iframeControl('stop');
+        const userID = event.data;
+
+        if (window.transactionAmount) {
+          processTransaction(userID, window.transactionAmount); 
+          window.transactionAmount = null; // Reset transaction amount
+        } else {
+          console.log('No transaction amount found');
+        }
       }, 1000);
     });
     
     // Setup scripting
     // Hide elements
       hideElement('#transactionForm');
-      hideElement('#bidScreen')
+      hideElement('#bidScreen');
       hideElement('#transaction-amount');
+      hideElement('#scaniframe'); 
       // hideElement('#login-screen');
   </script>
 </head>
@@ -329,10 +354,12 @@ document.getElementById("businessNameInput").addEventListener("keydown", (event)
       </div>
     </div>
     <form id="transactionForm" class="center">
-      <iframe id="scaniframe" style="border: 0px;" width="100%" height="500px" src="about:blank"></iframe>
-      <div id="transaction-amount">
+      <div id="transaction-amount-text">
         <label for="amountInput">How many hawkeyes?</label>
-        <input autocomplete="off" type="text" id="amountInput" name="amountInput" style="font-size: 18px;" required>
+      </div>
+      <input autocomplete="off" type="text" id="amountInput" name="amountInput" style="font-size: 18px;" required>
+      <iframe id="scaniframe" style="border: 0px; display: none;" width="100%" height="500px" src="about:blank"></iframe>
+      <div id="transaction-amount">
         <button id="cancel-button" class="outline-button">Back</button>
         <button type="submit" class="fill-button">Process</button>
       </div>
