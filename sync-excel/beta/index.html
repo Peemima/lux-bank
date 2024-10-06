@@ -37,85 +37,65 @@
 
     document.addEventListener("DOMContentLoaded", function() {
       const searchForm = document.getElementById("searchForm");
-
-      // Get grade levels from URL query parameters
-      const urlParams = new URLSearchParams(window.location.search);
-      let gradeLevelsParam = urlParams.get('grades');
-      let gradeLevels = [];
-      
-      if (gradeLevelsParam) {
-        gradeLevels = gradeLevelsParam.split('-').map(level => level.toLowerCase());
-      }
-
       searchForm.addEventListener("submit", function(event) {
         event.preventDefault();
         currentSearchQuery = document.getElementById("searchInput").value.trim().toLowerCase();
-        fetchAndDisplayUsers(currentSearchQuery, gradeLevels); 
+        fetchAndDisplayUsers(currentSearchQuery); 
       });
 
-      // Fetch and display users on page load with grade levels
-      fetchAndDisplayUsers('', gradeLevels);
+      // Fetch and display users right away
+      fetchAndDisplayUsers();
     });
 
-    function fetchAndDisplayUsers(query = "", gradeLevels = []) {
+    function fetchAndDisplayUsers(query = "") {
+      const urlParams = new URLSearchParams(window.location.search);
+      const gradeLevels = urlParams.get('grades') ? urlParams.get('grades').split('-') : []; // Get grade levels from URL
+
       get(ref(database, 'users')).then((snapshot) => {
         if (snapshot.exists() && Object.keys(snapshot.val()).length > 0) {
           const users = snapshot.val();
-          let userKeys = Object.keys(users).filter(key => key.toLowerCase().includes(query));
+          let content = "";
 
-          // Filter users based on grade levels
-          if (gradeLevels.length > 0) {
-            userKeys = userKeys.filter(key => {
-              const userGrade = users[key].gradeLevel ? users[key].gradeLevel.toLowerCase() : '';
-              return gradeLevels.includes(userGrade);
-            });
-          }
+          gradeLevels.forEach(gradeLevel => {
+            let userKeys = Object.keys(users).filter(key => key.toLowerCase().includes(query) && users[key].gradeLevel === gradeLevel); 
+            if (userKeys.length > 0) {
+              content += `<div class="grade-container" id="grade-${gradeLevel}"><h2>Grade ${gradeLevel}</h2><div class="user-list" id="users-grade-${gradeLevel}"></div></div>`;
 
-          if (userKeys.length === 0) {
-            document.getElementById("allUsers").innerHTML = `<div class="user-info"><p class="list-name">No matching users found.</p><button class="fill-button" onclick="addUser('${query}', 0)">Add ${query}</button></div>`;
+              userKeys.sort((a, b) => {
+                const balanceDiffA = users[a].balance - users[a].ogBalance;
+                const balanceDiffB = users[b].balance - users[b].ogBalance;
+                if (balanceDiffA === balanceDiffB) {
+                  return a.localeCompare(b); 
+                }
+                return balanceDiffB - balanceDiffA; 
+              });
+
+              userKeys.forEach((key, index) => {
+                let positionClass = 'user-middle';
+                if(userKeys.length === 1) {
+                  positionClass = 'only-user';
+                } else if(index === 0){
+                  positionClass = 'user-top';
+                } else if(index === userKeys.length - 1){
+                  positionClass = 'user-bottom';
+                }
+
+                let balanceDiff = users[key].balance - users[key].ogBalance;
+                let button = '';
+                if (balanceDiff != 0) {
+                  button = `<button class="fill-button" onclick="markAsCompleted('${key}')">Mark as Completed</button>`;
+                }
+
+                const userContainer = document.getElementById(`users-grade-${gradeLevel}`);
+                userContainer.innerHTML += `<div class="${positionClass}"><p class="list-name">${key}: $${balanceDiff}</p>${button}</div>`;
+              });
+            }
+          });
+
+          if (content === "") {
+            document.getElementById("allUsers").innerHTML = `<div class="user-info"><p class="list-name">No matching users found for selected grades.</p><button class="fill-button" onclick="addUser('${query}', 0)">Add ${query}</button></div>`;
           } else {
-            // Sort by grade level then by balance difference (descending)
-            userKeys.sort((a, b) => {
-              // Compare grade levels
-              const gradeA = users[a].gradeLevel ? users[a].gradeLevel.toLowerCase() : '';
-              const gradeB = users[b].gradeLevel ? users[b].gradeLevel.toLowerCase() : '';
-              if (gradeA < gradeB) return -1;
-              if (gradeA > gradeB) return 1;
-
-              // If grade levels are the same, compare balance difference
-              const balanceDiffA = users[a].balance - users[a].ogBalance;
-              const balanceDiffB = users[b].balance - users[b].ogBalance;
-              return balanceDiffB - balanceDiffA; // Sort by balance difference descending
-            });
-
-            let groupedContent = '';
-            gradeLevels.forEach(gradeLevel => {
-              let filteredUserKeys = userKeys.filter(key => users[key].gradeLevel && users[key].gradeLevel.toLowerCase() === gradeLevel);
-
-              if (filteredUserKeys.length > 0) {
-                let content = `<div class="grade-group"><h3>Grade: ${gradeLevel.toUpperCase()}</h3>`;
-                filteredUserKeys.forEach((key, index) => {
-                  let positionClass = 'user-middle';
-                  if (filteredUserKeys.length === 1) {
-                    positionClass = 'only-user';
-                  } else if (index === 0) {
-                    positionClass = 'user-top';
-                  } else if (index === filteredUserKeys.length - 1) {
-                    positionClass = 'user-bottom';
-                  }
-                  let balanceDiff = users[key].balance - users[key].ogBalance;
-                  let button = '';
-                  if (balanceDiff != 0) {
-                    button = `<button class="fill-button" onclick="markAsCompleted('${key}')">Mark as Completed</button>`;
-                  }
-                  content += `<div class="${positionClass}"><p class="list-name">${key}: $${balanceDiff}</p>${button}</div>`;
-                });
-                content += '</div>';
-                groupedContent += content;
-              }
-            });
-
-            document.getElementById("allUsers").innerHTML = groupedContent;
+            document.getElementById("allUsers").innerHTML = content;
           }
         } else {
           document.getElementById("allUsers").innerHTML = `<div class="user-info"><p class="list-name">No users found.</p><button class="fill-button">Search to Add Users</button></div>`;
@@ -141,8 +121,8 @@
         const newUserRef = ref(database, 'users/' + userName);
         set(newUserRef, { 
           id: userID, 
-          balance: startingBalance, // Starting balance can be set here
-          ogBalance: startingBalance // Initialize ogBalance when user is created
+          balance: startingBalance, 
+          ogBalance: startingBalance 
         }).then(() => {
           console.log('User added successfully.');
           fetchAndDisplayUsers(currentSearchQuery);
@@ -174,12 +154,11 @@
       const userData = snapshot.val();
       const newBalance = userData.balance;
 
-      // Use update() to only update ogBalance and keep other fields intact
       update(userRef, {
-        ogBalance: newBalance  // Only update the ogBalance field
+        ogBalance: newBalance 
       }).then(() => {
         console.log(`User ${userKey} marked as completed`);
-        fetchAndDisplayUsers(currentSearchQuery);  // Refresh user list
+        fetchAndDisplayUsers(currentSearchQuery);  
       }).catch((error) => {
         console.error(`Error marking user ${userKey} as completed:`, error);
       });
