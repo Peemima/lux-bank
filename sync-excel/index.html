@@ -135,31 +135,19 @@
       addUserWithUniqueID(userName);
     };
 
+    // Function to update the user's balance, setting it to the ogBalance
     window.markAsCompleted = function(userKey) {
-  const userRef = ref(database, `users/${userKey}`);
+      const userRef = ref(database, `users/${userKey}`);
 
-  get(userRef).then((snapshot) => {
-    if (snapshot.exists()) {
-      const userData = snapshot.val();
-      const newBalance = userData.ogBalance;
-
-      // Partial update: Only update the 'balance' field
-      set(userRef, { balance: newBalance }, { merge: true })
-        .then(() => {
-          console.log(`User ${userKey} marked as completed`);
-          fetchAndDisplayUsers(currentSearchQuery); 
-        })
-        .catch((error) => {
-          console.error(`Error marking user ${userKey} as completed:`, error);
-        });
-    } else {
-      console.log(`No user found with the key: ${userKey}`);
-    }
-  })
-  .catch((error) => {
-    console.error(`Error fetching user data: ${error}`);
-  });
-};
+      set(userRef, {
+        balance: userData.ogBalance
+      }).then(() => {
+        console.log(`User ${userKey} marked as completed`);
+        fetchAndDisplayUsers(currentSearchQuery); // Update the display after marking as completed
+      }).catch((error) => {
+        console.error(`Error marking user ${userKey} as completed:`, error);
+      });
+    };
 
     let selectedUserKey = ''; 
 
