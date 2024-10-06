@@ -147,7 +147,7 @@
         display: none;
     }
 
-  #message, #searchResult, #allUsers {
+  #message, #searchResult, #allUsers, .allUsers {
     padding: var(--padding-small);
     margin-top: var(--margin-normal);
     background-color: var(--section-background-color);
