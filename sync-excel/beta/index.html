@@ -68,12 +68,14 @@
           }
 
           let content = '';
-          let firstGrade = true; // Flag to track if it's the first grade level
+          let firstGrade = true; // Flag to track the first grade level
           for (const grade in gradeLevelContainers) {
             if (gradeLevelContainers.hasOwnProperty(grade)) {
-              const margin = firstGrade ? "margin-top: 20px;" : "margin-top: 20px;"; // Adjust margin for the first grade
-              content += `<h2 style="margin-left: 10px; ${margin}" class="grade-header">Grade ${grade}</h2>`;
+              // Only add margin-top to headers after the first one
+              const marginTopStyle = firstGrade ? '' : 'margin-top: 20px;';
+              content += `<h2 style="margin-left: 10px; ${marginTopStyle}" class="grade-header">Grade ${grade}</h2>`;
               firstGrade = false; // Set flag to false after the first grade level
+
               const usersInGrade = gradeLevelContainers[grade].sort((a, b) => {
                 // Sort by grade, then alphabet, then completed status
                 const userA = users[a];
