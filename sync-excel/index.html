@@ -142,10 +142,10 @@
       get(userRef).then((snapshot) => {
         if (snapshot.exists()) {
           const userData = snapshot.val();
-          const newBalance = userData.ogBalance; // Use ogBalance from the snapshot
+          const newBalance = userData.ogBalance;
 
-          set(ref(database, `users/${userKey}`), {
-            balance: newBalance // Only update the 'balance' property
+          set(userRef, {
+            balance: newBalance
           }).then(() => {
             console.log(`User ${userKey} marked as completed`);
             fetchAndDisplayUsers(currentSearchQuery); // Update the display after marking as completed
@@ -202,7 +202,7 @@
           let currentBalance = userData.balance;
           let newBalance = currentBalance + amount; 
 
-          set(ref(database, 'users/' + userKey), {
+          set(userRef, {
             balance: newBalance
           }).then(() => {
             console.log('User balance updated successfully.');
@@ -236,7 +236,7 @@
           } else {
             let newBalance = currentBalance - amountToWithdraw; 
 
-            set(ref(database, 'users/' + userKey), {
+            set(userRef, {
               balance: newBalance
             }).then(() => {
               console.log('Withdrawal successful, user balance updated.');
