@@ -168,12 +168,11 @@
       });
 
       function checkUser(scannedText) {
-            const userSnapshot = snapshot.val();
-            document.getElementById('barcode-reader').style.animation = 'checkmark 1s ease-in-out';
-            setTimeout(function(){
-              document.getElementById('barcode-reader').style.display = 'none';
-            }, 995);
-            sendToParent(scannedText);
+        document.getElementById('barcode-reader').style.animation = 'checkmark 1s ease-in-out';
+        setTimeout(function(){
+          document.getElementById('barcode-reader').style.display = 'none';
+        }, 995);
+        sendToParent(scannedText);
       }
       
       function sendToParent(userID) {
