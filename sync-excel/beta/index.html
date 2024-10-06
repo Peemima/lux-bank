@@ -70,7 +70,7 @@
           let content = '';
           for (const grade in gradeLevelContainers) {
             if (gradeLevelContainers.hasOwnProperty(grade)) {
-              content += `<h2 style="margin-left: 10px;" class="grade-header">Grade ${grade}</h2>`;
+              content += `<h2 style="margin-left: 10px; margin-top: 10px;" class="grade-header">Grade ${grade}</h2>`;
               const usersInGrade = gradeLevelContainers[grade].sort((a, b) => {
                 // Sort by grade, then alphabet, then completed status
                 const userA = users[a];
