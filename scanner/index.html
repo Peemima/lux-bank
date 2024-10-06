@@ -132,6 +132,7 @@
             },
             (decodedText, decodedResult) => {
               checkUser(decodedText);
+              console.log("caught it front function")
             },
             (errorMessage) => {
               document.getElementById('reader').style.transform = 'scaleX(1)';
@@ -149,6 +150,7 @@
               },
               (decodedText, decodedResult) => {
                 checkUser(decodedText);
+                console.log("caught it back function")
               },
               (errorMessage) => {
                 //console.error("Error during scanning:", errorMessage);
@@ -178,7 +180,7 @@
       
       function sendToParent(userID) {
           window.top.postMessage(userID, '*');
-        console.log("ran function")
+          console.log("ran function")
       }
     </script>
   </body>
