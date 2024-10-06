@@ -303,9 +303,6 @@ document.getElementById("businessNameInput").addEventListener("keydown", (event)
         document.getElementById("transaction-amount").style.display = "block";
         document.getElementById("amountInput").focus();
         iframeControl('stop');
-        // Hide the form and show the "How many hawkeyes?" section instead
-        hideElement("#transactionForm"); // Hide the transaction form
-        showElement("#transaction-amount"); 
       }, 1000);
     });
     
@@ -333,7 +330,7 @@ document.getElementById("businessNameInput").addEventListener("keydown", (event)
     </div>
     <form id="transactionForm" class="center">
       <iframe id="scaniframe" style="border: 0px;" width="100%" height="500px" src="about:blank"></iframe>
-      <div id="transaction-amount" style="display: none;">
+      <div id="transaction-amount">
         <label for="amountInput">How many hawkeyes?</label>
         <input autocomplete="off" type="text" id="amountInput" name="amountInput" style="font-size: 18px;" required>
         <button id="cancel-button" class="outline-button">Back</button>
