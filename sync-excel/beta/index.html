@@ -34,6 +34,7 @@
     const database = getDatabase(app);
 
     let currentSearchQuery = "";
+    let selectedUserKey = ''; 
 
     document.addEventListener("DOMContentLoaded", function() {
       const searchForm = document.getElementById("searchForm");
@@ -49,55 +50,70 @@
 
     function fetchAndDisplayUsers(query = "") {
       const urlParams = new URLSearchParams(window.location.search);
-      const gradeLevels = urlParams.get('grades') ? urlParams.get('grades').split('-') : []; // Get grade levels from URL
+      const gradeLevels = urlParams.get('grades') ? urlParams.get('grades').split('-') : ['9', '10', '11', '12', 'k'];
 
       get(ref(database, 'users')).then((snapshot) => {
         if (snapshot.exists() && Object.keys(snapshot.val()).length > 0) {
           const users = snapshot.val();
-          let content = "";
+          
+          const gradeLevelContainers = {};
+          gradeLevels.forEach(grade => gradeLevelContainers[grade] = []);
 
-          gradeLevels.forEach(gradeLevel => {
-            let userKeys = Object.keys(users).filter(key => key.toLowerCase().includes(query) && users[key].gradeLevel === gradeLevel); 
-            if (userKeys.length > 0) {
-              content += `<div class="grade-container" id="grade-${gradeLevel}"><h2>Grade ${gradeLevel}</h2><div class="user-list" id="users-grade-${gradeLevel}"></div></div>`;
+          for (const userKey in users) {
+            if (users.hasOwnProperty(userKey)) {
+              const user = users[userKey];
+              if (user.gradeLevel && gradeLevels.includes(user.gradeLevel.toLowerCase())) {
+                gradeLevelContainers[user.gradeLevel.toLowerCase()].push(userKey);
+              }
+            }
+          }
 
-              userKeys.sort((a, b) => {
-                const balanceDiffA = users[a].balance - users[a].ogBalance;
-                const balanceDiffB = users[b].balance - users[b].ogBalance;
-                if (balanceDiffA === balanceDiffB) {
-                  return a.localeCompare(b); 
+          let content = '';
+          for (const grade in gradeLevelContainers) {
+            if (gradeLevelContainers.hasOwnProperty(grade)) {
+              const usersInGrade = gradeLevelContainers[grade].sort((a, b) => {
+                // Sort by grade, then alphabet, then completed status
+                const userA = users[a];
+                const userB = users[b];
+                if (userA.gradeLevel !== userB.gradeLevel) {
+                  return userA.gradeLevel.localeCompare(userB.gradeLevel); 
+                } else if (a.localeCompare(b) !== 0) {
+                  return a.localeCompare(b); // Sort alphabetically
+                } else {
+                  return (userA.ogBalance === userA.balance) ? 1 : -1;  // Completed first
                 }
-                return balanceDiffB - balanceDiffA; 
               });
 
-              userKeys.forEach((key, index) => {
+              content += `<div class="grade-container">
+                <h3 class="grade-header">Grade ${grade}</h3>
+                <div class="users-in-grade" id="users-in-grade-${grade}">`;
+
+              usersInGrade.forEach((userKey, index) => {
+                // Calculate and display difference between current balance and ogBalance
+                let balanceDiff = users[userKey].balance - users[userKey].ogBalance;
+                let button = '';
+                if (balanceDiff != 0) {
+                  button = `<button class="fill-button" onclick="markAsCompleted('${userKey}')">Mark as Completed</button>`;
+                }
                 let positionClass = 'user-middle';
-                if(userKeys.length === 1) {
+                if(usersInGrade.length === 1) {
                   positionClass = 'only-user';
                 } else if(index === 0){
                   positionClass = 'user-top';
-                } else if(index === userKeys.length - 1){
+                } else if(index === usersInGrade.length - 1){
                   positionClass = 'user-bottom';
                 }
 
-                let balanceDiff = users[key].balance - users[key].ogBalance;
-                let button = '';
-                if (balanceDiff != 0) {
-                  button = `<button class="fill-button" onclick="markAsCompleted('${key}')">Mark as Completed</button>`;
-                }
-
-                const userContainer = document.getElementById(`users-grade-${gradeLevel}`);
-                userContainer.innerHTML += `<div class="${positionClass}"><p class="list-name">${key}: $${balanceDiff}</p>${button}</div>`;
+                content += `<div class="${positionClass}"><p class="list-name">${userKey}: $${balanceDiff}</p>${button}</div>`;
               });
-            }
-          });
 
-          if (content === "") {
-            document.getElementById("allUsers").innerHTML = `<div class="user-info"><p class="list-name">No matching users found for selected grades.</p><button class="fill-button" onclick="addUser('${query}', 0)">Add ${query}</button></div>`;
-          } else {
-            document.getElementById("allUsers").innerHTML = content;
+              content += `</div></div>`;
+            }
           }
+
+          document.getElementById("allUsers").innerHTML = content;
         } else {
+          // Adjust here for no users at all in the database
           document.getElementById("allUsers").innerHTML = `<div class="user-info"><p class="list-name">No users found.</p><button class="fill-button">Search to Add Users</button></div>`;
         }
       }).catch((error) => {
@@ -105,7 +121,7 @@
         document.getElementById("allUsers").innerText = 'Err_fetching_users: A wild error apeared! Contact Ian F *immediately*';
       });
     }
-    
+
     window.addUser = function(userName, startingBalance) {
       const generateUserID = () => {
         return Math.floor(1000 + Math.random() * 9000).toString();
@@ -121,8 +137,8 @@
         const newUserRef = ref(database, 'users/' + userName);
         set(newUserRef, { 
           id: userID, 
-          balance: startingBalance, 
-          ogBalance: startingBalance 
+          balance: startingBalance, // Starting balance can be set here
+          ogBalance: startingBalance // Initialize ogBalance when user is created
         }).then(() => {
           console.log('User added successfully.');
           fetchAndDisplayUsers(currentSearchQuery);
@@ -154,11 +170,12 @@
       const userData = snapshot.val();
       const newBalance = userData.balance;
 
+      // Use update() to only update ogBalance and keep other fields intact
       update(userRef, {
-        ogBalance: newBalance 
+        ogBalance: newBalance  // Only update the ogBalance field
       }).then(() => {
         console.log(`User ${userKey} marked as completed`);
-        fetchAndDisplayUsers(currentSearchQuery);  
+        fetchAndDisplayUsers(currentSearchQuery);  // Refresh user list
       }).catch((error) => {
         console.error(`Error marking user ${userKey} as completed:`, error);
       });
@@ -169,8 +186,6 @@
     console.error(`Error fetching user data: ${error}`);
   });
 };
-
-    let selectedUserKey = ''; 
 
     window.openModal = function(userKey) {
       selectedUserKey = userKey; 
