@@ -72,7 +72,7 @@
           for (const grade in gradeLevelContainers) {
             if (gradeLevelContainers.hasOwnProperty(grade)) {
               // Only add margin-top to headers after the first one
-              const marginTopStyle = firstGrade ? '' : 'margin-top: 20px;';
+              const marginTopStyle = firstGrade ? '' : 'margin-top: 25px;';
               content += `<h2 style="margin-left: 10px; ${marginTopStyle}" class="grade-header">Grade ${grade}</h2>`;
               firstGrade = false; // Set flag to false after the first grade level
 
