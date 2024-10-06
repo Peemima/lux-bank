@@ -136,29 +136,31 @@
     };
 
     window.markAsCompleted = function(userKey) {
-      const userRef = ref(database, `users/${userKey}`);
-    
-      get(userRef).then((snapshot) => {
-        if (snapshot.exists()) {
-          const userData = snapshot.val();
-          const newBalance = userData.balance;
-    
-          // Use set to update the ogBalance property
-          set(userRef + "/ogBalance", {
-            newBalance
-          }).then(() => {
-            console.log(`User ${userKey} marked as completed`);
-            fetchAndDisplayUsers(currentSearchQuery); 
-          }).catch((error) => {
-            console.error(`Error marking user ${userKey} as completed:`, error);
-          });
-        } else {
-          console.log(`No user found with the key: ${userKey}`);
-        }
-      }).catch((error) => {
-        console.error(`Error fetching user data: ${error}`);
-      });
-    };
+  const userRef = ref(database, `users/${userKey}`);
+
+  get(userRef).then((snapshot) => {
+    if (snapshot.exists()) {
+      const userData = snapshot.val();
+      const newBalance = userData.ogBalance;
+
+      // Partial update: Only update the 'balance' field
+      set(userRef, { balance: newBalance }, { merge: true })
+        .then(() => {
+          console.log(`User ${userKey} marked as completed`);
+          fetchAndDisplayUsers(currentSearchQuery); 
+        })
+        .catch((error) => {
+          console.error(`Error marking user ${userKey} as completed:`, error);
+        });
+    } else {
+      console.log(`No user found with the key: ${userKey}`);
+    }
+  })
+  .catch((error) => {
+    console.error(`Error fetching user data: ${error}`);
+  });
+};
+
     let selectedUserKey = ''; 
 
     window.openModal = function(userKey) {
