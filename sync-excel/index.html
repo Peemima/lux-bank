@@ -19,16 +19,16 @@
     import { getDatabase, ref, set, get } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
     // Remove business info
-    // const firebaseConfig = { // keep this exaple firebase config the same
-    //     apiKey: "AIzaSyASd5JOikXTlRp8eA2j_26Z1NWatZMjZds",
-    //     authDomain: "lux-bank.firebaseapp.com",
-    //     databaseURL: "https://lux-bank-default-rtdb.firebaseio.com",
-    //     projectId: "lux-bank",
-    //     storageBucket: "lux-bank.appspot.com",
-    //     messagingSenderId: "764922032293",
-    //     appId: "1:764922032293:web:573599b6116f025ee15d4c",
-    //     measurementId: "G-JQ7CWEJS9N"
-    // };
+     const firebaseConfig = { // keep this exaple firebase config the same
+         apiKey: "AIzaSyASd5JOikXTlRp8eA2j_26Z1NWatZMjZds",
+         authDomain: "lux-bank.firebaseapp.com",
+         databaseURL: "https://lux-bank-default-rtdb.firebaseio.com",
+         projectId: "lux-bank",
+         storageBucket: "lux-bank.appspot.com",
+         messagingSenderId: "764922032293",
+         appId: "1:764922032293:web:573599b6116f025ee15d4c",
+         measurementId: "G-JQ7CWEJS9N"
+     };
 
     const app = initializeApp(firebaseConfig);
     const database = getDatabase(app);
