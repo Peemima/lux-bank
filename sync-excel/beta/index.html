@@ -49,7 +49,7 @@
 
     function fetchAndDisplayUsers(query = "") {
       const urlParams = new URLSearchParams(window.location.search);
-      const gradeLevels = urlParams.get('grades') ? urlParams.get('grades').split('-') : ['9', '10', '11', '12', 'k'];
+      const gradeLevels = urlParams.get('grades') ? urlParams.get('grades').split('-') : ['Error: there are no grade levels avalible. Please use the original url'];
 
       get(ref(database, 'users')).then((snapshot) => {
         if (snapshot.exists() && Object.keys(snapshot.val()).length > 0) {
@@ -105,7 +105,7 @@
                   positionClass = 'user-bottom';
                 }
 
-                content += `<div class="${positionClass}"><p class="list-name">${userKey}: $${balanceDiff}</p>${button}</div>`;
+                content += `<div class="${positionClass}"><p class="list-name">${userKey}: Spent a total of ${balanceDiff} hawkeyes</p>${button}</div>`;
               });
             }
           }
@@ -162,29 +162,29 @@
     };
 
     window.markAsCompleted = function(userKey) {
-  const userRef = ref(database, `users/${userKey}`);
-
-  get(userRef).then((snapshot) => {
-    if (snapshot.exists()) {
-      const userData = snapshot.val();
-      const newBalance = userData.balance;
-
-      // Use update() to only update ogBalance and keep other fields intact
-      update(userRef, {
-        ogBalance: newBalance  // Only update the ogBalance field
-      }).then(() => {
-        console.log(`User ${userKey} marked as completed`);
-        fetchAndDisplayUsers(currentSearchQuery);  // Refresh user list
+      const userRef = ref(database, `users/${userKey}`);
+    
+      get(userRef).then((snapshot) => {
+        if (snapshot.exists()) {
+          const userData = snapshot.val();
+          const newBalance = userData.balance;
+    
+          // Use update() to only update ogBalance and keep other fields intact
+          update(userRef, {
+            ogBalance: newBalance  // Only update the ogBalance field
+          }).then(() => {
+            console.log(`User ${userKey} marked as completed`);
+            fetchAndDisplayUsers(currentSearchQuery);  // Refresh user list
+          }).catch((error) => {
+            console.error(`Error marking user ${userKey} as completed:`, error);
+          });
+        } else {
+          console.log(`No user found with the key: ${userKey}`);
+        }
       }).catch((error) => {
-        console.error(`Error marking user ${userKey} as completed:`, error);
+        console.error(`Error fetching user data: ${error}`);
       });
-    } else {
-      console.log(`No user found with the key: ${userKey}`);
-    }
-  }).catch((error) => {
-    console.error(`Error fetching user data: ${error}`);
-  });
-};
+    };
 
     window.openModal = function(userKey) {
       selectedUserKey = userKey; 
