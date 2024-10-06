@@ -85,7 +85,7 @@
         iframeControl('start');
       });
       let userCard  = document.getElementsByClassName("scaniframe");
-      function processTransaction(userID, amount) {
+      window.processTransaction = function(userID, amount) {
         get(ref(database, 'users')).then((snapshot) => {
           if (snapshot.exists()) {
             const users = snapshot.val();
