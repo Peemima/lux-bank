@@ -80,35 +80,25 @@
       });
 
       document.getElementById("transactionForm").addEventListener("submit", function(event) {
-        event.preventDefault(); 
-
-        const userID = latestUserID;
-        const amount = parseFloat(document.getElementById("amountInput").value);
-
-        if (isNaN(userID) || isNaN(amount) || amount <= 0) {
-          showPopup("flex", "Notice", "block", "Please enter a valid price for this product");
-          return;
-        }
-
-        processTransaction(userID, amount);
-        latestUserID = '0';
+        hideElement('#transactionForm');
+        iframeControl('start');
       });
       let userCard  = document.getElementsByClassName("scaniframe");
       function processTransaction(userID, amount) {
-  get(ref(database, 'users')).then((snapshot) => {
-    if (snapshot.exists()) {
-      const users = snapshot.val();
-      for (let userKey in users) {
-        // Check if the user ID matches 
-        if (users[userKey].id === userID) {
-          // Access the user's first name, which is the key of the user object
-          const userName = userKey.split(' ')[0]; // Extract only the first word
-
-          let currentBalance = users[userKey].balance;
-          if (amount > currentBalance) {
-            showPopup("flex", "Not enough hawkeyes", "block", `It looks like there aren't enough hawkeyes to buy that.`);
-            return;
-          }
+        get(ref(database, 'users')).then((snapshot) => {
+          if (snapshot.exists()) {
+            const users = snapshot.val();
+            for (let userKey in users) {
+              // Check if the user ID matches 
+              if (users[userKey].id === userID) {
+                // Access the user's first name, which is the key of the user object
+                const userName = userKey.split(' ')[0]; // Extract only the first word
+      
+                let currentBalance = users[userKey].balance;
+                if (amount > currentBalance) {
+                  showPopup("flex", "Not enough hawkeyes", "block", `It looks like there aren't enough hawkeyes to buy that.`);
+                  return;
+                }
 
                 let newBalance = currentBalance - amount; 
                 set(ref(database, 'users/' + userKey + '/balance'), newBalance)
@@ -117,7 +107,7 @@
                     logTransaction(userKey, userID, -amount, newBalance, businessValue, businessData.balance); 
                     document.getElementById("transactionForm").reset();
                     document.getElementById("scaniframe").style.display = "block";
-                    document.getElementById("transaction-amount").style.display = "none";
+                    document.getElementById("transactionForm").style.display = "none";
                     showElement('#homepage-heading');
                     showPopup("flex", "Success!", "block", `The transaction was successful!`);
                     hideElement('#transactionForm');
@@ -256,14 +246,6 @@ document.getElementById("businessNameInput").addEventListener("keydown", (event)
 });
     };
 
-    //Reset the forum when cancel button is pressed
-    document.getElementById("cancel-button").addEventListener('click', function() {
-      document.getElementById("transactionForm").reset();
-      iframeControl('start');
-      document.getElementById("transaction-amount").style.display = "none";
-    });
-
-
     // Set the navbar variables
     window.buyButton = document.getElementById('transaction-option'); 
     window.bidButton = document.getElementById('auction-option'); 
@@ -272,10 +254,12 @@ document.getElementById("businessNameInput").addEventListener("keydown", (event)
     buyButton.addEventListener("click", function() { // Start listening for a click
       bidButton.classList.remove('menu-item-selected'); // Remove the 'selected' styling from the bid button
       buyButton.classList.add('menu-item-selected'); // Give it the 'selected' styling
-      iframeControl('start');
+      document.getElementById("transactionForm").style.display = "block";
+      document.getElementById("amountInput").focus();
+      iframeControl('stop');
       hideElement('#homepage-heading'); // Hide the 'What would the customer like to do?' heading
       hideElement('#bidScreen'); // Hide the bid screen
-      hideElement('#transaction-amount'); // Hide the 'How many hawkeyes' screen
+      hideElement('#transactionForm'); // Hide the 'How many hawkeyes' screen
       showElement('#transactionForm'); // Show the transaction form
     });
     bidButton.addEventListener("click", function() { // Start listening for a click
@@ -298,19 +282,25 @@ document.getElementById("businessNameInput").addEventListener("keydown", (event)
     }
 
     window.addEventListener('message', (event) => {
-      setTimeout(function(){
-        window.latestUserID = event.data;
-        document.getElementById("transaction-amount").style.display = "block";
-        document.getElementById("amountInput").focus();
-        iframeControl('stop');
-      }, 1000);
+      event.preventDefault(); 
+
+      const userID = latestUserID;
+      const amount = parseFloat(document.getElementById("amountInput").value);
+
+      if (isNaN(userID) || isNaN(amount) || amount <= 0) {
+        showPopup("flex", "Notice", "block", "Please enter a valid price for this product");
+        return;
+      }
+
+      processTransaction(userID, amount);
+      latestUserID = '0';
     });
     
     // Setup scripting
     // Hide elements
-      hideElement('#transactionForm');
+      // hideElement('#transactionForm');
       hideElement('#bidScreen')
-      hideElement('#transaction-amount');
+      // hideElement('#transaction-amount');
       // hideElement('#login-screen');
   </script>
 </head>
@@ -329,14 +319,13 @@ document.getElementById("businessNameInput").addEventListener("keydown", (event)
       </div>
     </div>
     <form id="transactionForm" class="center">
-      <iframe id="scaniframe" style="border: 0px;" width="100%" height="500px" src="about:blank"></iframe>
       <div id="transaction-amount">
         <label for="amountInput">How many hawkeyes?</label>
         <input autocomplete="off" type="text" id="amountInput" name="amountInput" style="font-size: 18px;" required>
-        <button id="cancel-button" class="outline-button">Back</button>
         <button type="submit" class="fill-button">Process</button>
       </div>
     </form>
+    <iframe id="scaniframe" style="border: 0px;" width="100%" height="500px" src="about:blank"></iframe>
     <div id="bidScreen">
       Bid screen content
     </div>
