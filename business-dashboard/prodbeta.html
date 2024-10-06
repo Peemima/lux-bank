@@ -111,20 +111,23 @@
       // Function to process the transaction
       let userCard  = document.getElementsByClassName("scaniframe");
       function processTransaction(userID, amount) {
-  get(ref(database, 'users')).then((snapshot) => {
-    if (snapshot.exists()) {
-      const users = snapshot.val();
-      for (let userKey in users) {
-        // Check if the user ID matches 
-        if (users[userKey].id === userID) {
-          // Access the user's first name, which is the key of the user object
-          const userName = userKey.split(' ')[0]; // Extract only the first word
+        get(ref(database, 'users')).then((snapshot) => {
+          if (snapshot.exists()) {
+            const users = snapshot.val();
+            let userFound = false; // Flag to track if a match is found
 
-          let currentBalance = users[userKey].balance;
-          if (amount > currentBalance) {
-            showPopup("flex", "Not enough hawkeyes", "block", `It looks like there aren't enough hawkeyes to buy that.`);
-            return;
-          }
+            for (let userKey in users) {
+              // Check if the user ID matches the 'barcode' field
+              if (users[userKey].barcode === userID) { // Assuming 'barcode' is the field
+                userFound = true; // Set the flag to true
+                // Access the user's first name, which is the key of the user object
+                const userName = userKey.split(' ')[0]; // Extract only the first word
+
+                let currentBalance = users[userKey].balance;
+                if (amount > currentBalance) {
+                  showPopup("flex", "Not enough hawkeyes", "block", `It looks like there aren't enough hawkeyes to buy that.`);
+                  return;
+                }
 
                 let newBalance = currentBalance - amount; 
                 set(ref(database, 'users/' + userKey + '/balance'), newBalance)
@@ -145,7 +148,12 @@
                 return; 
               }
             }
-            showPopup("flex", "Notice", "block", "That doesn't seem to be a valid user id.");
+
+            // Check if a user was found
+            if (!userFound) {
+              showPopup("flex", "Notice", "block", "That doesn't seem to be a valid user ID or barcode.");
+            }
+
           } else {
             console.log('No users found in the database.');
           }
