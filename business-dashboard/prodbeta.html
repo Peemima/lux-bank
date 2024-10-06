@@ -1,4 +1,3 @@
-<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -50,9 +49,6 @@
 
     window.balanceName = "Balance";
 
-    // Declare latestUserID globally for access within other functions
-    window.latestUserID = '0'; // Initialize with a default value
-
     if (businessValue) {
       document.getElementById("businessName").innerText = businessValue;
 
@@ -83,7 +79,6 @@
         fetchAndDisplayBusinessBalance();
       });
 
-      // Event listener for the transaction form submission
       document.getElementById("transactionForm").addEventListener("submit", function(event) {
         event.preventDefault(); 
 
@@ -98,36 +93,22 @@
         processTransaction(userID, amount);
         latestUserID = '0';
       });
-
-      // Process the transaction when the user scans something
-      window.addEventListener('message', (event) => {
-        setTimeout(function(){
-          latestUserID = event.data; // Assign the received data to latestUserID
-          // Start the scanner after the user enters an amount
-          iframeControl('start');
-        }, 1000);
-      });
-
-      // Function to process the transaction
       let userCard  = document.getElementsByClassName("scaniframe");
       function processTransaction(userID, amount) {
-        get(ref(database, 'users')).then((snapshot) => {
-          if (snapshot.exists()) {
-            const users = snapshot.val();
-            let userFound = false; // Flag to track if a match is found
+  get(ref(database, 'users')).then((snapshot) => {
+    if (snapshot.exists()) {
+      const users = snapshot.val();
+      for (let userKey in users) {
+        // Check if the user ID matches 
+        if (users[userKey].id === userID) {
+          // Access the user's first name, which is the key of the user object
+          const userName = userKey.split(' ')[0]; // Extract only the first word
 
-            for (let userKey in users) {
-              // Check if the user ID matches the 'barcode' field
-              if (users[userKey].barcode === userID) { // Assuming 'barcode' is the field
-                userFound = true; // Set the flag to true
-                // Access the user's first name, which is the key of the user object
-                const userName = userKey.split(' ')[0]; // Extract only the first word
-
-                let currentBalance = users[userKey].balance;
-                if (amount > currentBalance) {
-                  showPopup("flex", "Not enough hawkeyes", "block", `It looks like there aren't enough hawkeyes to buy that.`);
-                  return;
-                }
+          let currentBalance = users[userKey].balance;
+          if (amount > currentBalance) {
+            showPopup("flex", "Not enough hawkeyes", "block", `It looks like there aren't enough hawkeyes to buy that.`);
+            return;
+          }
 
                 let newBalance = currentBalance - amount; 
                 set(ref(database, 'users/' + userKey + '/balance'), newBalance)
@@ -148,12 +129,7 @@
                 return; 
               }
             }
-
-            // Check if a user was found
-            if (!userFound) {
-              showPopup("flex", "Notice", "block", "That doesn't seem to be a valid user ID or barcode.");
-            }
-
+            showPopup("flex", "Notice", "block", "That doesn't seem to be a valid user id.");
           } else {
             console.log('No users found in the database.');
           }
@@ -283,7 +259,7 @@ document.getElementById("businessNameInput").addEventListener("keydown", (event)
     //Reset the forum when cancel button is pressed
     document.getElementById("cancel-button").addEventListener('click', function() {
       document.getElementById("transactionForm").reset();
-      iframeControl('stop');
+      iframeControl('start');
       document.getElementById("transaction-amount").style.display = "none";
     });
 
@@ -296,12 +272,11 @@ document.getElementById("businessNameInput").addEventListener("keydown", (event)
     buyButton.addEventListener("click", function() { // Start listening for a click
       bidButton.classList.remove('menu-item-selected'); // Remove the 'selected' styling from the bid button
       buyButton.classList.add('menu-item-selected'); // Give it the 'selected' styling
-      iframeControl('stop');
+      iframeControl('start');
       hideElement('#homepage-heading'); // Hide the 'What would the customer like to do?' heading
       hideElement('#bidScreen'); // Hide the bid screen
       hideElement('#transaction-amount'); // Hide the 'How many hawkeyes' screen
       showElement('#transactionForm'); // Show the transaction form
-      document.getElementById("transaction-amount").style.display = "block"; // Show the amount input
     });
     bidButton.addEventListener("click", function() { // Start listening for a click
       buyButton.classList.remove('menu-item-selected'); // Remove the 'selected' styling from the buy button
@@ -322,6 +297,18 @@ document.getElementById("businessNameInput").addEventListener("keydown", (event)
       }
     }
 
+    window.addEventListener('message', (event) => {
+      setTimeout(function(){
+        window.latestUserID = event.data;
+        document.getElementById("transaction-amount").style.display = "block";
+        document.getElementById("amountInput").focus();
+        iframeControl('stop');
+        // Hide the form and show the "How many hawkeyes?" section instead
+        hideElement("#transactionForm"); // Hide the transaction form
+        showElement("#transaction-amount"); 
+      }, 1000);
+    });
+    
     // Setup scripting
     // Hide elements
       hideElement('#transactionForm');
@@ -345,13 +332,13 @@ document.getElementById("businessNameInput").addEventListener("keydown", (event)
       </div>
     </div>
     <form id="transactionForm" class="center">
-      <div id="transaction-amount">
+      <iframe id="scaniframe" style="border: 0px;" width="100%" height="500px" src="about:blank"></iframe>
+      <div id="transaction-amount" style="display: none;">
         <label for="amountInput">How many hawkeyes?</label>
         <input autocomplete="off" type="text" id="amountInput" name="amountInput" style="font-size: 18px;" required>
         <button id="cancel-button" class="outline-button">Back</button>
-        <button type="submit" class="fill-button">Scan</button>
+        <button type="submit" class="fill-button">Process</button>
       </div>
-      <iframe id="scaniframe" style="border: 0px;" width="100%" height="500px" src="about:blank"></iframe>
     </form>
     <div id="bidScreen">
       Bid screen content
