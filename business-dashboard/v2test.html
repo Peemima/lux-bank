@@ -303,6 +303,9 @@ document.getElementById("businessNameInput").addEventListener("keydown", (event)
         document.getElementById("transaction-amount").style.display = "block";
         document.getElementById("amountInput").focus();
         iframeControl('stop');
+        // Hide the form and show the "How many hawkeyes?" section instead
+        hideElement("#transactionForm"); // Hide the transaction form
+        showElement("#transaction-amount"); 
       }, 1000);
     });
     
