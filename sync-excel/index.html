@@ -55,6 +55,16 @@
           if (userKeys.length === 0) { 
             document.getElementById("allUsers").innerHTML = `<div class="user-info"><p class="list-name">No matching users found.</p><button class="fill-button" onclick="addUser('${query}', 0)">Add ${query}</button></div>`;
           } else {
+            // Sort users by balance difference (descending), then by name (ascending)
+            userKeys.sort((a, b) => {
+              const balanceDiffA = users[a].balance - users[a].ogBalance;
+              const balanceDiffB = users[b].balance - users[b].ogBalance;
+              if (balanceDiffA === balanceDiffB) {
+                return a.localeCompare(b); // Sort by name alphabetically
+              }
+              return balanceDiffB - balanceDiffA; // Sort by balance difference descending
+            });
+
             userKeys.forEach((key, index) => {
               let positionClass = 'user-middle';
               if(userKeys.length === 1) {
@@ -100,8 +110,8 @@
         const newUserRef = ref(database, 'users/' + userName);
         set(newUserRef, { 
           id: userID, 
-          balance: 0, // Assuming starting balance is always 0
-          ogBalance: 0 // Initialize ogBalance when user is created
+          balance: startingBalance, // Starting balance can be set here
+          ogBalance: startingBalance // Initialize ogBalance when user is created
         }).then(() => {
           console.log('User added successfully.');
           fetchAndDisplayUsers(currentSearchQuery);
