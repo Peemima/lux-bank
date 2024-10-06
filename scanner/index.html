@@ -173,10 +173,12 @@
           document.getElementById('barcode-reader').style.display = 'none';
         }, 995);
         sendToParent(scannedText);
+        console.log("called function")
       }
       
       function sendToParent(userID) {
           window.top.postMessage(userID, '*');
+        console.log("ran function")
       }
     </script>
   </body>
