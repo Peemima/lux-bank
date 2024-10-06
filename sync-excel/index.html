@@ -144,7 +144,7 @@
           const userData = snapshot.val();
           const newBalance = userData.balance;
 
-          update(userRef, {
+          .update(userRef, {
             ogBalance: newBalance
           }).then(() => {
             console.log(`User ${userKey} marked as completed`);
