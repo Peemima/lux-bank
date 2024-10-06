@@ -285,7 +285,7 @@ document.getElementById("businessNameInput").addEventListener("keydown", (event)
     window.addEventListener('message', (event) => {
       event.preventDefault(); 
 
-      console.log(event.data);
+      window.latestUserID = event.data;
 
       const userID = latestUserID;
       const amount = parseFloat(document.getElementById("amountInput").value);
