@@ -1,3 +1,4 @@
+<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -49,6 +50,9 @@
 
     window.balanceName = "Balance";
 
+    // Declare latestUserID globally for access within other functions
+    window.latestUserID = '0'; // Initialize with a default value
+
     if (businessValue) {
       document.getElementById("businessName").innerText = businessValue;
 
@@ -98,7 +102,7 @@
       // Process the transaction when the user scans something
       window.addEventListener('message', (event) => {
         setTimeout(function(){
-          window.latestUserID = event.data;
+          latestUserID = event.data; // Assign the received data to latestUserID
           // Start the scanner after the user enters an amount
           iframeControl('start');
         }, 1000);
