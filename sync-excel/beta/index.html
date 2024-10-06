@@ -70,6 +70,7 @@
           let content = '';
           for (const grade in gradeLevelContainers) {
             if (gradeLevelContainers.hasOwnProperty(grade)) {
+              content += `<h3 class="grade-header">Grade ${grade}</h3>`;
               const usersInGrade = gradeLevelContainers[grade].sort((a, b) => {
                 // Sort by grade, then alphabet, then completed status
                 const userA = users[a];
@@ -82,10 +83,6 @@
                   return (userA.ogBalance === userA.balance) ? 1 : -1;  // Completed first
                 }
               });
-
-              content += `<div class="allUsers">
-                <h3 class="grade-header">Grade ${grade}</h3>
-                <div class="users-in-grade" id="users-in-grade-${grade}">`;
 
               usersInGrade.forEach((userKey, index) => {
                 // Calculate and display difference between current balance and ogBalance
@@ -105,8 +102,6 @@
 
                 content += `<div class="${positionClass}"><p class="list-name">${userKey}: $${balanceDiff}</p>${button}</div>`;
               });
-
-              content += `</div></div>`;
             }
           }
 
