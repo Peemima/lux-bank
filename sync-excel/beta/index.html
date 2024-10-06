@@ -10,8 +10,7 @@
     <p>Tell Ian F about it immediately.</p>
     <br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br>
   </noscript>
-<link rel="stylesheet" href="/lux-bank/assets/styles.css">
-
+  <link rel="stylesheet" href="/lux-bank/assets/styles.css">
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js" defer></script>
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js" defer></script>
   <script type="module">
@@ -84,7 +83,7 @@
                 }
               });
 
-              content += `<div class="grade-container">
+              content += `<div class="allUsers">
                 <h3 class="grade-header">Grade ${grade}</h3>
                 <div class="users-in-grade" id="users-in-grade-${grade}">`;
 
@@ -284,12 +283,16 @@
   </script>
 </head>
 <body>
-  <form id="searchForm">
-    <input type="text" id="searchInput" placeholder="Search users...">
-    <button class="fill-button" type="submit">Search</button>
-    <button id="resetButton" style="display: none;" class="outline-button">Reset</button>
-  </form>
-  <div id="allUsers" class="container"></div>
+  <header>
+    <h1>Lux Banking Dashboard</h1>
+  </header>
+  <main>
+    <form id="searchForm">
+      <input type="text" id="searchInput" placeholder="Search users...">
+      <button class="fill-button" type="submit">Search</button>
+    </form>
+    <div id="allUsers" class="container"></div>
+  </main>
   <div id="userModal" class="modal">
     <div class="modal-content">
       <span class="close">×</span>
