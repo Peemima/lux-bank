@@ -13,11 +13,6 @@
   <link rel="stylesheet" href="/lux-bank/assets/styles.css">
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js" defer></script>
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js" defer></script>
-  <style>
-    #allUsers:first-child {
-      margin-top: 0; 
-    }
-  </style>
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
     import { getDatabase, ref, set, get, update } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
@@ -73,9 +68,12 @@
           }
 
           let content = '';
+          let firstGrade = true; // Flag to track if it's the first grade level
           for (const grade in gradeLevelContainers) {
             if (gradeLevelContainers.hasOwnProperty(grade)) {
-              content += `<h2 style="margin-left: 10px; margin-top: 20px;" class="grade-header">Grade ${grade}</h2>`;
+              const margin = firstGrade ? "margin-top: 20px;" : "margin-top: 20px;"; // Adjust margin for the first grade
+              content += `<h2 style="margin-left: 10px; ${margin}" class="grade-header">Grade ${grade}</h2>`;
+              firstGrade = false; // Set flag to false after the first grade level
               const usersInGrade = gradeLevelContainers[grade].sort((a, b) => {
                 // Sort by grade, then alphabet, then completed status
                 const userA = users[a];
