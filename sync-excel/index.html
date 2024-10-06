@@ -138,28 +138,28 @@
     window.markAsCompleted = function(userKey) {
   const userRef = ref(database, `users/${userKey}`);
 
-  // We don't need to fetch the whole user data here
-  // We only need the ogBalance
-  get(ref(database, `users/${userKey}/ogBalance`)).then((snapshot) => {
+  get(userRef).then((snapshot) => {
     if (snapshot.exists()) {
-      const ogBalance = snapshot.val();
+      const userData = snapshot.val();
+      const newBalance = userData.balance;
 
-      // Update only the balance field
-      set(userRef, {
-        balance: ogBalance
+      // Use update() to only update ogBalance and keep other fields intact
+      update(userRef, {
+        ogBalance: newBalance  // Only update the ogBalance field
       }).then(() => {
         console.log(`User ${userKey} marked as completed`);
-        fetchAndDisplayUsers(currentSearchQuery); // Update the display after marking as completed
+        fetchAndDisplayUsers(currentSearchQuery);  // Refresh user list
       }).catch((error) => {
         console.error(`Error marking user ${userKey} as completed:`, error);
       });
     } else {
-      console.log(`No ogBalance found for user: ${userKey}`);
+      console.log(`No user found with the key: ${userKey}`);
     }
   }).catch((error) => {
-    console.error(`Error fetching ogBalance: ${error}`);
+    console.error(`Error fetching user data: ${error}`);
   });
 };
+
     let selectedUserKey = ''; 
 
     window.openModal = function(userKey) {
