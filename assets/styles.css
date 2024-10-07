@@ -257,6 +257,7 @@
   flex-direction: column; /* Arrange items vertically */
   align-items: center; /* Center items horizontally */
   justify-content: center; /* Center items vertically */
+  text-align: center;
 }
 .usercode-container {
     width: 80%;
