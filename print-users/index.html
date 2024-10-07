@@ -62,7 +62,7 @@ document.addEventListener('DOMContentLoaded', function() {
       `;
 
       // Create a new sheet if it's the first card or the current sheet is full
-      if (!currentSheet || userCount === 12) { 
+      if (!currentSheet || userCount === 9) { 
         currentSheet = document.createElement('div');
         currentSheet.classList.add('user-sheet');
         usersPrintSheet.appendChild(currentSheet);
