@@ -248,7 +248,7 @@
 .user-card {
   color: black; /* Text color set to black */
   font-family: monospace; /* Monospace font applied */
-  padding: 25px;
+  padding: 30px;
   border-radius: 45px;
   -webkit-print-color-adjust: exact;
   border: 1px solid black;
