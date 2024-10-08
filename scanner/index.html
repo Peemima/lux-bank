@@ -122,6 +122,7 @@
         if (devices && devices.length) {
           console.log(devices.length);
           console.log(devices);
+          var deviceId = devices[0].id;
           // Start scanning with selected camera
           html5QrCode.start({
               facingMode: {
@@ -141,9 +142,25 @@
             }).catch((err) => {
             console.error("Error starting scan:", err);
             // Start scanning with selected camera
-            var cameraId = devices[0].id;
             html5QrCode.start({
-              cameraId,
+              facingMode: {
+                exact: "user"
+              }
+              }, {
+                fps: 60,
+              },
+              (decodedText, decodedResult) => {
+                checkUser(decodedText);
+                console.log("caught it back function")
+              },
+              (errorMessage) => {
+                //console.error("Error during scanning:", errorMessage);
+                //document.getElementById("result").innerText = "Error during scanning: " + errorMessage;
+              }).catch((err) => {
+              console.error("Error starting scan:", err);
+              document.getElementById("result").innerText = "Error starting scan: " + err;
+            html5QrCode.start({
+              deviceId,
                 // facingMode: {
                 //   exact: "user"
                 // }
@@ -160,6 +177,7 @@
               }).catch((err) => {
               console.error("Error starting scan:", err);
               document.getElementById("result").innerText = "Error starting scan: " + err;
+            });
             });
           });
         } else {
