@@ -141,7 +141,12 @@
             }).catch((err) => {
             console.error("Error starting scan:", err);
             // Start scanning with selected camera
+            var cameraId = devices[0].id;
             html5QrCode.start({
+              cameraId,
+                // facingMode: {
+                //   exact: "user"
+                // }
               }, {
                 fps: 60,
               },
