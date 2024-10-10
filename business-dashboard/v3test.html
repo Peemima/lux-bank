@@ -220,7 +220,6 @@
                             logAuctionBid(userKey, userID, bidAmount, newBalance, businessValue, auctionName);
                             showPopup("flex", "Success!", "block", `Your bid of $${bidAmount} has been placed for ${auctionName}!`);
                             document.getElementById(`bidInput${auctionName}`).value = ''; // Clear the bid input
-                            displayAuctions(); // Update the display after successful bid
                           })
                           .catch((error) => {
                             console.error('Error updating user balance:', error);
@@ -257,7 +256,6 @@
                           logAuctionBid(userKey, userID, bidAmount, newBalance, businessValue, auctionName);
                           showPopup("flex", "Success!", "block", `Your bid of $${bidAmount} has been placed for ${auctionName}!`);
                           document.getElementById(`bidInput${auctionName}`).value = ''; // Clear the bid input
-                          displayAuctions(); // Update the display after successful bid
                         })
                         .catch((error) => {
                           console.error('Error updating user balance:', error);
@@ -404,6 +402,11 @@
             console.error('Error creating new auction:', error);
           });
         }
+      });
+
+      // Listen for changes in the auction data
+      onValue(ref(database, `auctions/${businessValue}`), (snapshot) => {
+        displayAuctions(); // Update the display whenever the auctions change
       });
 
     } else {
