@@ -471,11 +471,11 @@ document.getElementById("businessNameInput").addEventListener("keydown", (event)
 
   // Check if the user is on the auction screen
   if (document.getElementById('bidScreen').style.display !== 'none') {
+    bidIframeControl('stop');
     if (isNaN(bidAmount) || bidAmount <= 0) {
       showPopup("flex", "Notice", "block", "Please enter a valid bid amount");
       return;
     }
-    bidIframeControl('stop');
     processAuctionBid(auctionName, userID, bidAmount);
   } else {
     // The user is on the transaction screen
