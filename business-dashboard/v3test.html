@@ -77,7 +77,11 @@
       document.addEventListener("DOMContentLoaded", function() {
         ensureBusinessAccountExists();
         fetchAndDisplayBusinessBalance();
-        displayAuctions(); // Call displayAuctions on page load
+        
+        // Set up the auction listener and then call displayAuctions
+        onValue(ref(database, `auctions/${businessValue}`), (snapshot) => {
+          displayAuctions(); 
+        }); 
       });
 
       document.getElementById("transactionForm").addEventListener("submit", function(event) {
