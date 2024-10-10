@@ -457,47 +457,37 @@ document.getElementById("businessNameInput").addEventListener("keydown", (event)
     window.latestUserID = 0; // Initialize latestUserID outside the event listener
 
     window.addEventListener('message', (event) => {
-      event.preventDefault(); 
-      iframeControl('stop');
-
-      window.latestUserID = event.data;
-
-      const userID = event.data;
-      const amount = parseFloat(document.getElementById("amountInput").value);
-
-      if (isNaN(userID) || isNaN(amount) || amount <= 0) {
-        showPopup("flex", "Notice", "block", "Please enter a valid price for this product");
-        return;
-      }
-
-      processTransaction(userID, amount);
-      // latestUserID = '0'; // Not needed, it's already reset in processTransaction
-    });
-
-    window.bidIframeControl = function(status) {
-  if (status == "start") {
-    document.getElementById('bidScaniframe').src = 'https://peemima.github.io/lux-bank/scanner/';
-    document.getElementById('bidScaniframe').style.display = 'block';
-  } else if (status == "stop") {
-    document.getElementById('bidScaniframe').style.display = 'none';
-    document.getElementById('bidScaniframe').src = 'about:blank';
-  }
-}
-
-window.addEventListener('message', (event) => {
   event.preventDefault(); 
-  bidIframeControl('stop');
 
   const userID = event.data;
-  const auctionName = event.source.auctionName; // Assuming you pass the auction name from the iframe
+  const amount = parseFloat(document.getElementById("amountInput").value);
+  const auctionName = latestAuctionName;
   const bidAmount = parseFloat(document.getElementById(`bidInput${auctionName}`).value);
 
-  if (isNaN(userID) || isNaN(bidAmount) || bidAmount <= 0) {
-    showPopup("flex", "Notice", "block", "Please enter a valid bid amount");
+  if (isNaN(userID)) {
+    showPopup("flex", "Notice", "block", "Invalid user ID.");
     return;
   }
 
-  processAuctionBid(auctionName, userID, bidAmount);
+  // Check if the user is on the auction screen
+  if (document.getElementById('bidScreen').style.display !== 'none') {
+    if (isNaN(bidAmount) || bidAmount <= 0) {
+      showPopup("flex", "Notice", "block", "Please enter a valid bid amount");
+      return;
+    }
+
+    processAuctionBid(auctionName, userID, bidAmount);
+    bidIframeControl('stop');
+  } else {
+    // The user is on the transaction screen
+    if (isNaN(amount) || amount <= 0) {
+      showPopup("flex", "Notice", "block", "Please enter a valid price for this product");
+      return;
+    }
+
+    processTransaction(userID, amount);
+    iframeControl('stop');
+  }
 });
 
     window.latestAuctionName = ''; // Initialize latestAuctionName outside the event listener
