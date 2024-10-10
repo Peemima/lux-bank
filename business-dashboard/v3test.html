@@ -1,3 +1,4 @@
+<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -199,6 +200,58 @@
       const auctionContainer = document.getElementById('auctionContainer');
       const newAuctionButton = document.getElementById('newAuctionButton'); // Get reference to the button
 
+      // Function to handle the new auction button click
+      newAuctionButton.addEventListener('click', () => {
+        // Prompt the user for the auction name
+        const auctionName = prompt("Enter the name of the new auction:");
+        if (auctionName) {
+          // Create a new auction in the database with initial values
+          set(ref(database, `auctions/${businessValue}/${auctionName}`), {
+            highestBid: 0,
+            highestBidder: null
+          }).then(() => {
+            // Optionally, you can display a success message
+            showPopup("flex", "Success!", "block", `New auction "${auctionName}" created!`);
+          }).catch((error) => {
+            console.error('Error creating new auction:', error);
+          });
+        }
+      });
+
+      // Listen for changes in the auction data
+      onValue(ref(database, `auctions/${businessValue}`), (snapshot) => {
+        displayAuctions(); // Update the display whenever the auctions change
+      });
+
+      // Function to display the auctions
+      function displayAuctions() {
+        auctionContainer.innerHTML = ''; // Clear the container
+        get(ref(database, `auctions/${businessValue}`)).then((snapshot) => {
+          if (snapshot.exists()) {
+            const auctions = snapshot.val();
+            for (const auctionName in auctions) {
+              const auctionData = auctions[auctionName];
+              const auctionElement = document.createElement('div');
+              auctionElement.classList.add('auction-item');
+              auctionElement.innerHTML = `
+                <h3>${auctionName}</h3>
+                <p>Highest Bid: $${auctionData.highestBid || 0}</p>
+                <p>Highest Bidder: ${auctionData.highestBidder || 'None'}</p>
+                <input type="number" id="bidInput${auctionName}" placeholder="Enter your bid" min="0">
+                <button onclick="processAuctionBid('${auctionName}', latestUserID, document.getElementById('bidInput${auctionName}').value)">Place Bid</button>
+              `;
+              auctionContainer.appendChild(auctionElement);
+            }
+          } else {
+            console.log('No auctions found in the database.');
+          }
+        }).catch((error) => {
+          console.error('Error fetching auction data:', error);
+          showPopup("flex", "Help is on the way", "none", "There was an error, but don't worry, help is on the way.");
+        });
+      }
+
+      // Define the processAuctionBid function
       function processAuctionBid(auctionName, userID, bidAmount) {
         // Get the current highest bid for the specific auction
         get(ref(database, `auctions/${businessValue}/${auctionName}`)).then((snapshot) => {
@@ -305,57 +358,6 @@
           .catch((error) => {
             console.error('Error logging auction bid:', error);
           });
-      }
-
-      // Function to handle the new auction button click
-      newAuctionButton.addEventListener('click', () => {
-        // Prompt the user for the auction name
-        const auctionName = prompt("Enter the name of the new auction:");
-        if (auctionName) {
-          // Create a new auction in the database with initial values
-          set(ref(database, `auctions/${businessValue}/${auctionName}`), {
-            highestBid: 0,
-            highestBidder: null
-          }).then(() => {
-            // Optionally, you can display a success message
-            showPopup("flex", "Success!", "block", `New auction "${auctionName}" created!`);
-          }).catch((error) => {
-            console.error('Error creating new auction:', error);
-          });
-        }
-      });
-
-      // Listen for changes in the auction data
-      onValue(ref(database, `auctions/${businessValue}`), (snapshot) => {
-        displayAuctions(); // Update the display whenever the auctions change
-      });
-
-      // Function to display the auctions
-      function displayAuctions() {
-        auctionContainer.innerHTML = ''; // Clear the container
-        get(ref(database, `auctions/${businessValue}`)).then((snapshot) => {
-          if (snapshot.exists()) {
-            const auctions = snapshot.val();
-            for (const auctionName in auctions) {
-              const auctionData = auctions[auctionName];
-              const auctionElement = document.createElement('div');
-              auctionElement.classList.add('auction-item');
-              auctionElement.innerHTML = `
-                <h3>${auctionName}</h3>
-                <p>Highest Bid: $${auctionData.highestBid || 0}</p>
-                <p>Highest Bidder: ${auctionData.highestBidder || 'None'}</p>
-                <input type="number" id="bidInput${auctionName}" placeholder="Enter your bid" min="0">
-                <button onclick="processAuctionBid('${auctionName}', latestUserID, document.getElementById('bidInput${auctionName}').value)">Place Bid</button>
-              `;
-              auctionContainer.appendChild(auctionElement);
-            }
-          } else {
-            console.log('No auctions found in the database.');
-          }
-        }).catch((error) => {
-          console.error('Error fetching auction data:', error);
-          showPopup("flex", "Help is on the way", "none", "There was an error, but don't worry, help is on the way.");
-        });
       }
 
     } else {
