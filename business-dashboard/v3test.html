@@ -13,12 +13,12 @@
     <p>Tell Ian F about it immediately.</p>
     <br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br>
   </noscript>
-  <link rel="stylesheet" href="/lux-bank/assets/styles.css">
+  <link rel="stylesheet" href="https://peemima.github.io/lux-bank/assets/styles.css">
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js" defer></script>
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js" defer></script>
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-    import { getDatabase, ref, set, get, onValue } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+    import { getDatabase, ref, set, get, onValue, push } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
     const firebaseConfig = {
         apiKey: "AIzaSyASd5JOikXTlRp8eA2j_26Z1NWatZMjZds",
@@ -199,6 +199,7 @@
       // Auction functionality
       const auctionContainer = document.getElementById('auctionContainer');
       const newAuctionButton = document.getElementById('newAuctionButton'); // Get reference to the button
+      const bidSpreadsheet = document.getElementById('bidSpreadsheet'); // Get reference to the spreadsheet
 
       window.processAuctionBid = function(auctionName, userID, bidAmount) {
   // Convert bidAmount to a number
@@ -309,6 +310,15 @@
           .catch((error) => {
             console.error('Error logging auction bid:', error);
           });
+
+          // Store bid data for the spreadsheet
+          const bidRef = ref(database, `bids/${businessValue}/${auctionName}`);
+          push(bidRef, {
+            userKey: userKey,
+            userId: userId,
+            bidAmount: bidAmount,
+            timestamp: Date.now()
+          });
       }
 
       // Function to handle the new auction button click
@@ -349,7 +359,7 @@
                 <p>Highest Bid: $${auctionData.highestBid || 0}</p>
                 <p>Highest Bidder: ${auctionData.highestBidder || 'None'}</p>
                 <input type="number" id="bidInput${auctionName}" placeholder="Enter your bid" min="0">
-                <button onclick="bidIframeControl('start'); latestAuctionName = '${auctionName}';">Place Bid</button>
+                <button onclick="const bidAmount = parseFloat(document.getElementById('bidInput${auctionName}').value); if (isNaN(bidAmount) || bidAmount <= 0) { showPopup('flex', 'Notice', 'block', 'Please enter a valid bid amount'); return; } bidIframeControl('start'); latestAuctionName = '${auctionName}';">Place Bid</button>
               `;
               auctionContainer.appendChild(auctionElement);
             }
@@ -361,6 +371,44 @@
           showPopup("flex", "Help is on the way", "none", "There was an error, but don't worry, help is on the way.");
         });
       }
+
+      // Function to display the bid spreadsheet
+      function displayBidSpreadsheet() {
+        bidSpreadsheet.innerHTML = '';
+        get(ref(database, `bids/${businessValue}`)).then(snapshot => {
+          if (snapshot.exists()) {
+            const bids = snapshot.val();
+            const table = document.createElement('table');
+            const headerRow = table.insertRow();
+            headerRow.insertCell().innerText = 'Auction Name';
+            headerRow.insertCell().innerText = 'User ID';
+            headerRow.insertCell().innerText = 'Bid Amount';
+            headerRow.insertCell().innerText = 'Timestamp';
+
+            for (const auctionName in bids) {
+              const auctionBids = bids[auctionName];
+              for (const bidKey in auctionBids) {
+                const bidData = auctionBids[bidKey];
+                const row = table.insertRow();
+                row.insertCell().innerText = auctionName;
+                row.insertCell().innerText = bidData.userId;
+                row.insertCell().innerText = bidData.bidAmount;
+                row.insertCell().innerText = new Date(bidData.timestamp).toLocaleString(); 
+              }
+            }
+            bidSpreadsheet.appendChild(table);
+          } else {
+            bidSpreadsheet.innerHTML = 'No bids found.';
+          }
+        }).catch(error => {
+          console.error('Error fetching bid data:', error);
+        });
+      }
+
+      // Update the bid spreadsheet when changes occur
+      onValue(ref(database, `bids/${businessValue}`), (snapshot) => {
+        displayBidSpreadsheet();
+      });
 
     } else {
       document.getElementById("main-content").style.display = 'none'; 
@@ -578,6 +626,8 @@ function displayAuctions() {
       <button id="newAuctionButton" class="fill-button">New Auction</button>
       <div id="auctionContainer"></div>
       <iframe id="bidScaniframe" style="border: 0px; display: none;" width="100%" height="500px" src="about:blank"></iframe>
+      <h3>Bid Spreadsheet</h3>
+      <div id="bidSpreadsheet"></div>
     </div>
   </div>
   <div id="login-screen" class="center-container" style="display: none;">
