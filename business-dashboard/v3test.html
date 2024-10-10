@@ -192,7 +192,8 @@
 
       // Auction functionality
       const auctionContainer = document.getElementById('auctionContainer');
-      
+      const newAuctionButton = document.getElementById('newAuctionButton'); // Get reference to the button
+
       function processAuctionBid(auctionName, userID, bidAmount) {
         // Get the current highest bid for the specific auction
         get(ref(database, `auctions/${businessValue}/${auctionName}`)).then((snapshot) => {
@@ -339,8 +340,30 @@
               });
             }
           }
+          // Hide the new auction button if there are auctions
+          newAuctionButton.style.display = 'none';
         } else {
           console.log('No auctions found in the database.');
+          // Show the new auction button if there are no auctions
+          newAuctionButton.style.display = 'block';
+        }
+      });
+
+      // Function to handle the new auction button click
+      newAuctionButton.addEventListener('click', () => {
+        // Prompt the user for the auction name
+        const auctionName = prompt("Enter the name of the new auction:");
+        if (auctionName) {
+          // Create a new auction in the database with initial values
+          set(ref(database, `auctions/${businessValue}/${auctionName}`), {
+            highestBid: 0,
+            highestBidder: null
+          }).then(() => {
+            // Optionally, you can display a success message
+            showPopup("flex", "Success!", "block", `New auction "${auctionName}" created!`);
+          }).catch((error) => {
+            console.error('Error creating new auction:', error);
+          });
         }
       });
 
@@ -486,6 +509,7 @@ document.getElementById("businessNameInput").addEventListener("keydown", (event)
     <iframe id="scaniframe" style="border: 0px;" width="100%" height="500px" src="about:blank"></iframe>
     <div id="bidScreen">
       <h2 id="auctionHeading">Auctions</h2>
+      <button id="newAuctionButton" class="fill-button">New Auction</button>
       <div id="auctionContainer"></div>
     </div>
   </div>
