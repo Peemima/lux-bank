@@ -191,18 +191,19 @@
       setInterval(fetchAndDisplayBusinessBalance, 200);
 
       // Auction functionality
-
-      function processAuctionBid(userID, bidAmount) {
-        // Get the current highest bid
-        get(ref(database, 'auctions')).then((snapshot) => {
+      const auctionContainer = document.getElementById('auctionContainer');
+      
+      function processAuctionBid(auctionName, userID, bidAmount) {
+        // Get the current highest bid for the specific auction
+        get(ref(database, `auctions/${businessValue}/${auctionName}`)).then((snapshot) => {
           if (snapshot.exists()) {
-            const auctions = snapshot.val();
-            if (auctions[businessValue] && auctions[businessValue].highestBid && auctions[businessValue].highestBidder) {
+            const auctionData = snapshot.val();
+            if (auctionData.highestBid && auctionData.highestBidder) {
               // Check if the new bid is higher than the current highest bid
-              if (bidAmount > auctions[businessValue].highestBid) {
+              if (bidAmount > auctionData.highestBid) {
                 // Update the highest bid and bidder
-                set(ref(database, `auctions/${businessValue}/highestBid`), bidAmount);
-                set(ref(database, `auctions/${businessValue}/highestBidder`), userID);
+                set(ref(database, `auctions/${businessValue}/${auctionName}/highestBid`), bidAmount);
+                set(ref(database, `auctions/${businessValue}/${auctionName}/highestBidder`), userID);
 
                 // Update the user's balance
                 get(ref(database, 'users')).then((snapshot) => {
@@ -214,9 +215,9 @@
                         set(ref(database, 'users/' + userKey + '/balance'), newBalance)
                           .then(() => {
                             // Update the auction history
-                            logAuctionBid(userKey, userID, bidAmount, newBalance, businessValue);
-                            showPopup("flex", "Success!", "block", `Your bid of $${bidAmount} has been placed!`);
-                            document.getElementById("bidInput").value = ''; // Clear the bid input
+                            logAuctionBid(userKey, userID, bidAmount, newBalance, businessValue, auctionName);
+                            showPopup("flex", "Success!", "block", `Your bid of $${bidAmount} has been placed for ${auctionName}!`);
+                            document.getElementById(`bidInput${auctionName}`).value = ''; // Clear the bid input
                           })
                           .catch((error) => {
                             console.error('Error updating user balance:', error);
@@ -237,8 +238,8 @@
               }
             } else {
               // No current bid, set the new bid as the highest
-              set(ref(database, `auctions/${businessValue}/highestBid`), bidAmount);
-              set(ref(database, `auctions/${businessValue}/highestBidder`), userID);
+              set(ref(database, `auctions/${businessValue}/${auctionName}/highestBid`), bidAmount);
+              set(ref(database, `auctions/${businessValue}/${auctionName}/highestBidder`), userID);
 
               // Update the user's balance
               get(ref(database, 'users')).then((snapshot) => {
@@ -250,9 +251,9 @@
                       set(ref(database, 'users/' + userKey + '/balance'), newBalance)
                         .then(() => {
                           // Update the auction history
-                          logAuctionBid(userKey, userID, bidAmount, newBalance, businessValue);
-                          showPopup("flex", "Success!", "block", `Your bid of $${bidAmount} has been placed!`);
-                          document.getElementById("bidInput").value = ''; // Clear the bid input
+                          logAuctionBid(userKey, userID, bidAmount, newBalance, businessValue, auctionName);
+                          showPopup("flex", "Success!", "block", `Your bid of $${bidAmount} has been placed for ${auctionName}!`);
+                          document.getElementById(`bidInput${auctionName}`).value = ''; // Clear the bid input
                         })
                         .catch((error) => {
                           console.error('Error updating user balance:', error);
@@ -278,7 +279,7 @@
         });
       }
 
-      function logAuctionBid(userKey, userId, bidAmount, newBalance, businessValue) {
+      function logAuctionBid(userKey, userId, bidAmount, newBalance, businessValue, auctionName) {
         const transactionID = `bid_${Date.now()}_${Math.floor(Math.random() * 1000)}`; 
         const transactionRef = ref(database, 'transactions/' + transactionID); 
         const transactionData = {
@@ -287,6 +288,7 @@
           amount: bidAmount,
           newBalance: newBalance,
           business: businessValue, 
+          auction: auctionName,
           timestamp: Date.now() 
         };
 
@@ -300,32 +302,46 @@
       }
 
       // Listen for changes in the auction data
-      onValue(ref(database, 'auctions'), (snapshot) => {
+      onValue(ref(database, `auctions/${businessValue}`), (snapshot) => {
         if (snapshot.exists()) {
           const auctions = snapshot.val();
-          if (auctions[businessValue] && auctions[businessValue].highestBid) {
-            document.getElementById('highestBid').innerText = `Highest Bid: $${auctions[businessValue].highestBid}`;
-          } else {
-            document.getElementById('highestBid').innerText = `No bids yet`;
+          // Clear previous auction elements
+          auctionContainer.innerHTML = '';
+
+          for (const auctionName in auctions) {
+            if (auctions[auctionName].highestBid) {
+              const auctionDiv = document.createElement('div');
+              auctionDiv.innerHTML = `
+                <h3>${auctionName}</h3>
+                <div id="highestBid${auctionName}">Highest Bid: $${auctions[auctionName].highestBid}</div>
+                <form id="bidForm${auctionName}" class="center">
+                  <label for="bidUserId${auctionName}">User ID:</label>
+                  <input autocomplete="off" type="text" id="bidUserId${auctionName}" name="bidUserId${auctionName}" required>
+                  <label for="bidInput${auctionName}">Bid amount:</label>
+                  <input autocomplete="off" type="text" id="bidInput${auctionName}" name="bidInput${auctionName}" required>
+                  <button type="submit" class="fill-button" onclick="processAuctionBid('${auctionName}', document.getElementById('bidUserId${auctionName}').value, parseFloat(document.getElementById('bidInput${auctionName}').value))">Place Bid</button>
+                </form>
+              `;
+              auctionContainer.appendChild(auctionDiv);
+
+              // Add event listener to the bid form
+              document.getElementById(`bidForm${auctionName}`).addEventListener("submit", function(event) {
+                event.preventDefault();
+                const userID = document.getElementById(`bidUserId${auctionName}`).value;
+                const bidAmount = parseFloat(document.getElementById(`bidInput${auctionName}`).value);
+
+                if (isNaN(userID) || isNaN(bidAmount) || bidAmount <= 0) {
+                  showPopup("flex", "Notice", "block", "Please enter a valid user ID and bid amount.");
+                  return;
+                }
+
+                processAuctionBid(auctionName, userID, bidAmount);
+              });
+            }
           }
         } else {
           console.log('No auctions found in the database.');
         }
-      });
-
-      // Event listener for the bid form
-      document.getElementById("bidForm").addEventListener("submit", function(event) {
-        event.preventDefault();
-
-        const userID = document.getElementById("bidUserId").value;
-        const bidAmount = parseFloat(document.getElementById("bidInput").value);
-
-        if (isNaN(userID) || isNaN(bidAmount) || bidAmount <= 0) {
-          showPopup("flex", "Notice", "block", "Please enter a valid user ID and bid amount.");
-          return;
-        }
-
-        processAuctionBid(userID, bidAmount);
       });
 
     } else {
@@ -469,15 +485,8 @@ document.getElementById("businessNameInput").addEventListener("keydown", (event)
     </form>
     <iframe id="scaniframe" style="border: 0px;" width="100%" height="500px" src="about:blank"></iframe>
     <div id="bidScreen">
-      <h2 id="auctionHeading">Auction</h2>
-      <div id="highestBid">No bids yet</div>
-      <form id="bidForm" class="center">
-        <label for="bidUserId">User ID:</label>
-        <input autocomplete="off" type="text" id="bidUserId" name="bidUserId" required>
-        <label for="bidInput">Bid amount:</label>
-        <input autocomplete="off" type="text" id="bidInput" name="bidInput" required>
-        <button type="submit" class="fill-button">Place Bid</button>
-      </form>
+      <h2 id="auctionHeading">Auctions</h2>
+      <div id="auctionContainer"></div>
     </div>
   </div>
   <div id="login-screen" class="center-container" style="display: none;">
