@@ -308,7 +308,7 @@
       }
 
       // Function to display auctions
-      function displayAuctions() {
+      window.displayAuctions = function() {
         get(ref(database, `auctions/${businessValue}`)).then((snapshot) => {
           if (snapshot.exists()) {
             const auctions = snapshot.val();
