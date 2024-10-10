@@ -311,22 +311,53 @@
 
           for (const auctionName in auctions) {
             if (auctions[auctionName].highestBid) {
+              // Create elements
               const auctionDiv = document.createElement('div');
-              auctionDiv.innerHTML = `
-                <h3>${auctionName}</h3>
-                <div id="highestBid${auctionName}">Highest Bid: $${auctions[auctionName].highestBid}</div>
-                <form id="bidForm${auctionName}" class="center">
-                  <label for="bidUserId${auctionName}">User ID:</label>
-                  <input autocomplete="off" type="text" id="bidUserId${auctionName}" name="bidUserId${auctionName}" required>
-                  <label for="bidInput${auctionName}">Bid amount:</label>
-                  <input autocomplete="off" type="text" id="bidInput${auctionName}" name="bidInput${auctionName}" required>
-                  <button type="submit" class="fill-button" onclick="processAuctionBid('${auctionName}', document.getElementById('bidUserId${auctionName}').value, parseFloat(document.getElementById('bidInput${auctionName}').value))">Place Bid</button>
-                </form>
-              `;
+              const auctionHeading = document.createElement('h3');
+              const highestBidDiv = document.createElement('div');
+              const bidForm = document.createElement('form');
+              const userIdLabel = document.createElement('label');
+              const userIdInput = document.createElement('input');
+              const bidLabel = document.createElement('label');
+              const bidInput = document.createElement('input');
+              const bidButton = document.createElement('button');
+
+              // Set content and attributes
+              auctionHeading.textContent = auctionName;
+              highestBidDiv.textContent = `Highest Bid: $${auctions[auctionName].highestBid}`;
+              highestBidDiv.id = `highestBid${auctionName}`;
+              bidForm.id = `bidForm${auctionName}`;
+              bidForm.classList.add('center');
+              userIdLabel.textContent = "User ID:";
+              userIdInput.type = "text";
+              userIdInput.id = `bidUserId${auctionName}`;
+              userIdInput.name = `bidUserId${auctionName}`;
+              userIdInput.required = true;
+              bidLabel.textContent = "Bid amount:";
+              bidInput.type = "text";
+              bidInput.id = `bidInput${auctionName}`;
+              bidInput.name = `bidInput${auctionName}`;
+              bidInput.required = true;
+              bidButton.type = "submit";
+              bidButton.classList.add('fill-button');
+              bidButton.textContent = "Place Bid";
+              bidButton.onclick = () => {
+                processAuctionBid(auctionName, document.getElementById(`bidUserId${auctionName}`).value, parseFloat(document.getElementById(`bidInput${auctionName}`).value));
+              };
+
+              // Append elements to the DOM
+              auctionDiv.appendChild(auctionHeading);
+              auctionDiv.appendChild(highestBidDiv);
+              bidForm.appendChild(userIdLabel);
+              bidForm.appendChild(userIdInput);
+              bidForm.appendChild(bidLabel);
+              bidForm.appendChild(bidInput);
+              bidForm.appendChild(bidButton);
+              auctionDiv.appendChild(bidForm);
               auctionContainer.appendChild(auctionDiv);
 
               // Add event listener to the bid form
-              document.getElementById(`bidForm${auctionName}`).addEventListener("submit", function(event) {
+              bidForm.addEventListener("submit", function(event) {
                 event.preventDefault();
                 const userID = document.getElementById(`bidUserId${auctionName}`).value;
                 const bidAmount = parseFloat(document.getElementById(`bidInput${auctionName}`).value);
