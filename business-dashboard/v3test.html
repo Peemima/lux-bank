@@ -307,89 +307,84 @@
           });
       }
 
-      // Function to display auctions
-      window.displayAuctions = function() {
-        get(ref(database, `auctions/${businessValue}`)).then((snapshot) => {
-          if (snapshot.exists()) {
-            const auctions = snapshot.val();
-            // Clear previous auction elements
-            auctionContainer.innerHTML = '';
+      function displayAuctions() {
+  get(ref(database, `auctions/${businessValue}`)).then((snapshot) => {
+    if (snapshot.exists()) {
+      const auctions = snapshot.val();
+      // Clear previous auction elements
+      auctionContainer.innerHTML = '';
 
-            for (const auctionName in auctions) {
-              if (auctions[auctionName].highestBid) {
-                // Create elements
-                const auctionDiv = document.createElement('div');
-                const auctionHeading = document.createElement('h3');
-                const highestBidDiv = document.createElement('div');
-                const bidForm = document.createElement('form');
-                const userIdLabel = document.createElement('label');
-                const userIdInput = document.createElement('input');
-                const bidLabel = document.createElement('label');
-                const bidInput = document.createElement('input');
-                const bidButton = document.createElement('button');
+      for (const auctionName in auctions) {
+        if (auctions[auctionName].highestBid) {
+          // Create elements
+          const auctionDiv = document.createElement('div');
+          const auctionHeading = document.createElement('h3');
+          const highestBidDiv = document.createElement('div');
+          const bidForm = document.createElement('form');
+          const userIdLabel = document.createElement('label');
+          const userIdInput = document.createElement('input');
+          const bidLabel = document.createElement('label');
+          const bidInput = document.createElement('input');
+          const bidButton = document.createElement('button');
 
-                // Set content and attributes
-                auctionHeading.textContent = auctionName;
-                highestBidDiv.textContent = `Highest Bid: $${auctions[auctionName].highestBid}`;
-                highestBidDiv.id = `highestBid${auctionName}`;
-                bidForm.id = `bidForm${auctionName}`;
-                bidForm.classList.add('center');
-                userIdLabel.textContent = "User ID:";
-                userIdInput.type = "text";
-                userIdInput.id = `bidUserId${auctionName}`;
-                userIdInput.name = `bidUserId${auctionName}`;
-                userIdInput.required = true;
-                bidLabel.textContent = "Bid amount:";
-                bidInput.type = "text";
-                bidInput.id = `bidInput${auctionName}`;
-                bidInput.name = `bidInput${auctionName}`;
-                bidInput.required = true;
-                bidButton.type = "submit";
-                bidButton.classList.add('fill-button');
-                bidButton.textContent = "Place Bid";
-                bidButton.onclick = () => {
-                  processAuctionBid(auctionName, document.getElementById(`bidUserId${auctionName}`).value, parseFloat(document.getElementById(`bidInput${auctionName}`).value));
-                };
+          // Set content and attributes
+          auctionHeading.textContent = auctionName;
+          highestBidDiv.textContent = `Highest Bid: $${auctions[auctionName].highestBid}`;
+          highestBidDiv.id = `highestBid${auctionName}`;
+          bidForm.id = `bidForm${auctionName}`;
+          bidForm.classList.add('center');
+          userIdLabel.textContent = "User ID:";
+          userIdInput.type = "text";
+          userIdInput.id = `bidUserId${auctionName}`;
+          userIdInput.name = `bidUserId${auctionName}`;
+          userIdInput.required = true;
+          bidLabel.textContent = "Bid amount:";
+          bidInput.type = "text";
+          bidInput.id = `bidInput${auctionName}`;
+          bidInput.name = `bidInput${auctionName}`;
+          bidInput.required = true;
+          bidButton.type = "submit";
+          bidButton.classList.add('fill-button');
+          bidButton.textContent = "Place Bid";
 
-                // Append elements to the DOM
-                auctionDiv.appendChild(auctionHeading);
-                auctionDiv.appendChild(highestBidDiv);
-                bidForm.appendChild(userIdLabel);
-                bidForm.appendChild(userIdInput);
-                bidForm.appendChild(bidLabel);
-                bidForm.appendChild(bidInput);
-                bidForm.appendChild(bidButton);
-                auctionDiv.appendChild(bidForm);
-                auctionContainer.appendChild(auctionDiv);
+          // Append elements to the DOM
+          auctionDiv.appendChild(auctionHeading);
+          auctionDiv.appendChild(highestBidDiv);
+          bidForm.appendChild(userIdLabel);
+          bidForm.appendChild(userIdInput);
+          bidForm.appendChild(bidLabel);
+          bidForm.appendChild(bidInput);
+          bidForm.appendChild(bidButton);
+          auctionDiv.appendChild(bidForm);
+          auctionContainer.appendChild(auctionDiv);
 
-                // Add event listener to the bid form
-                bidForm.addEventListener("submit", function(event) {
-                  event.preventDefault();
-                  const userID = document.getElementById(`bidUserId${auctionName}`).value;
-                  const bidAmount = parseFloat(document.getElementById(`bidInput${auctionName}`).value);
+          // Add event listener to the bid form AFTER appending to DOM
+          bidForm.addEventListener("submit", function(event) {
+            event.preventDefault();
+            const userID = document.getElementById(`bidUserId${auctionName}`).value;
+            const bidAmount = parseFloat(document.getElementById(`bidInput${auctionName}`).value);
 
-                  if (isNaN(userID) || isNaN(bidAmount) || bidAmount <= 0) {
-                    showPopup("flex", "Notice", "block", "Please enter a valid user ID and bid amount.");
-                    return;
-                  }
-
-                  processAuctionBid(auctionName, userID, bidAmount);
-                });
-              }
+            if (isNaN(userID) || isNaN(bidAmount) || bidAmount <= 0) {
+              showPopup("flex", "Notice", "block", "Please enter a valid user ID and bid amount.");
+              return;
             }
-            // Hide the new auction button if there are auctions
-            newAuctionButton.style.display = 'none';
-          } else {
-            console.log('No auctions found in the database.');
-            // Show the new auction button if there are no auctions
-            newAuctionButton.style.display = 'block';
-          }
-        }).catch((error) => {
-          console.error('Error fetching auction data:', error);
-          showPopup("flex", "Help is on the way", "none", "There was an error, but don't worry, help is on the way.");
-        });
-      }
 
+            processAuctionBid(auctionName, userID, bidAmount);
+          });
+        }
+      }
+      // Hide the new auction button if there are auctions
+      newAuctionButton.style.display = 'none';
+    } else {
+      console.log('No auctions found in the database.');
+      // Show the new auction button if there are no auctions
+      newAuctionButton.style.display = 'block';
+    }
+  }).catch((error) => {
+    console.error('Error fetching auction data:', error);
+    showPopup("flex", "Help is on the way", "none", "There was an error, but don't worry, help is on the way.");
+  });
+}
       // Function to handle the new auction button click
       newAuctionButton.addEventListener('click', () => {
         // Prompt the user for the auction name
