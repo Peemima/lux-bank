@@ -200,7 +200,7 @@
       const auctionContainer = document.getElementById('auctionContainer');
       const newAuctionButton = document.getElementById('newAuctionButton'); // Get reference to the button
 
-      function processAuctionBid(auctionName, userID, bidAmount) {
+      window.processAuctionBid = function(auctionName, userID, bidAmount) {
         // Get the current highest bid for the specific auction
         get(ref(database, `auctions/${businessValue}/${auctionName}`)).then((snapshot) => {
           if (snapshot.exists()) {
