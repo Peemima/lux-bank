@@ -475,9 +475,8 @@ document.getElementById("businessNameInput").addEventListener("keydown", (event)
       showPopup("flex", "Notice", "block", "Please enter a valid bid amount");
       return;
     }
-
-    processAuctionBid(auctionName, userID, bidAmount);
     bidIframeControl('stop');
+    processAuctionBid(auctionName, userID, bidAmount);
   } else {
     // The user is on the transaction screen
     if (isNaN(amount) || amount <= 0) {
