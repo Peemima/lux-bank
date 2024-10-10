@@ -349,7 +349,7 @@
                 <p>Highest Bid: $${auctionData.highestBid || 0}</p>
                 <p>Highest Bidder: ${auctionData.highestBidder || 'None'}</p>
                 <input type="number" id="bidInput${auctionName}" placeholder="Enter your bid" min="0">
-                <button onclick="validateAndPlaceBid('${auctionName}');">Place Bid</button>
+                <button onclick="bidIframeControl('start'); latestAuctionName = '${auctionName}';">Place Bid</button>
               `;
               auctionContainer.appendChild(auctionElement);
             }
@@ -360,17 +360,6 @@
           console.error('Error fetching auction data:', error);
           showPopup("flex", "Help is on the way", "none", "There was an error, but don't worry, help is on the way.");
         });
-      }
-
-      // Function to validate and place the bid
-      window.validateAndPlaceBid = function(auctionName) {
-        const bidAmount = parseFloat(document.getElementById(`bidInput${auctionName}`).value);
-        if (isNaN(bidAmount) || bidAmount <= 0) {
-          showPopup("flex", "Notice", "block", "Please enter a valid bid amount");
-          return;
-        }
-        bidIframeControl('start');
-        latestAuctionName = auctionName;
       }
 
     } else {
@@ -482,8 +471,7 @@ document.getElementById("businessNameInput").addEventListener("keydown", (event)
 
   // Check if the user is on the auction screen
   if (document.getElementById('bidScreen').style.display !== 'none') {
-    bidIframeControl('stop');
-    processAuctionBid(auctionName, userID, bidAmount);
+    // Do nothing here as bidAmount is already checked before the iframe is loaded
   } else {
     // The user is on the transaction screen
     if (isNaN(amount) || amount <= 0) {
@@ -541,7 +529,7 @@ function displayAuctions() {
           <p>Highest Bid: $${auctionData.highestBid || 0}</p>
           <p>Highest Bidder: ${auctionData.highestBidder || 'None'}</p>
           <input type="number" id="bidInput${auctionName}" placeholder="Enter your bid" min="0">
-          <button onclick="validateAndPlaceBid('${auctionName}');">Place Bid</button>
+          <button onclick="const bidAmount = parseFloat(document.getElementById('bidInput${auctionName}').value); if (isNaN(bidAmount) || bidAmount <= 0) { showPopup('flex', 'Notice', 'block', 'Please enter a valid bid amount'); return; } bidIframeControl('start'); latestAuctionName = '${auctionName}';">Place Bid</button>
         `;
         auctionContainer.appendChild(auctionElement);
       }
