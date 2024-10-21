@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Lux Banking Dashboard</title>
+  <title>Sync Excel Grades</title>
   <noscript>
     <h1>js_err_noscrpt_popup</h1>
     <p>A wild error popped out of nowhere!</p>
@@ -50,7 +50,7 @@
     function fetchAndDisplayUsers(query = "") {
       const urlParams = new URLSearchParams(window.location.search);
       const gradeLevels = urlParams.get('grades') ? urlParams.get('grades').split('-') : ['Error: please use the url you were givin.'];
-
+      document.title = "Sync-Excel Grades" + gradeLevels;
       get(ref(database, 'users')).then((snapshot) => {
         if (snapshot.exists() && Object.keys(snapshot.val()).length > 0) {
           const users = snapshot.val();
