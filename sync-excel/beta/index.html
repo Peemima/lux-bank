@@ -49,8 +49,17 @@
 
     function fetchAndDisplayUsers(query = "") {
       const urlParams = new URLSearchParams(window.location.search);
-      const gradeLevels = urlParams.get('grades') ? urlParams.get('grades').split('-') : ['Error: please use the url you were givin.'];
-      document.title = "Sync-Excel Grades" + gradeLevels;
+      const gradeLevels = urlParams.get('grades') ? urlParams.get('grades').split('-') : ['Error: please use the url you were given.'];
+
+      let formattedGrades;
+      if (gradeLevels.length > 1) {
+        formattedGrades = gradeLevels.slice(0, -1).join(', ') + ' and ' + gradeLevels[gradeLevels.length - 1];
+      } else {
+        formattedGrades = gradeLevels[0];
+      }
+      
+      document.title = "Sync Excel Grades " + formattedGrades;
+
       get(ref(database, 'users')).then((snapshot) => {
         if (snapshot.exists() && Object.keys(snapshot.val()).length > 0) {
           const users = snapshot.val();
