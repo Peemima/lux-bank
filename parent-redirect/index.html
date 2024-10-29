@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Redirecting...</title>
+  <script src="https://peemima.github.io/lux-bank/assets/loading-screen.js"></script>
+  <noscript>
+    <h1>js_err_noscrpt_popup</h1>
+    <p>A wild error popped out of nowhere!</p>
+    <p>Tell Ian F about it immediately.</p>
+    <br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br>
+  </noscript>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js" defer></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js" defer></script>
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+    import { getDatabase, ref, get } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+
+    const firebaseConfig = {
+        apiKey: "AIzaSyASd5JOikXTlRp8eA2j_26Z1NWatZMjZds",
+        authDomain: "lux-bank.firebaseapp.com",
+        databaseURL: "https://lux-bank-default-rtdb.firebaseio.com",
+        projectId: "lux-bank",
+        storageBucket: "lux-bank.appspot.com",
+        messagingSenderId: "764922032293",
+        appId: "1:764922032293:web:573599b6116f025ee15d4c",
+        measurementId: "G-JQ7CWEJS9N"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const database = getDatabase(app);
+
+    const latestParentRef = ref(database, 'latestParentID');
+
+    get(latestParentRef).then((snapshot) => {
+      if (snapshot.exists()) {
+        const latestParentID = snapshot.val().id;
+        window.location.href = `https://peemima.github.io/lux-bank/${latestParentID}/?id=${latestParentID}`;
+      } else {
+        // No latest parent ID found, do nothing or display a message
+        console.log("No latest parent ID found.");
+      }
+    }).catch((error) => {
+      console.error("Error fetching latest parent ID:", error);
+    });
+  </script>
+</head>
+<body>
+  
+</body>
+</html>
