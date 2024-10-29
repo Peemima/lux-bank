@@ -57,8 +57,28 @@
 
               // Check if the ID matches the one from the URL
               if (user.id === userID) {
-                document.getElementById('parentName').textContent = userName; // Display the user's name
-                document.getElementById('parentID').textContent = userID;
+                // Create the user card element
+                const userCard = document.createElement("div");
+                userCard.className = "user-card";
+                userCard.style.width = "260px";
+
+                // Create the barcode image
+                const barcodeImg = document.createElement("img");
+                barcodeImg.className = "usercode-container";
+                barcodeImg.src = `https://barcodeapi.org/api/aztec/${userID}`;
+
+                // Create the name element
+                const userNameElement = document.createElement("p1");
+                userNameElement.textContent = userName;
+
+                // Append elements to the user card
+                userCard.appendChild(barcodeImg);
+                userCard.appendChild(document.createElement("br")); // Add a line break
+                userCard.appendChild(userNameElement);
+
+                // Append the user card to the body
+                document.body.appendChild(userCard);
+
                 return; // Exit the loop after finding the match
               }
             }
@@ -81,7 +101,5 @@
     <div class="lds-ring"><div></div><div></div><div></div><div></div></div>
   </div>
   <h1>Parent Card</h1>
-  <p><strong>Name:</strong> <span id="parentName"></span></p>
-  <p><strong>ID:</strong> <span id="parentID"></span></p>
 </body>
 </html>
