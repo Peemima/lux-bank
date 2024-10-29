@@ -53,7 +53,10 @@ window.addUser = function(userName, startingBalance) {
     const latestParentRef = ref(database, 'latestParentID');
     set(newUserRef, { 
       id: userID, 
-      balance: startingBalance 
+      balance: startingBalance,
+      ogBalance: startingBalance,
+      grade: "p",
+      payroll: "0"
     }).then(() => {
       console.log('User added successfully.');
       set(latestParentRef, { 
