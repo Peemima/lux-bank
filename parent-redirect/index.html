@@ -18,14 +18,14 @@
     import { getDatabase, ref, get, set } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
     const firebaseConfig = {
-        apiKey: "AIzaSyASd5JOikXTlRp8eA2j_26Z1NWatZMjZds",
-        authDomain: "lux-bank.firebaseapp.com",
-        databaseURL: "https://lux-bank-default-rtdb.firebaseio.com",
-        projectId: "lux-bank",
-        storageBucket: "lux-bank.appspot.com",
-        messagingSenderId: "764922032293",
-        appId: "1:764922032293:web:573599b6116f025ee15d4c",
-        measurementId: "G-JQ7CWEJS9N"
+      apiKey: "AIzaSyASd5JOikXTlRp8eA2j_26Z1NWatZMjZds",
+      authDomain: "lux-bank.firebaseapp.com",
+      databaseURL: "https://lux-bank-default-rtdb.firebaseio.com",
+      projectId: "lux-bank",
+      storageBucket: "lux-bank.appspot.com",
+      messagingSenderId: "764922032293",
+      appId: "1:764922032293:web:573599b6116f025ee15d4c",
+      measurementId: "G-JQ7CWEJS9N"
     };
 
     const app = initializeApp(firebaseConfig);
@@ -37,21 +37,25 @@
       if (snapshot.exists()) {
         const latestParentID = snapshot.val().id;
 
-        // Set latestParentID to "0" before redirecting
-        set(latestParentRef, { id: "0" })
-          .then(() => {
-            // Construct the redirect URL using the base URL
-            const baseUrl = window.location.origin; // Get the base URL
-            const redirectUrl = `${baseUrl}/lux-bank/parent-card/?id=${latestParentID}`;
-            window.location.href = redirectUrl;
-          })
-          .catch((error) => {
-            console.error("Error resetting latest parent ID:", error);
-            // Handle the error appropriately (e.g., display an error message)
-          });
-
+        // Only proceed if latestParentID is not "0"
+        if (latestParentID !== "0") { 
+          // Set latestParentID to "0" before redirecting
+          set(latestParentRef, { id: "0" })
+            .then(() => {
+              // Construct the redirect URL
+              const baseUrl = window.location.origin;
+              const redirectUrl = `${baseUrl}/lux-bank/parent-card/?id=${latestParentID}`;
+              window.location.href = redirectUrl;
+            })
+            .catch((error) => {
+              console.error("Error resetting latest parent ID:", error);
+              // Handle the error appropriately (e.g., display an error message)
+            });
+        } else {
+          console.log("Latest parent ID is already 0. No redirection.");
+        }
       } else {
-        // No latest parent ID found, do nothing or display a message
+        // No latest parent ID found
         console.log("No latest parent ID found.");
       }
     }).catch((error) => {
