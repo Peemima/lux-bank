@@ -17,7 +17,7 @@
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js" defer></script>
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-    import { getDatabase, ref, get } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+    import { getDatabase, ref, get, child, onValue } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyASd5JOikXTlRp8eA2j_26Z1NWatZMjZds",
@@ -44,10 +44,11 @@
 
     const userID = getParameterByName('id');
 
-    if (userID) {
-      const userRef = ref(database, 'users/' + userID);
+    const userRef = ref(database, 'users/');
 
-      get(userRef).then((snapshot) => {
+    if (userID) {
+      // This will update the page live as the database changes
+      onValue(child(userRef, userID), (snapshot) => {
         if (snapshot.exists()) {
           const userData = snapshot.val();
           document.getElementById('parentName').textContent = userData.name || "N/A";
