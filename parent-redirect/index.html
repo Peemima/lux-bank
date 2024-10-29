@@ -15,7 +15,7 @@
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js" defer></script>
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-    import { getDatabase, ref, get } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+    import { getDatabase, ref, get, set } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
     const firebaseConfig = {
         apiKey: "AIzaSyASd5JOikXTlRp8eA2j_26Z1NWatZMjZds",
@@ -36,7 +36,20 @@
     get(latestParentRef).then((snapshot) => {
       if (snapshot.exists()) {
         const latestParentID = snapshot.val().id;
-        window.location.href = `https://peemima.github.io/lux-bank/${latestParentID}/?id=${latestParentID}`;
+
+        // Set latestParentID to "0" before redirecting
+        set(latestParentRef, { id: "0" })
+          .then(() => {
+            // Construct the redirect URL using the base URL
+            const baseUrl = window.location.origin; // Get the base URL
+            const redirectUrl = `${baseUrl}/lux-bank/parent-card/?id=${latestParentID}`;
+            window.location.href = redirectUrl;
+          })
+          .catch((error) => {
+            console.error("Error resetting latest parent ID:", error);
+            // Handle the error appropriately (e.g., display an error message)
+          });
+
       } else {
         // No latest parent ID found, do nothing or display a message
         console.log("No latest parent ID found.");
@@ -47,6 +60,6 @@
   </script>
 </head>
 <body>
-  
+
 </body>
 </html>
