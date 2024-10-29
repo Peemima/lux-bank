@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Parent Card</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
+  <noscript>
+    <h1>js_err_noscrpt_popup</h1>
+    <p>A wild error popped out of nowhere!</p>
+    <p>Tell Ian F about it immediately.</p>
+    <br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br>
+  </noscript>
+  <link rel="stylesheet" href="/lux-bank/assets/styles.css">
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js" defer></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js" defer></script>
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+    import { getDatabase, ref, get } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyASd5JOikXTlRp8eA2j_26Z1NWatZMjZds",
+      authDomain: "lux-bank.firebaseapp.com",
+      databaseURL: "https://lux-bank-default-rtdb.firebaseio.com",
+      projectId: "lux-bank",
+      storageBucket: "lux-bank.appspot.com",
+      messagingSenderId: "764922032293",
+      appId: "1:764922032293:web:573599b6116f025ee15d4c",
+      measurementId: "G-JQ7CWEJS9N"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const database = getDatabase(app);
+
+    function getParameterByName(name, url = window.location.href) {
+      name = name.replace(/[\[\]]/g, '\\$&');
+      const regex = new RegExp('[?&]' + name + '(=([^&#]*)|&|#|$)');
+      const results = regex.exec(url);
+      if (!results) return null;
+      if (!results[2]) return '';
+      return decodeURIComponent(results[2].replace(/\+/g, ' '));
+    }
+
+    const userID = getParameterByName('id');
+
+    if (userID) {
+      const userRef = ref(database, 'users/' + userID);
+
+      get(userRef).then((snapshot) => {
+        if (snapshot.exists()) {
+          const userData = snapshot.val();
+          document.getElementById('parentName').textContent = userData.name || "N/A";
+          document.getElementById('parentID').textContent = userID;
+        } else {
+          console.log("User not found.");
+        }
+      }).catch((error) => {
+        console.error("Error fetching user data:", error);
+      });
+    } else {
+      console.log("User ID not found in URL.");
+    }
+  </script>
+</head>
+<body>
+  <div id="loading-screen">
+    <div class="lds-ring"><div></div><div></div><div></div><div></div></div>
+  </div>
+
+  <h1>Parent Card</h1>
+  <p><strong>Name:</strong> <span id="parentName"></span></p>
+  <p><strong>ID:</strong> <span id="parentID"></span></p>
+
+  <script src="https://peemima.github.io/lux-bank/assets/loading-screen.js"></script> 
+</body>
+</html>
