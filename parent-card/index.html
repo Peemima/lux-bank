@@ -76,8 +76,13 @@
                 userCard.appendChild(document.createElement("br")); // Add a line break
                 userCard.appendChild(userNameElement);
 
-                // Append the user card to the body
-                document.body.appendChild(userCard);
+                // Create the center container and append the user card to it
+                const centerContainer = document.createElement("div");
+                centerContainer.className = "center-container";
+                centerContainer.appendChild(userCard);
+
+                // Append the center container to the body
+                document.body.appendChild(centerContainer);
 
                 return; // Exit the loop after finding the match
               }
@@ -97,9 +102,6 @@
   </script>
 </head>
 <body>
-  <div id="loading-screen">
-    <div class="lds-ring"><div></div><div></div><div></div><div></div></div>
-  </div>
-  <h1>Parent Card</h1>
+  <div id="loading-screen"></div>
 </body>
 </html>
