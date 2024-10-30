@@ -38,8 +38,8 @@
       if (snapshot.exists()) {
         const latestParentID = snapshot.val().id;
 
-        // Only proceed if latestParentID is not "0"
-        if (latestParentID !== "0") { 
+        // Only proceed if latestParentID is not "0" and not "1"
+        if (latestParentID !== "0" && latestParentID !== "1") { 
           // Set latestParentID to "0" before redirecting
           set(latestParentRef, { id: "0" })
             .then(() => {
@@ -53,7 +53,7 @@
               // Handle the error appropriately (e.g., display an error message)
             });
         } else {
-          console.log("Latest parent ID is already 0. No redirection.");
+          console.log("Latest parent ID is either 0 or 1. No redirection.");
         }
       } else {
         // No latest parent ID found
