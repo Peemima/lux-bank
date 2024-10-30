@@ -202,6 +202,24 @@ userBalanceInput.onkeydown = function(e){
 //Automatically select the first name input feild
 firstNameInput.focus();
 
+// Add a "Be back soon" button
+const beBackSoonButton = document.createElement('button');
+beBackSoonButton.innerText = 'Be back soon';
+beBackSoonButton.addEventListener('click', () => {
+  // Set latestParentID to 1
+  set(latestParentRef, { id: '1' })
+    .then(() => {
+      console.log('Latest Parent ID set to 1');
+      updateBusinessBalanceElement();
+    })
+    .catch(error => {
+      console.error('Error setting Latest Parent ID:', error);
+    });
+});
+
+// Append the button to the body
+document.body.appendChild(beBackSoonButton);
+
   </script>
 </head>
 <body>
