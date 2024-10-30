@@ -46,10 +46,17 @@
             // Display the parent-value ad
             document.getElementById('parent-value-ad').style.display = 'block';
             document.getElementById('parent-redirect-qr').style.display = 'none';
+            document.getElementById('be-back-soon-image').style.display = 'none';
+          } else if (latestParentID === '1') {
+            // Display the "Be back soon" image
+            document.getElementById('parent-value-ad').style.display = 'none';
+            document.getElementById('parent-redirect-qr').style.display = 'none';
+            document.getElementById('be-back-soon-image').style.display = 'block';
           } else {
             // Display the parent-redirect-qr
             document.getElementById('parent-value-ad').style.display = 'none';
             document.getElementById('parent-redirect-qr').style.display = 'block';
+            document.getElementById('be-back-soon-image').style.display = 'none';
           }
         } else {
           console.log("No data found for 'latestParentID'");
@@ -72,6 +79,9 @@
   </div>
   <div id="parent-redirect-qr" style="display: none; position: relative;">
     <img src="/lux-bank/assets/parent-redirect-qr.png" alt="Parent Redirect QR" style="width: 100%; height: auto;">
+  </div>
+  <div id="be-back-soon-image" style="display: none; position: relative;">
+    <img src="/lux-bank/assets/be-back-soon.png" alt="Be back soon" style="width: 100%; height: auto;">
   </div>
 </body>
 </html>
