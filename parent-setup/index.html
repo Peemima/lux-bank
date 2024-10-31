@@ -121,7 +121,7 @@ function updateBusinessBalanceElement() {
         if (latestParentSnapshot.exists()) {
           const latestParentID = latestParentSnapshot.val().id;
           if (latestParentID === '0') {
-            businessInfoElement.innerText = `No queue`;
+            businessInfoElement.innerText = `Advertisement`;
             // Show the "Be back soon" button
             document.getElementById('beBackSoonButton').style.display = 'block';
             document.getElementById('iAmBackButton').style.display = 'none'; 
@@ -131,13 +131,13 @@ function updateBusinessBalanceElement() {
             document.getElementById('beBackSoonButton').style.display = 'none';
             document.getElementById('iAmBackButton').style.display = 'block'; 
           } else {
-            businessInfoElement.innerText = `Waiting for scan`;
+            businessInfoElement.innerText = `QR Code`;
             // Hide both buttons
             document.getElementById('beBackSoonButton').style.display = 'none';
             document.getElementById('iAmBackButton').style.display = 'none';
           }
         } else {
-          businessInfoElement.innerText = `No queue`;
+          businessInfoElement.innerText = `Advertisement`;
         }
       } else {
         console.log("No data found for 'users'");
