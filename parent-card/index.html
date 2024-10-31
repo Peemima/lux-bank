@@ -84,6 +84,9 @@
                 // Append the center container to the body
                 document.body.appendChild(centerContainer);
 
+                // Disconnect from Firebase after displaying the card
+                app.delete(); // Assuming 'app' is the Firebase app instance 
+
                 return; // Exit the loop after finding the match
               }
             }
