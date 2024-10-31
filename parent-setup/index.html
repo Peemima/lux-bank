@@ -122,6 +122,8 @@ function updateBusinessBalanceElement() {
           const latestParentID = latestParentSnapshot.val().id;
           if (latestParentID === '0') {
             businessInfoElement.innerText = `No queue`;
+          } else if (latestParentID === '1') {
+            businessInfoElement.innerText = `Be back soon`;
           } else {
             businessInfoElement.innerText = `Waiting for scan`;
           }
@@ -203,13 +205,16 @@ userBalanceInput.onkeydown = function(e){
 firstNameInput.focus();
 
 // Add a "Be back soon" button
-const beBackSoonButton = document.createElement('button');
+let beBackSoonButton = document.createElement('button');
 beBackSoonButton.innerText = 'Be back soon';
+let isBack = false;
 beBackSoonButton.addEventListener('click', () => {
   // Set latestParentID to 1
   set(latestParentRef, { id: '1' })
     .then(() => {
       console.log('Latest Parent ID set to 1');
+      beBackSoonButton.innerText = 'I am back';
+      isBack = true;
       updateBusinessBalanceElement();
     })
     .catch(error => {
@@ -217,8 +222,29 @@ beBackSoonButton.addEventListener('click', () => {
     });
 });
 
-// Append the button to the body
+// Add an "I am back" button
+let iAmBackButton = document.createElement('button');
+IAmBackButton.innerText = 'I am back';
+IAmBackButton.style.display = 'none'; // Initially hidden
+IAmBackButton.addEventListener('click', () => {
+  // Set latestParentID to 1
+  set(latestParentRef, { id: '1' })
+    .then(() => {
+      console.log('Latest Parent ID set to 1');
+      beBackSoonButton.innerText = 'Be back soon';
+      isBack = false;
+      IAmBackButton.style.display = 'none'; // Hide "I am back" button
+      beBackSoonButton.style.display = 'block'; // Show "Be back soon" button
+      updateBusinessBalanceElement();
+    })
+    .catch(error => {
+      console.error('Error setting Latest Parent ID:', error);
+    });
+});
+
+// Append the buttons to the body
 document.body.appendChild(beBackSoonButton);
+document.body.appendChild(IAmBackButton);
 
   </script>
 </head>
