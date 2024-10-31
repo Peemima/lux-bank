@@ -122,8 +122,19 @@ function updateBusinessBalanceElement() {
           const latestParentID = latestParentSnapshot.val().id;
           if (latestParentID === '0') {
             businessInfoElement.innerText = `No queue`;
+            // Show the "Be back soon" button
+            document.getElementById('beBackSoonButton').style.display = 'block';
+            document.getElementById('iAmBackButton').style.display = 'none'; 
+          } else if (latestParentID === '1') {
+            businessInfoElement.innerText = `Waiting for scan`;
+            // Show the "I am back" button
+            document.getElementById('beBackSoonButton').style.display = 'none';
+            document.getElementById('iAmBackButton').style.display = 'block'; 
           } else {
             businessInfoElement.innerText = `Waiting for scan`;
+            // Hide both buttons
+            document.getElementById('beBackSoonButton').style.display = 'none';
+            document.getElementById('iAmBackButton').style.display = 'none';
           }
         } else {
           businessInfoElement.innerText = `No queue`;
@@ -202,8 +213,9 @@ userBalanceInput.onkeydown = function(e){
 //Automatically select the first name input feild
 firstNameInput.focus();
 
-// Add a "Be back soon" button
+// Create the "Be back soon" button
 const beBackSoonButton = document.createElement('button');
+beBackSoonButton.id = 'beBackSoonButton'; // Add an ID for easy reference
 beBackSoonButton.innerText = 'Be back soon';
 beBackSoonButton.addEventListener('click', () => {
   // Set latestParentID to 1
@@ -217,8 +229,29 @@ beBackSoonButton.addEventListener('click', () => {
     });
 });
 
-// Append the button to the body
+// Create the "I am back" button
+const iAmBackButton = document.createElement('button');
+iAmBackButton.id = 'iAmBackButton'; // Add an ID for easy reference
+iAmBackButton.innerText = 'I am back';
+iAmBackButton.addEventListener('click', () => {
+  // Set latestParentID to 0
+  set(latestParentRef, { id: '0' })
+    .then(() => {
+      console.log('Latest Parent ID set to 0');
+      updateBusinessBalanceElement();
+    })
+    .catch(error => {
+      console.error('Error setting Latest Parent ID:', error);
+    });
+});
+
+// Append both buttons to the body (you can place them where you want)
 document.body.appendChild(beBackSoonButton);
+document.body.appendChild(iAmBackButton);
+
+// Hide both buttons initially
+beBackSoonButton.style.display = 'none';
+iAmBackButton.style.display = 'none'; 
 
   </script>
 </head>
