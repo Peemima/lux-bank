@@ -122,6 +122,8 @@ function updateBusinessBalanceElement() {
           const latestParentID = latestParentSnapshot.val().id;
           if (latestParentID === '0') {
             businessInfoElement.innerText = `No queue`;
+          } else if (latestParentID === '1') {
+            businessInfoElement.innerText = `Be back soon`;
           } else {
             businessInfoElement.innerText = `Waiting for scan`;
           }
@@ -205,20 +207,38 @@ firstNameInput.focus();
 // Add a "Be back soon" button
 const beBackSoonButton = document.createElement('button');
 beBackSoonButton.innerText = 'Be back soon';
+let isBack = false; // Track if the button has been clicked
 beBackSoonButton.addEventListener('click', () => {
-  // Set latestParentID to 1
-  set(latestParentRef, { id: '1' })
-    .then(() => {
-      console.log('Latest Parent ID set to 1');
-      updateBusinessBalanceElement();
-    })
-    .catch(error => {
-      console.error('Error setting Latest Parent ID:', error);
-    });
+  if (isBack) {
+    // Change back to "Be back soon"
+    beBackSoonButton.innerText = 'Be back soon';
+    isBack = false;
+    set(latestParentRef, { id: '1' }) // Set back to 1
+      .then(() => {
+        console.log('Latest Parent ID set to 1');
+        updateBusinessBalanceElement();
+      })
+      .catch(error => {
+        console.error('Error setting Latest Parent ID:', error);
+      });
+  } else {
+    // Change to "I am back"
+    beBackSoonButton.innerText = 'I am back';
+    isBack = true;
+    set(latestParentRef, { id: '0' }) // Set to 0
+      .then(() => {
+        console.log('Latest Parent ID set to 0');
+        updateBusinessBalanceElement();
+      })
+      .catch(error => {
+        console.error('Error setting Latest Parent ID:', error);
+      });
+  }
 });
 
-// Append the button to the body
-document.body.appendChild(beBackSoonButton);
+// Move the button to the #businessInfo div
+const businessInfoDiv = document.getElementById('businessInfo');
+businessInfoDiv.insertBefore(beBackSoonButton, businessInfoDiv.firstChild);
 
   </script>
 </head>
