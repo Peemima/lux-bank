@@ -245,9 +245,19 @@ iAmBackButton.addEventListener('click', () => {
     });
 });
 
-// Append both buttons to the body (you can place them where you want)
-document.body.appendChild(beBackSoonButton);
-document.body.appendChild(iAmBackButton);
+// Create a div to hold the buttons
+const buttonContainer = document.createElement('div');
+buttonContainer.style.display = 'block';
+buttonContainer.style.textAlign = '-webkit-center';
+buttonContainer.style.unicodeBidi = 'isolate';
+buttonContainer.style.marginTop = '10px';
+
+// Append both buttons to the div
+buttonContainer.appendChild(beBackSoonButton);
+buttonContainer.appendChild(iAmBackButton);
+
+// Append the button container to the body
+document.body.appendChild(buttonContainer);
 
 // Hide both buttons initially
 beBackSoonButton.style.display = 'none';
