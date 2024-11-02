@@ -142,6 +142,7 @@
                   .catch((error) => {
                     console.error('Error updating user balance:', error);
                     showPopup("flex", "Help is on the way", "none", "There was an error, but don't worry, help is on the way.");
+                    err(true);
                   });
                 return; 
               }
@@ -153,6 +154,7 @@
         }).catch((error) => {
           console.error('Error fetching user data:', error);
           showPopup("flex", "Help is on the way", "none", "There was an error, but don't worry, help is on the way.");
+          err(true);
         });
       }
 
@@ -175,6 +177,8 @@
           })
           .catch((error) => {
             console.error('Error logging transaction:', error);
+            showPopup("flex", "Help is on the way", "none", "There was an error, but don't worry, help is on the way.");
+            err(true);
           });
       }
 
@@ -189,6 +193,8 @@
             fetchAndDisplayBusinessBalance(); 
           }).catch((error) => {
             console.error('Error updating business balance:', error);
+            showPopup("flex", "Help is on the way", "none", "There was an error, but don't worry, help is on the way.");
+            err(true);
           });
         }).catch((error) => {
           console.error('Error fetching business balance:', error);
@@ -196,6 +202,8 @@
             console.log('Business balance initialized and set to:', amountToAdd);
           }).catch((initError) => {
             console.error('Error initializing business balance:', initError);
+            showPopup("flex", "Help is on the way", "none", "There was an error, but don't worry, help is on the way.");
+            err(true);
           });
         });
       }
@@ -211,6 +219,8 @@
           }
         }).catch((error) => {
           console.error('Error fetching business balance:', error);
+          showPopup("flex", "Help is on the way", "none", "There was an error, but don't worry, help is on the way.");
+          err(true);
         });
       }
 
