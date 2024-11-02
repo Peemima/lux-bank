@@ -83,6 +83,10 @@
         }
       });
 
+      if (!window.fatelError) {
+          updateBusinessTimestamp();
+      }
+
       document.getElementById("transactionForm").addEventListener("submit", function(event) {
         event.preventDefault(); 
 
