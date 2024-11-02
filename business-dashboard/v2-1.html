@@ -48,6 +48,10 @@
     window.err = function(mode) {
       window.fatelError = mode;
     }
+
+    window.rld = function() {
+      window.location.reload(true);
+    }
     
     window.businessValue = new URLSearchParams(window.location.search).get('businessvalue');
 
