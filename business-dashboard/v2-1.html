@@ -44,6 +44,10 @@
     window.showElement = function(identifier) {
       document.querySelectorAll(identifier).forEach(item => { item.attributeStyleMap.delete('display') });
     };
+
+    window.err = function(mode) {
+      window.fatelError = mode;
+    }
     
     window.businessValue = new URLSearchParams(window.location.search).get('businessvalue');
 
