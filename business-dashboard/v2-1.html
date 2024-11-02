@@ -73,19 +73,18 @@
         }
       }
 
+      window.fatelError = false;
+
       // Call the function to ensure business account exists on load
       document.addEventListener("DOMContentLoaded", function() {
         ensureBusinessAccountExists();
         fetchAndDisplayBusinessBalance();
+        updateBusinessTimestamp();
         // Start the timestamp update interval
-        if (!window.fatelError) {
+        if (window.fatelError === false) {
           setInterval(updateBusinessTimestamp, 5000); // Update every 5 seconds
         }
       });
-
-      if (!window.fatelError) {
-          updateBusinessTimestamp();
-      }
 
       document.getElementById("transactionForm").addEventListener("submit", function(event) {
         event.preventDefault(); 
