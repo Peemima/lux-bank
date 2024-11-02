@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Market Day Business Dashboard</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
+  <script src="https://peemima.github.io/lux-bank/assets/loading-screen.js"></script>
+  <noscript>
+    <h1>js_err_noscrpt_popup</h1>
+    <p>A wild error popped out of nowhere!</p>
+    <p>Tell Ian F about it immediately.</p>
+    <br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br>
+  </noscript>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      background-color: #f4f4f4;
+    }
+
+    .grid-container {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); /* Responsive grid */
+      gap: 20px;
+      padding: 20px;
+    }
+
+    .grid-item {
+      border: 1px solid #ddd;
+      padding: 20px;
+      text-align: center;
+    }
+
+    .online {
+      background-color: lightgreen;
+    }
+
+    .offline {
+      background-color: lightcoral;
+    }
+
+    h3 {
+      margin-top: 0;
+    }
+
+    p {
+      margin: 5px 0;
+    }
+  </style>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js" defer></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js" defer></script>
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+    import { getDatabase, ref, get } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyASd5JOikXTlRp8eA2j_26Z1NWatZMjZds",
+      authDomain: "lux-bank.firebaseapp.com",
+      databaseURL: "https://lux-bank-default-rtdb.firebaseio.com",
+      projectId: "lux-bank",
+      storageBucket: "lux-bank.appspot.com",
+      messagingSenderId: "764922032293",
+      appId: "1:764922032293:web:573599b6116f025ee15d4c",
+      measurementId: "G-JQ7CWEJS9N"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const database = getDatabase(app);
+
+    const businessGrid = document.getElementById("businessGrid");
+
+    function fetchAndDisplayBusinesses() {
+      get(ref(database, 'businesses')).then((snapshot) => {
+        if (snapshot.exists()) {
+          const businesses = snapshot.val();
+          businessGrid.innerHTML = ''; // Clear existing grid
+
+          for (const businessKey in businesses) {
+            const businessData = businesses[businessKey];
+            const gridItem = document.createElement("div");
+            gridItem.classList.add("grid-item");
+
+            // Check online/offline status
+            const now = Date.now();
+            const timeDiff = now - businessData.timestamp;
+            if (timeDiff <= 6000) { // Within 6 seconds
+              gridItem.classList.add("online"); 
+              gridItem.innerHTML = `
+                <h3>${businessKey}</h3>
+                <p>Balance: $${businessData.balance}</p>
+                <p>Status: Online</p>
+              `;
+            } else { // Offline
+              gridItem.classList.add("offline"); 
+              gridItem.innerHTML = `
+                <h3>${businessKey}</h3>
+                <p>Balance: $${businessData.balance}</p>
+                <p>Status: Offline</p>
+              `;
+            }
+
+            businessGrid.appendChild(gridItem);
+          }
+        } else {
+          console.error('No businesses found in the database.');
+        }
+      }).catch((error) => {
+        console.error('Error fetching business data:', error);
+      });
+    }
+
+    // Update the grid every 4 seconds
+    setInterval(fetchAndDisplayBusinesses, 4000);
+
+    // Initial display
+    fetchAndDisplayBusinesses();
+  </script>
+</head>
+<body>
+  <div id="businessGrid" class="grid-container">
+    </div>
+</body>
+</html>
