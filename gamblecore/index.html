@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gamblecore Slot Machine</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+      background-color: #333;
+      color: #fff;
+    }
+    
+    .slot-machine {
+      text-align: center;
+    }
+    
+    .reels {
+      display: flex;
+      justify-content: center;
+      margin-bottom: 20px;
+    }
+    
+    .reel {
+      width: 100px;
+      height: 100px;
+      border: 2px solid #fff;
+      margin: 0 10px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-size: 24px;
+    }
+    
+    .controls {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+    
+    .controls button {
+      padding: 10px 20px;
+      font-size: 16px;
+      cursor: pointer;
+    }
+    
+    .bet {
+      margin-left: 20px;
+    }
+    
+    .bet input {
+      width: 50px;
+      text-align: center;
+    }
+    
+    .balance {
+      margin-left: 20px;
+    }
+    
+    .rtp {
+      margin-left: 20px;
+    }
+    
+    .progress-bar {
+      width: 300px;
+      height: 20px;
+      background-color: #ddd;
+      margin-top: 20px;
+    }
+    
+    .progress-bar-fill {
+      height: 100%;
+      background-color: #4caf50;
+      width: 0;
+      transition: width 0.2s;
+    }
+    
+    .messages {
+      font-size: 18px;
+      font-weight: bold;
+    }
+    
+    .chart-container {
+      width: 600px;
+      height: 400px;
+      margin-top: 20px;
+    }
+  </style>
+  <script>
+    const symbols = ['🍒', '🍋', '💰', '7️⃣', '🍀', '💣'];
+    const reels = [
+      { weights: [0.4, 0.3, 0.15, 0.1, 0.04, 0.01], symbols: symbols },
+      { weights: [0.35, 0.3, 0.2, 0.1, 0.04, 0.01], symbols: symbols },
+      { weights: [0.3, 0.3, 0.25, 0.1, 0.04, 0.01], symbols: symbols },
+    ];
+    
+    let balance = 3001;
+    let startingBalance = balance;
+    let spins = 0;
+    let nearMissCount = 0;
+    let consecutiveLosses = 0;
+    let bonusTriggerChance = 0.05;
+    let hiddenCap = 3001;
+    let playerLevel = 1;
+    let levelProgress = 0;
+    let levelThreshold = 100;
+    
+    let rtp = 1.2;
+    const minRtp = 0.9;
+    const rtpDecrement = 0.01;
+    
+    let balanceData = {
+      labels: [],
+      datasets: [{
+        label: 'Balance',
+        data: [],
+        backgroundColor: 'rgba(54, 162, 235, 0.2)',
+        borderColor: 'rgba(54, 162, 235, 1)',
+        borderWidth: 1
+      }]
+    };
+    
+    let balanceChart = null;
+    
+    function getRandomSymbol(reel) {
+      const randomNum = Math.random();
+      let cumulativeWeight = 0;
+    
+      for (let i = 0; i < reel.weights.length; i++) {
+        cumulativeWeight += reel.weights[i];
+        if (randomNum < cumulativeWeight) {
+          return reel.symbols[i];
+        }
+      }
+    
+      return reel.symbols[reel.symbols.length - 1];
+    }
+    
+    function getRTP() {
+      if (rtp > minRtp) {
+        rtp -= rtpDecrement;
+      }
+      return rtp;
+    }
+    
+    function spin() {
+      const betAmount = parseInt(document.getElementById('bet-amount').value, 10);
+    
+      if (betAmount > balance) {
+        showMessage('Insufficient balance!');
+        return;
+      }
+    
+      if (betAmount > hiddenCap) {
+        showMessage('Bet amount exceeds hidden cap!');
+        return;
+      }
+    
+      balance -= betAmount;
+      spins++;
+    
+      let manipulation = [0, 0, 0, 0, 0, 0];
+      const currentRtp = getRTP();
+      if (betAmount < 50) {
+        manipulation = [0.1, 0.1, 0.2, 0.2, 0.3, 0.3].map((x) => x * (1 - currentRtp));
+      } else if (consecutiveLosses >= 5) {
+        manipulation = [-0.1, -0.1, -0.2, -0.2, -0.3, -0.3].map((x) => x * (1 - currentRtp));
+      }
+    
+      let results = [];
+      for (let i = 0; i < 3; i++) {
+        results.push(getRandomSymbol(reels[i]));
+      }
+    
+      if (spins % 20 === 0 && nearMissCount < 1) {
+        let nearMissSymbol = symbols.filter(symbol => symbol !== '💰')[Math.floor(Math.random() * 5)];
+        if (nearMissSymbol === results[0] || nearMissSymbol === results[1]) {
+          nearMissSymbol = symbols.filter(symbol => symbol !== '💰' && symbol !== nearMissSymbol)[Math.floor(Math.random() * 4)];
+        }
+        results = ['💰', '💰', nearMissSymbol];
+        nearMissCount++;
+      } else {
+        nearMissCount = 0;
+      }
+    
+      if (results.every((symbol) => symbol === '💰')) {
+        results[2] = getRandomSymbol(reels[2]);
+      } else if (results.every((symbol) => symbol === '💣')) {
+        results = spinBonus(betAmount);
+      }
+    
+      // Play sound before animation
+      let winSound = new Audio("https://assets.onecompiler.app/42s4trm3d/42x2w2v5w/win.mp3");
+      let loseSound = new Audio("https://assets.onecompiler.app/42s4trm3d/42x2w2v5w/lose.mp3");
+    
+      if (results.every((symbol) => symbol === '🍒') || 
+          results.every((symbol) => symbol === '🍋') ||
+          results.every((symbol) => symbol === '7️⃣') ||
+          results.every((symbol) => symbol === '🍀') ||
+          results.every((symbol) => symbol === '💰')) {
+        winSound.play();
+      } else {
+        loseSound.play();
+      }
+    
+      animateReels(results, betAmount);
+      document.getElementById('rtp-value').textContent = `${(currentRtp * 100).toFixed(2)}%`;
+    
+      balanceData.labels.push(`Spin ${spins}`);
+      balanceData.datasets[0].data.push(balance);
+      updateBalanceChart();
+    }
+    
+    function animateReels(finalResults, betAmount) {
+      const reelElements = [document.getElementById('reel1'), document.getElementById('reel2'), document.getElementById('reel3')];
+      let animationCount = 0;
+    
+      reelElements.forEach((reelElement, index) => {
+        let animationInterval = setInterval(() => {
+          const randomSymbol = symbols[Math.floor(Math.random() * symbols.length)];
+          reelElement.textContent = randomSymbol;
+        }, 10);
+    
+        setTimeout(() => {
+          clearInterval(animationInterval);
+          reelElement.textContent = finalResults[index];
+          animationCount++;
+    
+          if (animationCount === reelElements.length) {
+            evaluateResults(finalResults, betAmount);
+            updateBalance();
+            updateProgressBar();
+          }
+        }, 600 + index * 100);
+      });
+    }
+    
+    function spinBonus(betAmount) {
+      let bonusResults = [];
+      for (let i = 0; i < 3; i++) {
+        const bonusSymbols = ['🍒', '🍋', '7️⃣', '🍀'];
+        const bonusWeights = [0.4, 0.3, 0.2, 0.1];
+        bonusResults.push(getRandomSymbol({ symbols: bonusSymbols, weights: bonusWeights }));
+      }
+    
+      evaluateResults(bonusResults, betAmount, true);
+      return bonusResults;
+    }
+    
+    function displayResults(results) {
+      for (let i = 0; i < 3; i++) {
+        document.getElementById(`reel${i + 1}`).textContent = results[i];
+      }
+    }
+    
+    function evaluateResults(results, betAmount, isBonus = false) {
+      if (results.every((symbol) => symbol === '🍒')) {
+        showMessage('You won 10x your bet!');
+        balance += betAmount * 10;
+      } else if (results.every((symbol) => symbol === '🍋')) {
+        showMessage('You won 10x your bet!');
+        balance += betAmount * 10;
+      } else if (results.every((symbol) => symbol === '7️⃣')) {
+        showMessage('You won 10x your bet!');
+        balance += betAmount * 5;
+      } else if (results.every((symbol) => symbol === '🍀')) {
+        showMessage('You won 10x your bet!');
+        balance += betAmount * 10;
+      } else if (results.every((symbol) => symbol === '💰')) {
+        showMessage('You won 20x your bet!');
+        balance += betAmount * 20;
+      } else if (isBonus) {
+        showMessage('Bonus feature: No win. Try again!');
+      } else {
+        showMessage('No win. Try again!');
+        consecutiveLosses++;
+      }
+    
+      if (!isBonus) {
+        consecutiveLosses = 0;
+        levelProgress += betAmount;
+      }
+    }
+    
+    function updateBalance() {
+      document.getElementById('balance-value').textContent = balance;
+    }
+    
+    function updateProgressBar() {
+      const progressBarFill = document.getElementById('progress-bar-fill');
+      const progressPercentage = (levelProgress / levelThreshold) * 100;
+    
+      progressBarFill.style.width = `${progressPercentage}%`;
+    
+      if (levelProgress >= levelThreshold) {
+        playerLevel++;
+        levelProgress = 0;
+        showMessage(`Congratulations! You've reached level ${playerLevel}!`);
+        levelThreshold *= 2;
+      }
+    }
+    
+    function showMessage(message) {
+      document.getElementById('messages').textContent = message;
+    }
+    
+    function updateBalanceChart() {
+      if (balanceChart) {
+        balanceChart.destroy();
+      }
+    
+      const balanceCanvas = document.getElementById('balanceChart');
+      balanceChart = new Chart(balanceCanvas, {
+        type: 'line',
+        data: balanceData,
+        options: {
+          scales: {
+            y: {
+              beginAtZero: true
+            }
+          },
+          animation: {
+            duration: 0
+          }
+        }
+      });
+    }
+    
+    document.getElementById('spin-btn').addEventListener('click', spin);
+    
+    updateBalance();
+    updateBalanceChart();
+  </script>
+</head>
+<body>
+  <div class="slot-machine">
+    <div class="reels">
+      <div class="reel" id="reel1"></div>
+      <div class="reel" id="reel2"></div>
+      <div class="reel" id="reel3"></div>
+    </div>
+    <div class="controls">
+      <button id="spin-btn">Spin</button>
+      <div class="bet">
+        <label for="bet-amount">Bet Amount:</label>
+        <input type="number" id="bet-amount" min="1" max="100" value="10">
+      </div>
+      <div class="balance">Balance: <span id="balance-value">1000</span></div>
+      <div class="rtp">Current RTP: <span id="rtp-value">125.00%</span></div>
+    </div>
+    <div class="progress-bar">
+      <div class="progress-bar-fill" id="progress-bar-fill"></div>
+    </div>
+    <div class="messages" id="messages"></div>
+    <div class="chart-container">
+      <canvas id="balanceChart"></canvas>
+    </div>
+  </div>
+  <script src="script.js"></script>
+</body>
+</html>
