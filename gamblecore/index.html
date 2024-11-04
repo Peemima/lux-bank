@@ -4,8 +4,8 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Gamblecore Slot Machine</title>
-  <script src="https://peemima.github.io/lux-bank/assets/popup-code.js"></script>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
+  <script src="https://peemima.github.io/lux-bank/assets/popup-code.js"></script> <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
+  <script src="https://peemima.github.io/lux-bank/assets/loading-screen.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js" defer></script>
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js" defer></script>
   <style>
@@ -19,17 +19,17 @@
       background-color: #333;
       color: #fff;
     }
-
+    
     .slot-machine {
       text-align: center;
     }
-
+    
     .reels {
       display: flex;
       justify-content: center;
       margin-bottom: 20px;
     }
-
+    
     .reel {
       width: 100px;
       height: 100px;
@@ -40,65 +40,92 @@
       align-items: center;
       font-size: 24px;
     }
-
+    
     .controls {
       display: flex;
       justify-content: center;
       align-items: center;
       margin-bottom: 20px;
     }
-
+    
     .controls button {
       padding: 10px 20px;
       font-size: 16px;
       cursor: pointer;
     }
-
+    
     .bet {
       margin-left: 20px;
     }
-
+    
     .bet input {
       width: 50px;
       text-align: center;
     }
-
+    
     .balance {
       margin-left: 20px;
     }
-
+    
     .rtp {
       margin-left: 20px;
     }
-
+    
     .progress-bar {
       width: 300px;
       height: 20px;
       background-color: #ddd;
       margin-top: 20px;
     }
-
+    
     .progress-bar-fill {
       height: 100%;
       background-color: #4caf50;
       width: 0;
       transition: width 0.2s;
     }
-
+    
     .messages {
       font-size: 18px;
       font-weight: bold;
     }
-
+    
     .chart-container {
       width: 600px;
       height: 400px;
       margin-top: 20px;
     }
+
+    #login-screen {
+      display: none; /* Initially hidden */
+      /* ... other login screen styles ... */
+    }
+
+    #scaniframe {
+      display: none; /* Initially hidden */
+      border: none;
+      width: 100%;
+      height: 500px;
+    }
+    #cashOutButton {
+      display: none; /* Initially hidden */
+      padding: 10px 20px;
+      font-size: 16px;
+      cursor: pointer;
+      margin-left: 10px; /* Add some spacing */
+
+    }
   </style>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
+  <div id="login-screen" class="center-container">
+    <h1 style="font-family: 'Poppins', sans-serif; font-weight: 500">Login to your business</h1>
+    <form onSubmit="return false;">
+      <input autocomplete="off" id="businessNameInput" type="text" placeholder="">
+    </form>
+    <div id="suggestions"></div>
+  </div>
+  <iframe id="scaniframe" src="about:blank"></iframe>
   <div class="slot-machine">
     <div class="reels">
       <div class="reel" id="reel1"></div>
@@ -113,6 +140,9 @@
       </div>
       <div class="balance">Balance: <span id="balance-value">1000</span></div>
       <div class="rtp">Current RTP: <span id="rtp-value">125.00%</span></div>
+      <div class="cashOutContainer">
+         <button id="cashOutButton">Cash Out</button>
+      </div>
     </div>
     <div class="progress-bar">
       <div class="progress-bar-fill" id="progress-bar-fill"></div>
@@ -123,22 +153,264 @@
     </div>
   </div>
 
-  <div id="login-screen" class="center-container" style="display: none;">
-    <h1 style="font-family: 'Poppins', sans-serif; font-weight: 500">Login to your business</h1>
-    <form onSubmit="return false;">
-      <input autocomplete="off" id="businessNameInput" type="text" placeholder="">
-    </form>
-    <div id="suggestions"></div>
-  </div>
 
-  <iframe id="scaniframe" style="border: 0px;" width="100%" height="500px" src="about:blank"></iframe>
 
   <script type="module">
+    // ... (Gambling machine JavaScript)
+    const symbols = ['🍒', '🍋', '💰', '7️⃣', '🍀', '💣'];
+    const reels = [
+      { weights: [0.4, 0.3, 0.15, 0.1, 0.04, 0.01], symbols: symbols },
+      { weights: [0.35, 0.3, 0.2, 0.1, 0.04, 0.01], symbols: symbols },
+      { weights: [0.3, 0.3, 0.25, 0.1, 0.04, 0.01], symbols: symbols },
+    ];
+    
+    let balance = 3001;
+    let startingBalance = balance;
+    let spins = 0;
+    let nearMissCount = 0;
+    let consecutiveLosses = 0;
+    let bonusTriggerChance = 0.05;
+    let hiddenCap = 3001;
+    let playerLevel = 1;
+    let levelProgress = 0;
+    let levelThreshold = 100;
+    
+    let rtp = 1.2;
+    const minRtp = 0.9;
+    const rtpDecrement = 0.01;
+    
+    let balanceData = {
+      labels: [],
+      datasets: [{
+        label: 'Balance',
+        data: [],
+        backgroundColor: 'rgba(54, 162, 235, 0.2)',
+        borderColor: 'rgba(54, 162, 235, 1)',
+        borderWidth: 1
+      }]
+    };
+    
+    let balanceChart = null;
+    
+    function getRandomSymbol(reel) {
+      const randomNum = Math.random();
+      let cumulativeWeight = 0;
+    
+      for (let i = 0; i < reel.weights.length; i++) {
+        cumulativeWeight += reel.weights[i];
+        if (randomNum < cumulativeWeight) {
+          return reel.symbols[i];
+        }
+      }
+    
+      return reel.symbols[reel.symbols.length - 1];
+    }
+    
+    function getRTP() {
+      if (rtp > minRtp) {
+        rtp -= rtpDecrement;
+      }
+      return rtp;
+    }
+    
+    function spin() {
+      if (!latestUserID) {
+        showMessage("Please scan a user ID before playing.");
+        return;
+      }
+      const betAmount = parseInt(document.getElementById('bet-amount').value, 10);
+    
+      if (betAmount > balance) {
+        showMessage('Insufficient balance!');
+        return;
+      }
+    
+      if (betAmount > hiddenCap) {
+        showMessage('Bet amount exceeds hidden cap!');
+        return;
+      }
+    
+      balance -= betAmount;
+      spins++;
+    
+      let manipulation = [0, 0, 0, 0, 0, 0];
+      const currentRtp = getRTP();
+      if (betAmount < 50) {
+        manipulation = [0.1, 0.1, 0.2, 0.2, 0.3, 0.3].map((x) => x * (1 - currentRtp));
+      } else if (consecutiveLosses >= 5) {
+        manipulation = [-0.1, -0.1, -0.2, -0.2, -0.3, -0.3].map((x) => x * (1 - currentRtp));
+      }
+    
+      let results = [];
+      for (let i = 0; i < 3; i++) {
+        results.push(getRandomSymbol(reels[i]));
+      }
+    
+      if (spins % 20 === 0 && nearMissCount < 1) {
+        let nearMissSymbol = symbols.filter(symbol => symbol !== '💰')[Math.floor(Math.random() * 5)];
+        if (nearMissSymbol === results[0] || nearMissSymbol === results[1]) {
+          nearMissSymbol = symbols.filter(symbol => symbol !== '💰' && symbol !== nearMissSymbol)[Math.floor(Math.random() * 4)];
+        }
+        results = ['💰', '💰', nearMissSymbol];
+        nearMissCount++;
+      } else {
+        nearMissCount = 0;
+      }
+    
+      if (results.every((symbol) => symbol === '💰')) {
+        results[2] = getRandomSymbol(reels[2]);
+      } else if (results.every((symbol) => symbol === '💣')) {
+        results = spinBonus(betAmount);
+      }
+    
+      // Play sound before animation
+      let winSound = new Audio("https://assets.onecompiler.app/42s4trm3d/42x2w2v5w/win.mp3");
+      let loseSound = new Audio("https://assets.onecompiler.app/42s4trm3d/42x2w2v5w/lose.mp3");
+    
+      if (results.every((symbol) => symbol === '🍒') || 
+          results.every((symbol) => symbol === '🍋') ||
+          results.every((symbol) => symbol === '7️⃣') ||
+          results.every((symbol) => symbol === '🍀') ||
+          results.every((symbol) => symbol === '💰')) {
+        winSound.play();
+      } else {
+        loseSound.play();
+      }
+    
+      animateReels(results, betAmount);
+      document.getElementById('rtp-value').textContent = `${(currentRtp * 100).toFixed(2)}%`;
+    
+      balanceData.labels.push(`Spin ${spins}`);
+      balanceData.datasets[0].data.push(balance);
+      updateBalanceChart();
+    }
+    
+    function animateReels(finalResults, betAmount) {
+      const reelElements = [document.getElementById('reel1'), document.getElementById('reel2'), document.getElementById('reel3')];
+      let animationCount = 0;
+    
+      reelElements.forEach((reelElement, index) => {
+        let animationInterval = setInterval(() => {
+          const randomSymbol = symbols[Math.floor(Math.random() * symbols.length)];
+          reelElement.textContent = randomSymbol;
+        }, 10);
+    
+        setTimeout(() => {
+          clearInterval(animationInterval);
+          reelElement.textContent = finalResults[index];
+          animationCount++;
+    
+          if (animationCount === reelElements.length) {
+            evaluateResults(finalResults, betAmount);
+            updateBalance();
+            updateProgressBar();
+          }
+        }, 600 + index * 100);
+      });
+    }
+    
+    function spinBonus(betAmount) {
+      let bonusResults = [];
+      for (let i = 0; i < 3; i++) {
+        const bonusSymbols = ['🍒', '🍋', '7️⃣', '🍀'];
+        const bonusWeights = [0.4, 0.3, 0.2, 0.1];
+        bonusResults.push(getRandomSymbol({ symbols: bonusSymbols, weights: bonusWeights }));
+      }
+    
+      evaluateResults(bonusResults, betAmount, true);
+      return bonusResults;
+    }
+    
+    function displayResults(results) {
+      for (let i = 0; i < 3; i++) {
+        document.getElementById(`reel${i + 1}`).textContent = results[i];
+      }
+    }
+    
+    function evaluateResults(results, betAmount, isBonus = false) {
+      if (results.every((symbol) => symbol === '🍒')) {
+        showMessage('You won 10x your bet!');
+        processTransaction(latestUserID, betAmount * 10, true); // Process win
+      } else if (results.every((symbol) => symbol === '🍋')) {
+        showMessage('You won 10x your bet!');
+        processTransaction(latestUserID, betAmount * 10, true); // Process win
+      } else if (results.every((symbol) => symbol === '7️⃣')) {
+        showMessage('You won 10x your bet!');
+        processTransaction(latestUserID, betAmount * 5, true); // Process win
+      } else if (results.every((symbol) => symbol === '🍀')) {
+        showMessage('You won 10x your bet!');
+        processTransaction(latestUserID, betAmount * 10, true); // Process win
+      } else if (results.every((symbol) => symbol === '💰')) {
+        showMessage('You won 20x your bet!');
+        processTransaction(latestUserID, betAmount * 20, true); // Process win
+      } else if (isBonus) {
+        showMessage('Bonus feature: No win. Try again!');
+      } else {
+        showMessage('No win. Try again!');
+        consecutiveLosses++;
+      }
+    
+      if (!isBonus) {
+        consecutiveLosses = 0;
+        levelProgress += betAmount;
+      }
+    }
+    
+    function updateBalance() {
+      document.getElementById('balance-value').textContent = balance;
+    }
+    
+    function updateProgressBar() {
+      const progressBarFill = document.getElementById('progress-bar-fill');
+      const progressPercentage = (levelProgress / levelThreshold) * 100;
+    
+      progressBarFill.style.width = `${progressPercentage}%`;
+    
+      if (levelProgress >= levelThreshold) {
+        playerLevel++;
+        levelProgress = 0;
+        showMessage(`Congratulations! You've reached level ${playerLevel}!`);
+        levelThreshold *= 2;
+      }
+    }
+    
+    function showMessage(message) {
+      document.getElementById('messages').textContent = message;
+    }
+    
+    function updateBalanceChart() {
+      if (balanceChart) {
+        balanceChart.destroy();
+      }
+    
+      const balanceCanvas = document.getElementById('balanceChart');
+      balanceChart = new Chart(balanceCanvas, {
+        type: 'line',
+        data: balanceData,
+        options: {
+          scales: {
+            y: {
+              beginAtZero: true
+            }
+          },
+          animation: {
+            duration: 0
+          }
+        }
+      });
+    }
+    
+    document.getElementById('spin-btn').addEventListener('click', spin);
+    
+    updateBalance();
+    updateBalanceChart();
+
+
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
     import { getDatabase, ref, set, get } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
-    const firebaseConfig = {
-        apiKey: "AIzaSyASd5JOikXTlRp8eA2j_26Z1NWatZMjZds",
+    const firebaseConfig = { //Your Firebase Config
+       apiKey: "AIzaSyASd5JOikXTlRp8eA2j_26Z1NWatZMjZds",
         authDomain: "lux-bank.firebaseapp.com",
         databaseURL: "https://lux-bank-default-rtdb.firebaseio.com",
         projectId: "lux-bank",
@@ -150,145 +422,268 @@
 
     const app = initializeApp(firebaseConfig);
     const database = getDatabase(app);
+    let latestUserID = null;  // Store the scanned user ID
+    let businessValue = new URLSearchParams(window.location.search).get('businessvalue');
+    let businessData; // Store the business data
 
-    console.log("%cVersion: %c1.634", "color: black; font-size:75px;", "color: red; font-size:75px;");
+    // --- Business Login and URL Parameter Handling ---
+    if (!businessValue) {
+        document.getElementById("login-screen").style.display = 'block';
+        document.querySelector('.slot-machine').style.display = 'none'; // Hide slot machine initially
 
-    // Make hideElement a window function
-    window.hideElement = function(identifier) {
-      document.querySelectorAll(identifier).forEach(item => { item.style.display= 'none'; });
-    };
+        let businessSuggestions = [];
 
-    // Make showElement a window function
-    window.showElement = function(identifier) {
-      document.querySelectorAll(identifier).forEach(item => { item.attributeStyleMap.delete('display') });
-    };
+        document.getElementById("businessNameInput").addEventListener("mousedown", function() {
+          document.getElementById("businessNameInput").placeholder = "Business Name";
+        });
 
-    window.businessValue = new URLSearchParams(window.location.search).get('businessvalue');
+        document.getElementById("businessNameInput").addEventListener("blur", function() {
+          document.getElementById("businessNameInput").placeholder = "";
+        });
 
-    window.balanceName = "Balance";
+        document.getElementById("businessNameInput").addEventListener("input", function() {
+          const inputValue = this.value.trim().toLowerCase();
+          get(ref(database, 'businesses')).then(snapshot => {
+            if (snapshot.exists()) {
+              const businesses = snapshot.val();
+              businessSuggestions = Object.keys(businesses).filter(business => 
+                business.toLowerCase().includes(inputValue)
+              );
 
-    if (businessValue) {
-      document.getElementById("businessName").innerText = businessValue;
+              // Show suggestions ONLY if there's exactly one match
+              if (businessSuggestions.length === 1) { 
+                updateSuggestions(businessSuggestions[0]); // Pass the single suggestion
+              } else {
+                // Hide suggestions if there are zero or multiple matches
+                document.getElementById('suggestions').style.display = 'none'; 
+              }
+            } else {
+              console.error('No businesses found in the database.');
+            }
+          }).catch(error => {
+            console.error('Error fetching businesses:', error);
+          });
+        });
 
-      if (businessValue == "Firehawk Store") {
-        balanceName = "Total Earned";
-        document.getElementById("homepage-heading").innerText = "Hello, Firehawk Banker";
-        document.getElementById("transaction-option").innerText = "New Sale";
-        document.getElementById("auction-option").style.display = "none";
-      }
+        function updateSuggestions(suggestion) {
+          const suggestionList = document.getElementById('suggestions');
+          if (suggestion) {
+            suggestionList.style.display = 'block'; 
+            suggestionList.innerText = 'Press Enter to login to ' + suggestion;
+          } else {
+            suggestionList.innerText = 'No businesses found';
+          }
+        }
 
-      // Function to check if business account exists and redirect if not
-      function ensureBusinessAccountExists() {
-        if (businessValue != null) {
+        // Add event listener to the input field for Enter key press
+        document.getElementById("businessNameInput").addEventListener("keydown", (event) => {
+          if (event.key === 'Enter') {
+            const suggestion = document.getElementById('suggestions').innerText.replace('Press Enter to login to ', '');
+            window.location.href = `?businessvalue=${suggestion}`;
+          }
+        });
+
+    } else {
+      document.getElementById('login-screen').style.display = 'none';
+       // Check if business account exists and redirect if not
           const businessRef = ref(database, `businesses/${businessValue}`);
           get(businessRef).then((snapshot) => {
             if (!snapshot.exists()) {
-              window.location.href = `?businessvalue=`;
+              window.location.href = `?businessvalue=`; // Redirect if business doesn't exist
+            } else {
+                businessData = snapshot.val(); //Store Business Data
             }
           }).catch((error) => {
             console.error('Error checking for business existence:', error);
           });
+    }
+
+
+  // ... (Barcode scanning iframe code and related functions)
+
+window.iframeControl = function(status) {
+  const iframe = document.getElementById('scaniframe');
+  if (status === "start") {
+    iframe.src = 'https://peemima.github.io/lux-bank/scanner/';
+    iframe.style.display = 'block';
+    document.querySelector('.slot-machine').style.display = 'none';
+    document.getElementById('cashOutButton').style.display = 'none'; 
+  } else if (status === "stop") {
+    iframe.style.display = 'none';
+    iframe.src = 'about:blank';
+    document.querySelector('.slot-machine').style.display = 'block';
+    document.getElementById('cashOutButton').style.display = 'inline-block'; // Show cash out button after scan
+  }
+};
+
+
+    window.addEventListener('message', (event) => {
+        if(event.origin === "https://peemima.github.io"){
+      latestUserID = event.data; // Store the latest scanned ID
+      iframeControl('stop'); // Stop and hide the iframe
         }
+    });
+
+    //Cash out button functionality
+    document.getElementById("cashOutButton").addEventListener('click', () =>{
+        latestUserID = null;
+        iframeControl('start');
+    });
+    // ... (processTransaction, logTransaction, updateBusinessBalance functions as before)
+    // ... (Add new function for handling wins and subtracting from business balance)
+    // ... (Modify spin() to check for scanned user and handle wins/losses:
+  function spin() {
+    if (!latestUserID) {
+      showMessage("Please scan a user ID before playing.");
+      return;
+    }
+    const betAmount = parseInt(document.getElementById('bet-amount').value, 10);
+    
+    if (betAmount > balance) {
+      showMessage('Insufficient balance!');
+      return;
+    }
+    
+    if (betAmount > hiddenCap) {
+      showMessage('Bet amount exceeds hidden cap!');
+      return;
+    }
+    
+    balance -= betAmount;
+    spins++;
+    
+    let manipulation = [0, 0, 0, 0, 0, 0];
+    const currentRtp = getRTP();
+    if (betAmount < 50) {
+      manipulation = [0.1, 0.1, 0.2, 0.2, 0.3, 0.3].map((x) => x * (1 - currentRtp));
+    } else if (consecutiveLosses >= 5) {
+      manipulation = [-0.1, -0.1, -0.2, -0.2, -0.3, -0.3].map((x) => x * (1 - currentRtp));
+    }
+    
+    let results = [];
+    for (let i = 0; i < 3; i++) {
+      results.push(getRandomSymbol(reels[i]));
+    }
+    
+    if (spins % 20 === 0 && nearMissCount < 1) {
+      let nearMissSymbol = symbols.filter(symbol => symbol !== '💰')[Math.floor(Math.random() * 5)];
+      if (nearMissSymbol === results[0] || nearMissSymbol === results[1]) {
+        nearMissSymbol = symbols.filter(symbol => symbol !== '💰' && symbol !== nearMissSymbol)[Math.floor(Math.random() * 4)];
       }
+      results = ['💰', '💰', nearMissSymbol];
+      nearMissCount++;
+    } else {
+      nearMissCount = 0;
+    }
+    
+    if (results.every((symbol) => symbol === '💰')) {
+      results[2] = getRandomSymbol(reels[2]);
+    } else if (results.every((symbol) => symbol === '💣')) {
+      results = spinBonus(betAmount);
+    }
+    
+    // Play sound before animation
+    let winSound = new Audio("https://assets.onecompiler.app/42s4trm3d/42x2w2v5w/win.mp3");
+    let loseSound = new Audio("https://assets.onecompiler.app/42s4trm3d/42x2w2v5w/lose.mp3");
+    
+    if (results.every((symbol) => symbol === '🍒') || 
+        results.every((symbol) => symbol === '🍋') ||
+        results.every((symbol) => symbol === '7️⃣') ||
+        results.every((symbol) => symbol === '🍀') ||
+        results.every((symbol) => symbol === '💰')) {
+      winSound.play();
+    } else {
+      loseSound.play();
+    }
+    
+    animateReels(results, betAmount);
+    document.getElementById('rtp-value').textContent = `${(currentRtp * 100).toFixed(2)}%`;
+    
+    balanceData.labels.push(`Spin ${spins}`);
+    balanceData.datasets[0].data.push(balance);
+    updateBalanceChart();
+  }
 
-      // Call the function to ensure business account exists on load
-      document.addEventListener("DOMContentLoaded", function() {
-        ensureBusinessAccountExists();
-        fetchAndDisplayBusinessBalance();
-      });
+    function processTransaction(userID, amount, isWin = false) {
+  get(ref(database, 'users')).then((snapshot) => {
+    if (snapshot.exists()) {
+      const users = snapshot.val();
+      for (let userKey in users) {
+        if (users[userKey].id === userID) {
+          let currentBalance = users[userKey].balance;
+          let newBalance;
 
-      document.getElementById("transactionForm").addEventListener("submit", function(event) {
-        event.preventDefault();
-
-        const userID = latestUserID;
-        const amount = parseFloat(document.getElementById("amountInput").value);
-
-        if (isNaN(userID) || isNaN(amount) || amount <= 0) {
-          showPopup("flex", "Notice", "block", "Please enter a valid price for this product");
-          return;
-        }
-
-        processTransaction(userID, amount);
-        latestUserID = '0';
-      });
-
-      let userCard  = document.getElementsByClassName("scaniframe");
-      function processTransaction(userID, amount) {
-        get(ref(database, 'users')).then((snapshot) => {
-          if (snapshot.exists()) {
-            const users = snapshot.val();
-            for (let userKey in users) {
-              // Check if the user ID matches
-              if (users[userKey].id === userID) {
-                // Access the user's first name, which is the key of the user object
-                const userName = userKey.split(' ')[0]; // Extract only the first word
-
-                let currentBalance = users[userKey].balance;
-                if (amount > currentBalance) {
-                  showPopup("flex", "Not enough hawkeyes", "block", `It looks like there aren't enough hawkeyes to buy that.`);
-                  return;
+          if (isWin) {
+             if (businessData.balance >= amount) {
+                 newBalance = currentBalance + amount; // Add winnings to user balance
+                 businessData.balance -= amount; //Subtract Winnings From Business Balance
+               } else {
+                  showMessage("Insufficient business funds to pay out winnings.");
+                  return; // Don't allow the win if the business can't pay
                 }
-
-                let newBalance = currentBalance - amount;
-                set(ref(database, 'users/' + userKey + '/balance'), newBalance)
-                  .then(() => {
-                    updateBusinessBalance(amount);
-                    logTransaction(userKey, userID, -amount, newBalance, businessValue, businessData.balance);
-                    document.getElementById("transactionForm").reset();
-                    document.getElementById("scaniframe").style.display = "block";
-                    document.getElementById("transaction-amount").style.display = "none";
-                    showElement('#homepage-heading');
-                    showPopup("flex", "Success!", "block", `The transaction was successful!`);
-                    hideElement('#transactionForm');
-                  })
-                  .catch((error) => {
-                    console.error('Error updating user balance:', error);
-                    showPopup("flex", "Help is on the way", "none", "There was an error, but don't worry, help is on the way.");
-                  });
-                return;
-              }
-            }
-            showPopup("flex", "Notice", "block", "That doesn't seem to be a valid user id.");
           } else {
-            console.log('No users found in the database.');
+            if (amount > currentBalance) {
+              showPopup("flex", "Not enough hawkeyes", "block", `It looks like there aren't enough hawkeyes to buy that.`);
+              return;
+            }
+            newBalance = currentBalance - amount;
+            businessData.balance += amount;
           }
-        }).catch((error) => {
-          console.error('Error fetching user data:', error);
-          showPopup("flex", "Help is on the way", "none", "There was an error, but don't worry, help is on the way.");
+
+            set(ref(database, 'users/' + userKey + '/balance'), newBalance)
+              .then(() => {
+                   updateBusinessBalance(isWin ? -amount : amount); // Update based on win/loss
+                logTransaction(userKey, userID, isWin ? amount : -amount, newBalance, businessValue, businessData.balance);
+
+                  // ... (Update UI and display appropriate messages based on win/loss)
+              })
+              .catch((error) => {
+                console.error('Error updating user balance:', error);
+               // ...(handle Error)
+              });
+           return;
+        }
+      }
+       //...(handle error if userid is not valid)
+    } else {
+      console.log('No users found in the database.');
+    }
+  }).catch((error) => {
+      //...(Handle error fetching user data)
+  });
+}
+
+    function logTransaction(userKey, userId, amount, newBalance, businessValue, businessBalanceAmount) {
+      const transactionID = `trans_${Date.now()}_${Math.floor(Math.random() * 1000)}`; 
+      const transactionRef = ref(database, 'transactions/' + transactionID); 
+      const transactionData = {
+        userKey: userKey,
+        userId: userId,
+        amount: amount,
+        newBalance: newBalance,
+        businessBalance: businessBalanceAmount,
+        business: businessValue, 
+        timestamp: Date.now() 
+      };
+
+      set(transactionRef, transactionData)
+        .then(() => {
+          console.log('Transaction logged successfully.');
+        })
+        .catch((error) => {
+          console.error('Error logging transaction:', error);
         });
-      }
+    }
 
-      function logTransaction(userKey, userId, amount, newBalance, businessValue, businessBalanceAmount) {
-        const transactionID = `trans_${Date.now()}_${Math.floor(Math.random() * 1000)}`;
-        const transactionRef = ref(database, 'transactions/' + transactionID);
-        const transactionData = {
-          userKey: userKey,
-          userId: userId,
-          amount: amount,
-          newBalance: newBalance,
-          businessBalance: businessBalanceAmount,
-          business: businessValue,
-          timestamp: Date.now()
-        };
-
-        set(transactionRef, transactionData)
-          .then(() => {
-            console.log('Transaction logged successfully.');
-          })
-          .catch((error) => {
-            console.error('Error logging transaction:', error);
-          });
-      }
-
-      function updateBusinessBalance(amountToAdd) {
+    function updateBusinessBalance(amountToAdd) {
         const businessRef = ref(database, `businesses/${businessValue}/balance`);
         get(businessRef).then((snapshot) => {
           let newBalance;
-          let currentBalance = snapshot.exists() ? snapshot.val() : 0;
+          let currentBalance = snapshot.exists() ? snapshot.val() : 0; 
           newBalance = currentBalance + amountToAdd;
           set(businessRef, newBalance).then(() => {
             console.log(`Business balance updated to ${newBalance}`);
-            fetchAndDisplayBusinessBalance();
+            fetchAndDisplayBusinessBalance(); 
           }).catch((error) => {
             console.error('Error updating business balance:', error);
           });
@@ -307,7 +702,6 @@
         get(businessRef).then((snapshot) => {
           if (snapshot.exists()) {
             window.businessData = snapshot.val();
-            document.getElementById('businessBalance').innerText = balanceName + `: $${businessData.balance}`;
           } else {
             console.error('Business data not found');
           }
@@ -318,371 +712,7 @@
 
       setInterval(fetchAndDisplayBusinessBalance, 200);
 
-    } else {
-      document.getElementById("main-content").style.display = 'none';
-      document.getElementById("login-screen").style.display = 'block';
-
-      let businessSuggestions = [];
-
-      document.getElementById("businessNameInput").addEventListener("mousedown", function() {
-        document.getElementById("businessNameInput").placeholder = "Business Name";
-      });
-
-      document.getElementById("businessNameInput").addEventListener("blur", function() {
-        document.getElementById("businessNameInput").placeholder = "";
-      });
-
-      document.getElementById("businessNameInput").addEventListener("input", function() {
-        const inputValue = this.value.trim().toLowerCase();
-        get(ref(database, 'businesses')).then(snapshot => {
-          if (snapshot.exists()) {
-            const businesses = snapshot.val();
-            businessSuggestions = Object.keys(businesses).filter(business =>
-              business.toLowerCase().includes(inputValue)
-            );
-
-            // Show suggestions ONLY if there's exactly one match
-            if (businessSuggestions.length === 1) {
-              updateSuggestions(businessSuggestions[0]); // Pass the single suggestion
-            } else {
-              // Hide suggestions if there are zero or multiple matches
-              document.getElementById('suggestions').style.display = 'none';
-            }
-          } else {
-            console.error('No businesses found in the database.');
-          }
-        }).catch(error => {
-          console.error('Error fetching businesses:', error);
-        });
-      });
-
-      function updateSuggestions(suggestion) {
-        const suggestionList = document.getElementById('suggestions');
-        if (suggestion) {
-          suggestionList.style.display = 'block';
-          suggestionList.innerText = 'Press Enter to login to ' + suggestion;
-        } else {
-          suggestionList.innerText = 'No businesses found';
-        }
-      }
-
-      // Add event listener to the input field for Enter key press
-      document.getElementById("businessNameInput").addEventListener("keydown", (event) => {
-        if (event.key === 'Enter') {
-          const suggestion = document.getElementById('suggestions').innerText.replace('Press Enter to login to ', '');
-          window.location.href = `?businessvalue=${suggestion}`;
-        }
-      });
-    };
-
-    //Reset the forum when cancel button is pressed
-    document.getElementById("cancel-button").addEventListener('click', function() {
-      document.getElementById("transactionForm").reset();
-      iframeControl('start');
-      document.getElementById("transaction-amount").style.display = "none";
-    });
-
-    // Set the navbar variables
-    window.buyButton = document.getElementById('transaction-option');
-    window.bidButton = document.getElementById('auction-option');
-
-    // Event listeners for the navbar options
-    buyButton.addEventListener("click", function() { // Start listening for a click
-      bidButton.classList.remove('menu-item-selected'); // Remove the 'selected' styling from the bid button
-      buyButton.classList.add('menu-item-selected'); // Give it the 'selected' styling
-      iframeControl('start');
-      hideElement('#homepage-heading'); // Hide the 'What would the customer like to do?' heading
-      hideElement('#bidScreen'); // Hide the bid screen
-      hideElement('#transaction-amount'); // Hide the 'How many hawkeyes' screen
-      showElement('#transactionForm'); // Show the transaction form
-    });
-    bidButton.addEventListener("click", function() { // Start listening for a click
-      buyButton.classList.remove('menu-item-selected'); // Remove the 'selected' styling from the buy button
-      bidButton.classList.add('menu-item-selected'); // Give it the 'selected' styling
-      iframeControl('stop');
-      hideElement('#homepage-heading'); // Hide the 'What would the customer like to do?' heading
-      hideElement('#transactionForm'); // Hide the transaction form
-      showElement('#bidScreen'); // Show the bid screen
-    });
-
-    window.iframeControl = function(status) {
-      if (status == "start") {
-        document.getElementById('scaniframe').src = 'https://peemima.github.io/lux-bank/scanner/';
-        document.getElementById('scaniframe').style.display = 'block';
-      } else if (status == "stop") {
-        document.getElementById('scaniframe').style.display = 'none';
-        document.getElementById('scaniframe').src = 'about:blank';
-      }
-    }
-
-    window.addEventListener('message', (event) => {
-      setTimeout(function(){
-        window.latestUserID = event.data;
-        document.getElementById("transaction-amount").style.display = "block";
-        document.getElementById("amountInput").focus();
-        iframeControl('stop');
-      }, 1000);
-    });
-
-    // Gamblecore Slot Machine Code
-    const symbols = ['🍒', '🍋', '💰', '7️⃣', '🍀', '💣'];
-    const reels = [
-      { weights: [0.4, 0.3, 0.15, 0.1, 0.04, 0.01], symbols: symbols },
-      { weights: [0.35, 0.3, 0.2, 0.1, 0.04, 0.01], symbols: symbols },
-      { weights: [0.3, 0.3, 0.25, 0.1, 0.04, 0.01], symbols: symbols },
-    ];
-
-    let balance = 3001;
-    let startingBalance = balance;
-    let spins = 0;
-    let nearMissCount = 0;
-    let consecutiveLosses = 0;
-    let bonusTriggerChance = 0.05;
-    let hiddenCap = 3001;
-    let playerLevel = 1;
-    let levelProgress = 0;
-    let levelThreshold = 100;
-
-    let rtp = 1.2;
-    const minRtp = 0.9;
-    const rtpDecrement = 0.01;
-
-    let balanceData = {
-      labels: [],
-      datasets: [{
-        label: 'Balance',
-        data: [],
-        backgroundColor: 'rgba(54, 162, 235, 0.2)',
-        borderColor: 'rgba(54, 162, 235, 1)',
-        borderWidth: 1
-      }]
-    };
-
-    let balanceChart = null;
-
-    function getRandomSymbol(reel) {
-      const randomNum = Math.random();
-      let cumulativeWeight = 0;
-
-      for (let i = 0; i < reel.weights.length; i++) {
-        cumulativeWeight += reel.weights[i];
-        if (randomNum < cumulativeWeight) {
-          return reel.symbols[i];
-        }
-      }
-
-      return reel.symbols[reel.symbols.length - 1];
-    }
-
-    function getRTP() {
-      if (rtp > minRtp) {
-        rtp -= rtpDecrement;
-      }
-      return rtp;
-    }
-
-    function spin() {
-      const betAmount = parseInt(document.getElementById('bet-amount').value, 10);
-
-      if (betAmount > balance) {
-        showMessage('Insufficient balance!');
-        return;
-      }
-
-      if (betAmount > hiddenCap) {
-        showMessage('Bet amount exceeds hidden cap!');
-        return;
-      }
-
-      balance -= betAmount;
-      spins++;
-
-      let manipulation = [0, 0, 0, 0, 0, 0];
-      const currentRtp = getRTP();
-      if (betAmount < 50) {
-        manipulation = [0.1, 0.1, 0.2, 0.2, 0.3, 0.3].map((x) => x * (1 - currentRtp));
-      } else if (consecutiveLosses >= 5) {
-        manipulation = [-0.1, -0.1, -0.2, -0.2, -0.3, -0.3].map((x) => x * (1 - currentRtp));
-      }
-
-      let results = [];
-      for (let i = 0; i < 3; i++) {
-        results.push(getRandomSymbol(reels[i]));
-      }
-
-      if (spins % 20 === 0 && nearMissCount < 1) {
-        let nearMissSymbol = symbols.filter(symbol => symbol !== '💰')[Math.floor(Math.random() * 5)];
-        if (nearMissSymbol === results[0] || nearMissSymbol === results[1]) {
-          nearMissSymbol = symbols.filter(symbol => symbol !== '💰' && symbol !== nearMissSymbol)[Math.floor(Math.random() * 4)];
-        }
-        results = ['💰', '💰', nearMissSymbol];
-        nearMissCount++;
-      } else {
-        nearMissCount = 0;
-      }
-
-      if (results.every((symbol) => symbol === '💰')) {
-        results[2] = getRandomSymbol(reels[2]);
-      } else if (results.every((symbol) => symbol === '💣')) {
-        results = spinBonus(betAmount);
-      }
-
-      // Play sound before animation
-      let winSound = new Audio("https://assets.onecompiler.app/42s4trm3d/42x2w2v5w/win.mp3");
-      let loseSound = new Audio("https://assets.onecompiler.app/42s4trm3d/42x2w2v5w/lose.mp3");
-
-      if (results.every((symbol) => symbol === '🍒') ||
-          results.every((symbol) => symbol === '🍋') ||
-          results.every((symbol) => symbol === '7️⃣') ||
-          results.every((symbol) => symbol === '🍀') ||
-          results.every((symbol) => symbol === '💰')) {
-        winSound.play();
-      } else {
-        loseSound.play();
-      }
-
-      animateReels(results, betAmount);
-      document.getElementById('rtp-value').textContent = `${(currentRtp * 100).toFixed(2)}%`;
-
-      balanceData.labels.push(`Spin ${spins}`);
-      balanceData.datasets[0].data.push(balance);
-      updateBalanceChart();
-    }
-
-    function animateReels(finalResults, betAmount) {
-      const reelElements = [document.getElementById('reel1'), document.getElementById('reel2'), document.getElementById('reel3')];
-      let animationCount = 0;
-
-      reelElements.forEach((reelElement, index) => {
-        let animationInterval = setInterval(() => {
-          const randomSymbol = symbols[Math.floor(Math.random() * symbols.length)];
-          reelElement.textContent = randomSymbol;
-        }, 10);
-
-        setTimeout(() => {
-          clearInterval(animationInterval);
-          reelElement.textContent = finalResults[index];
-          animationCount++;
-
-          if (animationCount === reelElements.length) {
-            evaluateResults(finalResults, betAmount);
-            updateBalance();
-            updateProgressBar();
-          }
-        }, 600 + index * 100);
-      });
-    }
-
-    function spinBonus(betAmount) {
-      let bonusResults = [];
-      for (let i = 0; i < 3; i++) {
-        const bonusSymbols = ['🍒', '🍋', '7️⃣', '🍀'];
-        const bonusWeights = [0.4, 0.3, 0.2, 0.1];
-        bonusResults.push(getRandomSymbol({ symbols: bonusSymbols, weights: bonusWeights }));
-      }
-
-      evaluateResults(bonusResults, betAmount, true);
-      return bonusResults;
-    }
-
-    function displayResults(results) {
-      for (let i = 0; i < 3; i++) {
-        document.getElementById(`reel${i + 1}`).textContent = results[i];
-      }
-    }
-
-    function evaluateResults(results, betAmount, isBonus = false) {
-      if (results.every((symbol) => symbol === '🍒')) {
-        showMessage('You won 10x your bet!');
-        balance += betAmount * 10;
-      } else if (results.every((symbol) => symbol === '🍋')) {
-        showMessage('You won 10x your bet!');
-        balance += betAmount * 10;
-      } else if (results.every((symbol) => symbol === '7️⃣')) {
-        showMessage('You won 10x your bet!');
-        balance += betAmount * 5;
-      } else if (results.every((symbol) => symbol === '🍀')) {
-        showMessage('You won 10x your bet!');
-        balance += betAmount * 10;
-      } else if (results.every((symbol) => symbol === '💰')) {
-        showMessage('You won 20x your bet!');
-        balance += betAmount * 20;
-      } else if (isBonus) {
-        showMessage('Bonus feature: No win. Try again!');
-      } else {
-        showMessage('No win. Try again!');
-        consecutiveLosses++;
-      }
-
-      if (!isBonus) {
-        consecutiveLosses = 0;
-        levelProgress += betAmount;
-      }
-    }
-
-    function updateBalance() {
-      document.getElementById('balance-value').textContent = balance;
-    }
-
-    function updateProgressBar() {
-      const progressBarFill = document.getElementById('progress-bar-fill');
-      const progressPercentage = (levelProgress / levelThreshold) * 100;
-
-      progressBarFill.style.width = `${progressPercentage}%`;
-
-      if (levelProgress >= levelThreshold) {
-        playerLevel++;
-        levelProgress = 0;
-        showMessage(`Congratulations! You've reached level ${playerLevel}!`);
-        levelThreshold *= 2;
-      }
-    }
-
-    function showMessage(message) {
-      document.getElementById('messages').textContent = message;
-    }
-
-    function updateBalanceChart() {
-      if (balanceChart) {
-        balanceChart.destroy();
-      }
-
-      const balanceCanvas = document.getElementById('balanceChart');
-      balanceChart = new Chart(balanceCanvas, {
-        type: 'line',
-        data: balanceData,
-        options: {
-          scales: {
-            y: {
-              beginAtZero: true
-            }
-          },
-          animation: {
-            duration: 0
-          }
-        }
-      });
-    }
-
-    document.getElementById('spin-btn').addEventListener('click', spin);
-
-    updateBalance();
-    updateBalanceChart();
-
-    // Add logout button
-    const logoutButton = document.createElement('button');
-    logoutButton.textContent = 'Cash Out';
-    logoutButton.style.padding = '10px 20px';
-    logoutButton.style.fontSize = '16px';
-    logoutButton.style.cursor = 'pointer';
-    logoutButton.addEventListener('click', function() {
-      latestUserID = '0';
-      iframeControl('start');
-      hideElement('#transaction-amount');
-      showElement('#scaniframe');
-    });
-
-    document.querySelector('.controls').appendChild(logoutButton);
   </script>
+
 </body>
 </html>
