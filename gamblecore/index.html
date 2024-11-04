@@ -95,7 +95,6 @@
       height: 400px;
       margin-top: 20px;
     }
-
     #login-screen {
       display: none; /* Initially hidden */
       /* ... other login screen styles ... */
@@ -115,7 +114,13 @@
       margin-left: 10px; /* Add some spacing */
 
     }
+    .cashOutContainer{
+        display: flex;
+        justify-content: flex-end;
+        margin-bottom: 20px;
+    }
   </style>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script> </head>
 </head>
 <body>
   <div id="login-screen" class="center-container">
@@ -127,6 +132,9 @@
   </div>
   <iframe id="scaniframe" src="about:blank"></iframe>
   <div class="slot-machine">
+      <div class="cashOutContainer">
+         <button id="cashOutButton">Cash Out</button>
+      </div>
     <div class="reels">
       <div class="reel" id="reel1"></div>
       <div class="reel" id="reel2"></div>
@@ -140,9 +148,6 @@
       </div>
       <div class="balance">Balance: <span id="balance-value">1000</span></div>
       <div class="rtp">Current RTP: <span id="rtp-value">125.00%</span></div>
-      <div class="cashOutContainer">
-         <button id="cashOutButton">Cash Out</button>
-      </div>
     </div>
     <div class="progress-bar">
       <div class="progress-bar-fill" id="progress-bar-fill"></div>
@@ -156,7 +161,6 @@
 
 
   <script type="module">
-    // ... (Gambling machine JavaScript)
     const symbols = ['🍒', '🍋', '💰', '7️⃣', '🍀', '💣'];
     const reels = [
       { weights: [0.4, 0.3, 0.15, 0.1, 0.04, 0.01], symbols: symbols },
@@ -192,6 +196,122 @@
     
     let balanceChart = null;
     
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+    import { getDatabase, ref, set, get } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+
+    const firebaseConfig = { //Your Firebase Config
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const database = getDatabase(app);
+    let latestUserID = null;  // Store the scanned user ID
+    let businessValue = new URLSearchParams(window.location.search).get('businessvalue');
+    let businessData; // Store the business data
+
+    // --- Business Login and URL Parameter Handling ---
+    if (!businessValue) {
+        document.getElementById("login-screen").style.display = 'block';
+        document.querySelector('.slot-machine').style.display = 'none'; // Hide slot machine initially
+
+        let businessSuggestions = [];
+
+        document.getElementById("businessNameInput").addEventListener("mousedown", function() {
+          document.getElementById("businessNameInput").placeholder = "Business Name";
+        });
+
+        document.getElementById("businessNameInput").addEventListener("blur", function() {
+          document.getElementById("businessNameInput").placeholder = "";
+        });
+
+        document.getElementById("businessNameInput").addEventListener("input", function() {
+          const inputValue = this.value.trim().toLowerCase();
+          get(ref(database, 'businesses')).then(snapshot => {
+            if (snapshot.exists()) {
+              const businesses = snapshot.val();
+              businessSuggestions = Object.keys(businesses).filter(business => 
+                business.toLowerCase().includes(inputValue)
+              );
+
+              // Show suggestions ONLY if there's exactly one match
+              if (businessSuggestions.length === 1) { 
+                updateSuggestions(businessSuggestions[0]); // Pass the single suggestion
+              } else {
+                // Hide suggestions if there are zero or multiple matches
+                document.getElementById('suggestions').style.display = 'none'; 
+              }
+            } else {
+              console.error('No businesses found in the database.');
+            }
+          }).catch(error => {
+            console.error('Error fetching businesses:', error);
+          });
+        });
+
+        function updateSuggestions(suggestion) {
+          const suggestionList = document.getElementById('suggestions');
+          if (suggestion) {
+            suggestionList.style.display = 'block'; 
+            suggestionList.innerText = 'Press Enter to login to ' + suggestion;
+          } else {
+            suggestionList.innerText = 'No businesses found';
+          }
+        }
+
+        // Add event listener to the input field for Enter key press
+        document.getElementById("businessNameInput").addEventListener("keydown", (event) => {
+          if (event.key === 'Enter') {
+            const suggestion = document.getElementById('suggestions').innerText.replace('Press Enter to login to ', '');
+            window.location.href = `?businessvalue=${suggestion}`;
+          }
+        });
+    } else {
+      document.getElementById('login-screen').style.display = 'none';
+       // Check if business account exists and redirect if not
+          const businessRef = ref(database, `businesses/${businessValue}`);
+          get(businessRef).then((snapshot) => {
+            if (!snapshot.exists()) {
+              window.location.href = `?businessvalue=`; // Redirect if business doesn't exist
+            } else {
+                businessData = snapshot.val(); //Store Business Data
+            }
+          }).catch((error) => {
+            console.error('Error checking for business existence:', error);
+          });
+    }
+
+
+  // ... (Barcode scanning iframe code and related functions)
+
+window.iframeControl = function(status) {
+  const iframe = document.getElementById('scaniframe');
+  if (status === "start") {
+    iframe.src = 'https://peemima.github.io/lux-bank/scanner/';
+    iframe.style.display = 'block';
+    document.querySelector('.slot-machine').style.display = 'none';
+    document.getElementById('cashOutButton').style.display = 'none'; 
+  } else if (status === "stop") {
+    iframe.style.display = 'none';
+    iframe.src = 'about:blank';
+    document.querySelector('.slot-machine').style.display = 'block';
+    document.getElementById('cashOutButton').style.display = 'inline-block'; // Show cash out button after scan
+  }
+};
+
+
+    window.addEventListener('message', (event) => {
+        if(event.origin === "https://peemima.github.io"){
+      latestUserID = event.data; // Store the latest scanned ID
+      iframeControl('stop'); // Stop and hide the iframe
+        }
+    });
+
+    //Cash out button functionality
+    document.getElementById("cashOutButton").addEventListener('click', () =>{
+        latestUserID = null;
+        iframeControl('start');
+    });
+    
+
     function getRandomSymbol(reel) {
       const randomNum = Math.random();
       let cumulativeWeight = 0;
@@ -243,7 +363,13 @@
     
       let results = [];
       for (let i = 0; i < 3; i++) {
+        let symbolIndex = reels[i].symbols.findIndex(symbol => symbol === '💰');
+        let adjustedWeight = reels[i].weights[symbolIndex] + manipulation[symbolIndex];
+        if (adjustedWeight > 1) adjustedWeight = 1;
+        if (adjustedWeight < 0) adjustedWeight = 0;
+        reels[i].weights[symbolIndex] = adjustedWeight;
         results.push(getRandomSymbol(reels[i]));
+        reels[i].weights[symbolIndex] = reels[i].weights[symbolIndex] - manipulation[symbolIndex];
       }
     
       if (spins % 20 === 0 && nearMissCount < 1) {
@@ -400,209 +526,6 @@
       });
     }
     
-    document.getElementById('spin-btn').addEventListener('click', spin);
-    
-    updateBalance();
-    updateBalanceChart();
-
-
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-    import { getDatabase, ref, set, get } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
-
-    const firebaseConfig = { //Your Firebase Config
-       apiKey: "AIzaSyASd5JOikXTlRp8eA2j_26Z1NWatZMjZds",
-        authDomain: "lux-bank.firebaseapp.com",
-        databaseURL: "https://lux-bank-default-rtdb.firebaseio.com",
-        projectId: "lux-bank",
-        storageBucket: "lux-bank.appspot.com",
-        messagingSenderId: "764922032293",
-        appId: "1:764922032293:web:573599b6116f025ee15d4c",
-        measurementId: "G-JQ7CWEJS9N"
-    };
-
-    const app = initializeApp(firebaseConfig);
-    const database = getDatabase(app);
-    let latestUserID = null;  // Store the scanned user ID
-    let businessValue = new URLSearchParams(window.location.search).get('businessvalue');
-    let businessData; // Store the business data
-
-    // --- Business Login and URL Parameter Handling ---
-    if (!businessValue) {
-        document.getElementById("login-screen").style.display = 'block';
-        document.querySelector('.slot-machine').style.display = 'none'; // Hide slot machine initially
-
-        let businessSuggestions = [];
-
-        document.getElementById("businessNameInput").addEventListener("mousedown", function() {
-          document.getElementById("businessNameInput").placeholder = "Business Name";
-        });
-
-        document.getElementById("businessNameInput").addEventListener("blur", function() {
-          document.getElementById("businessNameInput").placeholder = "";
-        });
-
-        document.getElementById("businessNameInput").addEventListener("input", function() {
-          const inputValue = this.value.trim().toLowerCase();
-          get(ref(database, 'businesses')).then(snapshot => {
-            if (snapshot.exists()) {
-              const businesses = snapshot.val();
-              businessSuggestions = Object.keys(businesses).filter(business => 
-                business.toLowerCase().includes(inputValue)
-              );
-
-              // Show suggestions ONLY if there's exactly one match
-              if (businessSuggestions.length === 1) { 
-                updateSuggestions(businessSuggestions[0]); // Pass the single suggestion
-              } else {
-                // Hide suggestions if there are zero or multiple matches
-                document.getElementById('suggestions').style.display = 'none'; 
-              }
-            } else {
-              console.error('No businesses found in the database.');
-            }
-          }).catch(error => {
-            console.error('Error fetching businesses:', error);
-          });
-        });
-
-        function updateSuggestions(suggestion) {
-          const suggestionList = document.getElementById('suggestions');
-          if (suggestion) {
-            suggestionList.style.display = 'block'; 
-            suggestionList.innerText = 'Press Enter to login to ' + suggestion;
-          } else {
-            suggestionList.innerText = 'No businesses found';
-          }
-        }
-
-        // Add event listener to the input field for Enter key press
-        document.getElementById("businessNameInput").addEventListener("keydown", (event) => {
-          if (event.key === 'Enter') {
-            const suggestion = document.getElementById('suggestions').innerText.replace('Press Enter to login to ', '');
-            window.location.href = `?businessvalue=${suggestion}`;
-          }
-        });
-
-    } else {
-      document.getElementById('login-screen').style.display = 'none';
-       // Check if business account exists and redirect if not
-          const businessRef = ref(database, `businesses/${businessValue}`);
-          get(businessRef).then((snapshot) => {
-            if (!snapshot.exists()) {
-              window.location.href = `?businessvalue=`; // Redirect if business doesn't exist
-            } else {
-                businessData = snapshot.val(); //Store Business Data
-            }
-          }).catch((error) => {
-            console.error('Error checking for business existence:', error);
-          });
-    }
-
-
-  // ... (Barcode scanning iframe code and related functions)
-
-window.iframeControl = function(status) {
-  const iframe = document.getElementById('scaniframe');
-  if (status === "start") {
-    iframe.src = 'https://peemima.github.io/lux-bank/scanner/';
-    iframe.style.display = 'block';
-    document.querySelector('.slot-machine').style.display = 'none';
-    document.getElementById('cashOutButton').style.display = 'none'; 
-  } else if (status === "stop") {
-    iframe.style.display = 'none';
-    iframe.src = 'about:blank';
-    document.querySelector('.slot-machine').style.display = 'block';
-    document.getElementById('cashOutButton').style.display = 'inline-block'; // Show cash out button after scan
-  }
-};
-
-
-    window.addEventListener('message', (event) => {
-        if(event.origin === "https://peemima.github.io"){
-      latestUserID = event.data; // Store the latest scanned ID
-      iframeControl('stop'); // Stop and hide the iframe
-        }
-    });
-
-    //Cash out button functionality
-    document.getElementById("cashOutButton").addEventListener('click', () =>{
-        latestUserID = null;
-        iframeControl('start');
-    });
-    // ... (processTransaction, logTransaction, updateBusinessBalance functions as before)
-    // ... (Add new function for handling wins and subtracting from business balance)
-    // ... (Modify spin() to check for scanned user and handle wins/losses:
-  function spin() {
-    if (!latestUserID) {
-      showMessage("Please scan a user ID before playing.");
-      return;
-    }
-    const betAmount = parseInt(document.getElementById('bet-amount').value, 10);
-    
-    if (betAmount > balance) {
-      showMessage('Insufficient balance!');
-      return;
-    }
-    
-    if (betAmount > hiddenCap) {
-      showMessage('Bet amount exceeds hidden cap!');
-      return;
-    }
-    
-    balance -= betAmount;
-    spins++;
-    
-    let manipulation = [0, 0, 0, 0, 0, 0];
-    const currentRtp = getRTP();
-    if (betAmount < 50) {
-      manipulation = [0.1, 0.1, 0.2, 0.2, 0.3, 0.3].map((x) => x * (1 - currentRtp));
-    } else if (consecutiveLosses >= 5) {
-      manipulation = [-0.1, -0.1, -0.2, -0.2, -0.3, -0.3].map((x) => x * (1 - currentRtp));
-    }
-    
-    let results = [];
-    for (let i = 0; i < 3; i++) {
-      results.push(getRandomSymbol(reels[i]));
-    }
-    
-    if (spins % 20 === 0 && nearMissCount < 1) {
-      let nearMissSymbol = symbols.filter(symbol => symbol !== '💰')[Math.floor(Math.random() * 5)];
-      if (nearMissSymbol === results[0] || nearMissSymbol === results[1]) {
-        nearMissSymbol = symbols.filter(symbol => symbol !== '💰' && symbol !== nearMissSymbol)[Math.floor(Math.random() * 4)];
-      }
-      results = ['💰', '💰', nearMissSymbol];
-      nearMissCount++;
-    } else {
-      nearMissCount = 0;
-    }
-    
-    if (results.every((symbol) => symbol === '💰')) {
-      results[2] = getRandomSymbol(reels[2]);
-    } else if (results.every((symbol) => symbol === '💣')) {
-      results = spinBonus(betAmount);
-    }
-    
-    // Play sound before animation
-    let winSound = new Audio("https://assets.onecompiler.app/42s4trm3d/42x2w2v5w/win.mp3");
-    let loseSound = new Audio("https://assets.onecompiler.app/42s4trm3d/42x2w2v5w/lose.mp3");
-    
-    if (results.every((symbol) => symbol === '🍒') || 
-        results.every((symbol) => symbol === '🍋') ||
-        results.every((symbol) => symbol === '7️⃣') ||
-        results.every((symbol) => symbol === '🍀') ||
-        results.every((symbol) => symbol === '💰')) {
-      winSound.play();
-    } else {
-      loseSound.play();
-    }
-    
-    animateReels(results, betAmount);
-    document.getElementById('rtp-value').textContent = `${(currentRtp * 100).toFixed(2)}%`;
-    
-    balanceData.labels.push(`Spin ${spins}`);
-    balanceData.datasets[0].data.push(balance);
-    updateBalanceChart();
-  }
 
     function processTransaction(userID, amount, isWin = false) {
   get(ref(database, 'users')).then((snapshot) => {
@@ -653,29 +576,30 @@ window.iframeControl = function(status) {
   });
 }
 
+
     function logTransaction(userKey, userId, amount, newBalance, businessValue, businessBalanceAmount) {
-      const transactionID = `trans_${Date.now()}_${Math.floor(Math.random() * 1000)}`; 
-      const transactionRef = ref(database, 'transactions/' + transactionID); 
-      const transactionData = {
-        userKey: userKey,
-        userId: userId,
-        amount: amount,
-        newBalance: newBalance,
-        businessBalance: businessBalanceAmount,
-        business: businessValue, 
-        timestamp: Date.now() 
-      };
+        const transactionID = `trans_${Date.now()}_${Math.floor(Math.random() * 1000)}`; 
+        const transactionRef = ref(database, 'transactions/' + transactionID); 
+        const transactionData = {
+          userKey: userKey,
+          userId: userId,
+          amount: amount,
+          newBalance: newBalance,
+          businessBalance: businessBalanceAmount,
+          business: businessValue, 
+          timestamp: Date.now() 
+        };
 
-      set(transactionRef, transactionData)
-        .then(() => {
-          console.log('Transaction logged successfully.');
-        })
-        .catch((error) => {
-          console.error('Error logging transaction:', error);
-        });
-    }
+        set(transactionRef, transactionData)
+          .then(() => {
+            console.log('Transaction logged successfully.');
+          })
+          .catch((error) => {
+            console.error('Error logging transaction:', error);
+          });
+      }
 
-    function updateBusinessBalance(amountToAdd) {
+      function updateBusinessBalance(amountToAdd) {
         const businessRef = ref(database, `businesses/${businessValue}/balance`);
         get(businessRef).then((snapshot) => {
           let newBalance;
@@ -683,7 +607,6 @@ window.iframeControl = function(status) {
           newBalance = currentBalance + amountToAdd;
           set(businessRef, newBalance).then(() => {
             console.log(`Business balance updated to ${newBalance}`);
-            fetchAndDisplayBusinessBalance(); 
           }).catch((error) => {
             console.error('Error updating business balance:', error);
           });
@@ -697,21 +620,10 @@ window.iframeControl = function(status) {
         });
       }
 
-      function fetchAndDisplayBusinessBalance() {
-        const businessRef = ref(database, `businesses/${businessValue}`);
-        get(businessRef).then((snapshot) => {
-          if (snapshot.exists()) {
-            window.businessData = snapshot.val();
-          } else {
-            console.error('Business data not found');
-          }
-        }).catch((error) => {
-          console.error('Error fetching business balance:', error);
-        });
-      }
-
-      setInterval(fetchAndDisplayBusinessBalance, 200);
-
+    document.getElementById('spin-btn').addEventListener('click', spin);
+    
+    updateBalance();
+    updateBalanceChart();
   </script>
 
 </body>
