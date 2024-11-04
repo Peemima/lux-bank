@@ -91,15 +91,11 @@
       height: 400px;
       margin-top: 20px;
     }
-    
-    .logout-container {
-      margin-top: 20px;
-    }
   </style>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script> </head>
 </head>
 <body>
-  <div class="slot-machine" id="slot-machine-container" style="display: none;">
+  <div class="slot-machine">
     <div class="reels">
       <div class="reel" id="reel1"></div>
       <div class="reel" id="reel2"></div>
@@ -121,24 +117,19 @@
     <div class="chart-container">
       <canvas id="balanceChart"></canvas>
     </div>
-    <div class="logout-container">
-      <button id="cash-out-btn">Cash Out</button>
-    </div>
   </div>
-  <div id="login-screen" class="center-container" style="display: block;">
+  <iframe id="scaniframe" style="display: none; border: 0px;" width="100%" height="500px" src="about:blank"></iframe>
+  <div id="login-screen" class="center-container" style="display: none;">
     <h1 style="font-family: 'Poppins', sans-serif; font-weight: 500">Login to your business</h1>
     <form onSubmit="return false;">
       <input autocomplete="off" id="businessNameInput" type="text" placeholder="">
     </form>
     <div id="suggestions"></div>
   </div>
-  <iframe id="scaniframe" style="border: 0px; display: none;" width="100%" height="500px" src="about:blank"></iframe>
-
   <script>
-    // Popup Code from https://peemima.github.io/lux-bank/assets/popup-code.js
-    // ... (Add the popup code content from the provided URL)
+    // Popup code from https://peemima.github.io/lux-bank/assets/popup-code.js
+    // ... (Popup code) ...
 
-    // Firebase Initialization
     const firebaseConfig = {
         apiKey: "AIzaSyASd5JOikXTlRp8eA2j_26Z1NWatZMjZds",
         authDomain: "lux-bank.firebaseapp.com",
@@ -149,55 +140,107 @@
         appId: "1:764922032293:web:573599b6116f025ee15d4c",
         measurementId: "G-JQ7CWEJS9N"
     };
+
     const app = initializeApp(firebaseConfig);
     const database = getDatabase(app);
 
-    // Business Value and Balance Name
+    console.log("%cVersion: %c1.634", "color: black; font-size:75px;", "color: red; font-size:75px;");
+
+    // ... (Hide/Show Element functions) ...
+
     window.businessValue = new URLSearchParams(window.location.search).get('businessvalue');
+
     window.balanceName = "Balance";
 
-    // Hide/Show Element Functions
-    window.hideElement = function(identifier) {
-      document.querySelectorAll(identifier).forEach(item => { item.style.display= 'none'; });
-    };
+    if (businessValue) {
+      document.getElementById("businessName").innerText = businessValue;
 
-    window.showElement = function(identifier) {
-      document.querySelectorAll(identifier).forEach(item => { item.attributeStyleMap.delete('display') });
-    };
-
-    // Ensure Business Account Exists
-    function ensureBusinessAccountExists() {
-        if (businessValue != null) {
-          const businessRef = ref(database, `businesses/${businessValue}`);
-          get(businessRef).then((snapshot) => {
-            if (!snapshot.exists()) {
-              window.location.href = `?businessvalue=`;
-            }
-          }).catch((error) => {
-            console.error('Error checking for business existence:', error);
-          });
-        }
+      if (businessValue == "Firehawk Store") {
+        balanceName = "Total Earned";
+        document.getElementById("homepage-heading").innerText = "Hello, Firehawk Banker";
+        document.getElementById("transaction-option").innerText = "New Sale";
+        document.getElementById("auction-option").style.display = "none";
       }
 
-    // Business Data and Balance Fetching
-    let businessData = {};
+      // ... (Ensure business account exists function) ...
 
-    function fetchAndDisplayBusinessBalance() {
-      const businessRef = ref(database, `businesses/${businessValue}`);
-      get(businessRef).then((snapshot) => {
-        if (snapshot.exists()) {
-          businessData = snapshot.val();
-          document.getElementById('businessBalance').innerText = balanceName + `: $${businessData.balance}`;
-        } else {
-          console.error('Business data not found');
-        }
-      }).catch((error) => {
-        console.error('Error fetching business balance:', error);
-      });
+      // ... (Event listener for transaction form) ...
+
+      let userCard  = document.getElementsByClassName("scaniframe");
+      function processTransaction(userID, amount) {
+        get(ref(database, 'users')).then((snapshot) => {
+          if (snapshot.exists()) {
+            const users = snapshot.val();
+            for (let userKey in users) {
+              // Check if the user ID matches 
+              if (users[userKey].id === userID) {
+                // Access the user's first name, which is the key of the user object
+                const userName = userKey.split(' ')[0]; // Extract only the first word
+
+                let currentBalance = users[userKey].balance;
+                if (amount > currentBalance) {
+                  showPopup("flex", "Not enough hawkeyes", "block", `It looks like there aren't enough hawkeyes to buy that.`);
+                  return;
+                }
+
+                let newBalance = currentBalance - amount; 
+                set(ref(database, 'users/' + userKey + '/balance'), newBalance)
+                  .then(() => {
+                    updateBusinessBalance(amount);
+                    logTransaction(userKey, userID, -amount, newBalance, businessValue, businessData.balance); 
+                    // ... (Other actions after successful transaction) ...
+                  })
+                  .catch((error) => {
+                    console.error('Error updating user balance:', error);
+                    showPopup("flex", "Help is on the way", "none", "There was an error, but don't worry, help is on the way.");
+                  });
+                return; 
+              }
+            }
+            showPopup("flex", "Notice", "block", "That doesn't seem to be a valid user id.");
+          } else {
+            console.log('No users found in the database.');
+          }
+        }).catch((error) => {
+          console.error('Error fetching user data:', error);
+          showPopup("flex", "Help is on the way", "none", "There was an error, but don't worry, help is on the way.");
+        });
+      }
+
+      // ... (logTransaction, updateBusinessBalance, fetchAndDisplayBusinessBalance) ...
+
+      setInterval(fetchAndDisplayBusinessBalance, 200);
+
+    } else {
+      // ... (Login screen code) ...
     }
 
-    // Slot Machine Logic
+    // ... (Reset transaction form code) ...
 
+    // ... (Navbar setup and event listeners) ...
+
+    window.iframeControl = function(status) {
+      if (status == "start") {
+        document.getElementById('scaniframe').src = 'https://peemima.github.io/lux-bank/scanner/';
+        document.getElementById('scaniframe').style.display = 'block';
+      } else if (status == "stop") {
+        document.getElementById('scaniframe').style.display = 'none';
+        document.getElementById('scaniframe').src = 'about:blank';
+      }
+    }
+
+    window.addEventListener('message', (event) => {
+      setTimeout(function(){
+        window.latestUserID = event.data;
+        document.getElementById("transaction-amount").style.display = "block";
+        document.getElementById("amountInput").focus();
+        iframeControl('stop');
+      }, 1000);
+    });
+
+    // ... (Hide elements) ...
+
+    // Gamblecore Slot Machine Code
     const symbols = ['🍒', '🍋', '💰', '7️⃣', '🍀', '💣'];
     const reels = [
       { weights: [0.4, 0.3, 0.15, 0.1, 0.04, 0.01], symbols: symbols },
@@ -205,7 +248,7 @@
       { weights: [0.3, 0.3, 0.25, 0.1, 0.04, 0.01], symbols: symbols },
     ];
 
-    let balance = 1000;
+    let balance = 3001;
     let startingBalance = balance;
     let spins = 0;
     let nearMissCount = 0;
@@ -368,18 +411,23 @@
       if (results.every((symbol) => symbol === '🍒')) {
         showMessage('You won 10x your bet!');
         balance += betAmount * 10;
+        processTransaction(latestUserID, betAmount * 10); // Add the win to the business
       } else if (results.every((symbol) => symbol === '🍋')) {
         showMessage('You won 10x your bet!');
         balance += betAmount * 10;
+        processTransaction(latestUserID, betAmount * 10);
       } else if (results.every((symbol) => symbol === '7️⃣')) {
         showMessage('You won 5x your bet!');
         balance += betAmount * 5;
+        processTransaction(latestUserID, betAmount * 5);
       } else if (results.every((symbol) => symbol === '🍀')) {
         showMessage('You won 10x your bet!');
         balance += betAmount * 10;
+        processTransaction(latestUserID, betAmount * 10);
       } else if (results.every((symbol) => symbol === '💰')) {
         showMessage('You won 20x your bet!');
         balance += betAmount * 20;
+        processTransaction(latestUserID, betAmount * 20);
       } else if (isBonus) {
         showMessage('Bonus feature: No win. Try again!');
       } else {
@@ -391,8 +439,6 @@
         consecutiveLosses = 0;
         levelProgress += betAmount;
       }
-
-      updateBusinessBalance(betAmount);
     }
 
     function updateBalance() {
@@ -439,141 +485,7 @@
       });
     }
 
-    function updateBusinessBalance(amountToAdd) {
-      const businessRef = ref(database, `businesses/${businessValue}/balance`);
-      get(businessRef).then((snapshot) => {
-        let newBalance;
-        let currentBalance = snapshot.exists() ? snapshot.val() : 0; 
-        newBalance = currentBalance - amountToAdd;
-        if (newBalance < 0) {
-          newBalance = currentBalance;
-          showMessage("Business cannot afford to let you win!")
-        }
-        set(businessRef, newBalance).then(() => {
-          console.log(`Business balance updated to ${newBalance}`);
-          fetchAndDisplayBusinessBalance(); 
-        }).catch((error) => {
-          console.error('Error updating business balance:', error);
-        });
-      }).catch((error) => {
-        console.error('Error fetching business balance:', error);
-        set(businessRef, amountToAdd).then(() => {
-          console.log('Business balance initialized and set to:', amountToAdd);
-        }).catch((initError) => {
-          console.error('Error initializing business balance:', initError);
-        });
-      });
-    }
-   
-    // Transaction Handling
-    let latestUserID = '0';
-    let userLoggedIn = false;
-
-    document.getElementById('spin-btn').addEventListener('click', () => {
-      if (userLoggedIn) {
-        spin();
-      } else {
-        showMessage("Please scan a user to play!");
-      }
-    });
-
-    document.getElementById('cash-out-btn').addEventListener('click', () => {
-      if (userLoggedIn) {
-        latestUserID = '0';
-        userLoggedIn = false;
-        showMessage("Logged out. Please scan a user to play.");
-        hideElement('#slot-machine-container');
-        showElement('#scaniframe');
-        document.getElementById('scaniframe').style.display = 'block';
-        document.getElementById('scaniframe').src = 'https://peemima.github.io/lux-bank/scanner/';
-        iframeControl('start');
-        // Reset balance to starting balance
-        balance = startingBalance;
-        updateBalance();
-        document.getElementById('bet-amount').value = 10;
-      }
-    });
-
-    // Iframe Control
-    window.iframeControl = function(status) {
-      if (status == "start") {
-        document.getElementById('scaniframe').src = 'https://peemima.github.io/lux-bank/scanner/';
-        document.getElementById('scaniframe').style.display = 'block';
-      } else if (status == "stop") {
-        document.getElementById('scaniframe').style.display = 'none';
-        document.getElementById('scaniframe').src = 'about:blank';
-      }
-    }
-
-    window.addEventListener('message', (event) => {
-      setTimeout(function(){
-        window.latestUserID = event.data;
-        userLoggedIn = true;
-        showMessage("User scanned, ready to play!");
-        hideElement('#login-screen');
-        showElement('#slot-machine-container');
-        iframeControl('stop');
-      }, 1000);
-    });
-    
-
-    // Login Screen Logic
-    document.getElementById("businessNameInput").addEventListener("mousedown", function() {
-      document.getElementById("businessNameInput").placeholder = "Business Name";
-    });
-
-    document.getElementById("businessNameInput").addEventListener("blur", function() {
-      document.getElementById("businessNameInput").placeholder = "";
-    });
-
-    document.getElementById("businessNameInput").addEventListener("input", function() {
-      const inputValue = this.value.trim().toLowerCase();
-      get(ref(database, 'businesses')).then(snapshot => {
-        if (snapshot.exists()) {
-          const businesses = snapshot.val();
-          const businessSuggestions = Object.keys(businesses).filter(business => 
-            business.toLowerCase().includes(inputValue)
-          );
-
-          // Show suggestions ONLY if there's exactly one match
-          if (businessSuggestions.length === 1) { 
-            updateSuggestions(businessSuggestions[0]); // Pass the single suggestion
-          } else {
-            // Hide suggestions if there are zero or multiple matches
-            document.getElementById('suggestions').style.display = 'none'; 
-          }
-        } else {
-          console.error('No businesses found in the database.');
-        }
-      }).catch(error => {
-        console.error('Error fetching businesses:', error);
-      });
-    });
-
-    function updateSuggestions(suggestion) {
-      const suggestionList = document.getElementById('suggestions');
-      if (suggestion) {
-        suggestionList.style.display = 'block'; 
-        suggestionList.innerText = 'Press Enter to login to ' + suggestion;
-      } else {
-        suggestionList.innerText = 'No businesses found';
-      }
-    }
-
-    // Add event listener to the input field for Enter key press
-    document.getElementById("businessNameInput").addEventListener("keydown", (event) => {
-      if (event.key === 'Enter') {
-        const suggestion = document.getElementById('suggestions').innerText.replace('Press Enter to login to ', '');
-        window.location.href = `?businessvalue=${suggestion}`;
-      }
-    });
-    
-    // Initial Setup
-    document.addEventListener("DOMContentLoaded", function() {
-      ensureBusinessAccountExists();
-      fetchAndDisplayBusinessBalance();
-      setInterval(fetchAndDisplayBusinessBalance, 200); 
-    });
+    document.getElementById('spin-btn').addEventListener('click', spin);
 
     updateBalance();
     updateBalanceChart();
