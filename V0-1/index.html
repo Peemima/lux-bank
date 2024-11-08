@@ -80,7 +80,7 @@ function fetchAndDisplayUsers(query = "") {
       const users = snapshot.val();
       let content = "", userKeys = Object.keys(users).filter(key => key.toLowerCase().includes(query));
       if (userKeys.length === 0) { // No user matches the search query
-        document.getElementById("allUsers").innerHTML = `<div class="user-info"><p class="list-name">No matching users found.</p><button class="fill-button" onclick="addUser('${query}', 0)">Add ${query}</button></div>`;
+        document.getElementById("allUsers").innerHTML = `<div class="user-info"><p class="list-name">No matching users found.</p><button class="fill-button" style="cursor: not-allowed;" disabled onclick="addUser('${query}', 0)">Add ${query}</button></div>`;
       } else {
         userKeys.forEach((key, index) => {
           let positionClass = 'user-middle';
@@ -91,13 +91,13 @@ function fetchAndDisplayUsers(query = "") {
           } else if(index === userKeys.length - 1){
             positionClass = 'user-bottom';
           }
-          content += `<div class="${positionClass}"><p class="list-name">${key}: $${users[key].balance}</p><button class="fill-button" onclick="openModal('${key}')">Select</button></div>`;
+          content += `<div class="${positionClass}"><p class="list-name">${key}: $${users[key].balance}</p><button class="fill-button" style="cursor: not-allowed;" disabled onclick="openModal('${key}')">Select</button></div>`;
         });
         document.getElementById("allUsers").innerHTML = content;
       }
     } else {
       // Adjust here for no users at all in the database
-      document.getElementById("allUsers").innerHTML = `<div class="user-info"><p class="list-name">No users found.</p><button class="fill-button">Search to Add Users</button></div>`;
+      document.getElementById("allUsers").innerHTML = `<div class="user-info"><p class="list-name">No users found.</p><button style="cursor: not-allowed;" disabled class="fill-button">Search to Add Users</button></div>`;
     }
   }).catch((error) => {
     console.error("Error fetching users: ", error);
