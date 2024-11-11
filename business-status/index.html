@@ -85,7 +85,7 @@
             // Check online/offline status
             const now = Date.now();
             const timeDiff = now - businessData.timestamp;
-            if (timeDiff <= 6000) { // Within 6 seconds
+            if (timeDiff <= 21000) { // Within 21 seconds
               gridItem.classList.add("online"); 
               gridItem.innerHTML = `
                 <h3>${businessKey}</h3>
@@ -112,7 +112,7 @@
     }
 
     // Update the grid every 4 seconds
-    setInterval(fetchAndDisplayBusinesses, 4000);
+    setInterval(fetchAndDisplayBusinesses, 19000);
 
     // Initial display
     fetchAndDisplayBusinesses();
