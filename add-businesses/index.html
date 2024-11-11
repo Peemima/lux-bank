@@ -1,381 +1,103 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>QR Code Scanner</title>
-    <script src="https://unpkg.com/html5-qrcode@2.0.9/dist/html5-qrcode.min.js"></script>
-    <link href="https://peemima.github.io/lux-bank/assets/styles.css" rel="stylesheet" />
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
-    <script src="https://peemima.github.io/lux-bank/assets/popup-code.js"></script>
-    <style>
-      #barcode-reader {
-        width: 100%;
-        max-width: 500px;
-      }
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lux Business Registry</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
+<script src="https://peemima.github.io/lux-bank/assets/loading-screen.js"></script>
+<noscript>
+  <h1>js_err_noscrpt_popup</h1>
+  <p>A wild error popped out of nowhere!</p>
+  <p>Tell Ian F about it immediately.</p>
+</noscript>
+<link rel="stylesheet" href="/lux-bank/assets/styles.css">
 
-      #reader-contaier {
-        position: relative;
-        width: 100%;
-        overflow: hidden;
-        border-radius: 40px;
-      }
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+  import { getDatabase, ref, set, get } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
-      #reader {
-        position: relative;
-        -webkit-transform: scaleX(-1);
-        transform: scaleX(-1);
-      }
+  const firebaseConfig = {
+      apiKey: "AIzaSyASd5JOikXTlRp8eA2j_26Z1NWatZMjZds",
+      authDomain: "lux-bank.firebaseapp.com",
+      databaseURL: "https://lux-bank-default-rtdb.firebaseio.com",
+      projectId: "lux-bank",
+      storageBucket: "lux-bank.appspot.com",
+      messagingSenderId: "764922032293",
+      appId: "1:764922032293:web:573599b6116f025ee15d4c",
+      measurementId: "G-JQ7CWEJS9N"
+  };
 
-      #scanOverlay {
-        position: absolute;
-        width: 100%;
-        height: 100%;
-        top: 0;
-        left: 0;
-        z-index: 2;
-        background-color: rgba(0, 0, 0, 0.5);
-        /* Darken the video */
-        //animation: blurInOut 6s infinite;
-        backdrop-filter: blur(10px);
-        display: flex;
-        align-items: center;
-        vertical-align: center;
-        justify-content: center;
-      }
+  const app = initializeApp(firebaseConfig);
+  const database = getDatabase(app);
 
-      /* Define the keyframes for the blur animation */
-      @keyframes blurInOut {
-        0% {
-          backdrop-filter: blur(10px);
-        }
-
-        50% {
-          backdrop-filter: blur(5px);
-        }
-
-        100% {
-          backdrop-filter: blur(10px);
-        }
-      }
-
-      #result {
-        margin-top: 10px;
-        font-size: 18px;
-      }
-
-      scan-area {
-        box-shadow: rgba(149, 157, 165, 0.2) 0px 8px 24px;
-      }
-
-      #scanningVideo {
-        width: 175px;
-        max-width: 30%;
-        border-radius: 23%;
-        margin: 0px;
-      }
-
-      #form-container {
-        display: none;
-        /* Initially hidden */
-        width: 100%;
-        max-width: 500px;
-        margin: 20px auto;
-        padding: 20px;
-        border-radius: 40px;
-        box-shadow:  41px 41px 82px #f2f2f2,
-             -41px -41px 82px #ffffff;
-      }
-
-      #form-container label {
-        display: block;
-        margin-top: 10px;
-      }
-
-      #form-container input[type="submit"] {
-        background-color: #4CAF50;
-        color: white;
-        padding: 10px 20px;
-        margin-top: 20px;
-        border: none;
-        border-radius: 3px;
-        cursor: pointer;
-      }
-      
-      .barcode-container {
-    width: 100%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    max-width: 100%;
-    text-align: center;
-    font-size: 19px;
-                position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-      }
-    </style>
-  </head>
-  <body>
-  <div id="businessInfo" style="display: grid; grid-template-columns: 1fr auto 1fr;">
-  <span id="businessName" style="float: left;">Teacher Interface</span>
-  <img class="logo" src="/lux-bank/assets/Lux_Logo.svg">
-  <span id="businessBalance" style="float: right; text-align: right;">Input Businesses</span>
-  </div>
-    <div class="barcode-container">
-    <div id="barcode-reader">
-      <h2 style="font-family: Poppins, sans serif;">How to scan</h2>
-      <p style="font-family: Poppins, sans serif;">Scan the id of everyone that works at the business.</p>
-      <div id="reader-contaier">
-        <div id="scanOverlay">
-          <video id="scanningVideo" loop muted="true" src="https://peemima.github.io/lux-bank/assets/scanbarcode.mp4"></video>
-        </div>
-        <div id="reader">Scanned users are as follows: </div>
-      </div>
-      <div id="result"></div>
-      <button style="display: none;" id="finish-scanning">Next</button>
-    </div>
-    </div>
-
-    <!-- The form -->
-    <div id="form-container">
-      <h2 style="font-family: Poppins, sans serif;">Business Information</h2>
-      <form id="business-form">
-        <label for="business-name">Name of Business:</label>
-        <input placeholder="Nancy's Snacks" type="text" id="business-name" name="business-name" required>
-
-        <label for="product-service">Product/Service:</label>
-        <input placeholder="Cookies and Lemonade" type="text" id="product-service" name="product-service" required>
-
-        <label for="additional-items">Additional Items Needed:</label>
-        <textarea placeholder="Electricity, Microwave, Extention Cord, etc." id="additional-items" name="additional-items"></textarea>
-
-        <label for="supply-cost">Supply Costs (in $USD):</label>
-        <input type="number" id="supply-cost" name="supply-cost" required>
-
-        <label for="revenue-he">Revenue (HE):</label>
-        <input type="number" id="revenue-he" name="revenue-he" required>
-
-        <h3>Marketing Needs</h3>
-        <input type="checkbox" id="tv-commercial" name="marketing" value="TV Commercial">
-        <label for="tv-commercial">TV Commercial (9 HE)</label><br>
-
-        <input type="checkbox" id="class-announcement" name="marketing" value="Class Announcement">
-        <label for="class-announcement">Class Announcement (9 HE)</label><br>
-
-        <input type="checkbox" id="radio-announcement" name="marketing" value="Radio Announcement">
-        <label for="radio-announcement">Radio Announcement (9 HE)</label><br>
-
-        <input type="checkbox" id="poster" name="marketing" value="Poster">
-        <label for="poster">Poster (9 HE)</label><br>
-
-        <input type="checkbox" id="flyer" name="marketing" value="Flyer or Dig. Flyer">
-        <label for="flyer">Flyer or Dig. Flyer (9 HE)</label><br>
-
-        <input type="submit" value="Submit">
-      </form>
-    </div>
-
-    <script>
-      const firebaseConfig = {
-        apiKey: "AIzaSyASd5JOikXTlRp8eA2j_26Z1NWatZMjZds",
-        authDomain: "lux-bank.firebaseapp.com",
-        databaseURL: "https://lux-bank-default-rtdb.firebaseio.com",
-        projectId: "lux-bank",
-        storageBucket: "lux-bank.appspot.com",
-        messagingSenderId: "764922032293",
-        appId: "1:764922032293:web:573599b6116f025ee15d4c",
-        measurementId: "G-JQ7CWEJS9N"
-      };
-      const app = firebase.initializeApp(firebaseConfig);
-      const database = firebase.database();
-      const scannedUsers = {}; // Store scanned user IDs
-      const uniqueUserIds = []; // Array to store unique user IDs
-      let scannedNames = []; // Array to store scanned user names
-      const finishScanningButton = document.getElementById('finish-scanning');
-      const barcodeReader = document.getElementById('barcode-reader');
-      const formContainer = document.getElementById('form-container');
-      const businessForm = document.getElementById('business-form');
-      let businessIdCounter = 10000; // Start with a unique ID
-
-      function generateBusinessId() {
-        businessIdCounter++;
-        return businessIdCounter.toString().padStart(5, '0');
-      }
-
-      window.scanCode = function(scannedText) {
-        // Check if the code has already been scanned
-        if (scannedUsers[scannedText]) {
-          // Don't display a duplicate message, just return
-          return;
-        }
-
-        // Mark the code as scanned
-        scannedUsers[scannedText] = true;
-
-        // Add unique user ID to the array
-        uniqueUserIds.push(scannedText);
-
-        // Query the database for the user with the scanned ID
-        database.ref('users').orderByChild('id').equalTo(scannedText).once('value').then((snapshot) => {
-          if (snapshot.exists()) {
-            // Get the first matching user (assuming only one user has the ID)
-            const userSnapshot = snapshot.val();
-            const userName = Object.keys(userSnapshot)[0]; // Get the parent element key (username)
-            scannedNames.push(userName);
-            updateResultText();
-          } else {
-            showPopup("flex", "Notice", "block", "It looks like that user code doesn't match to a user.");
-          }
-        }).catch((error) => {
-          console.error("Error fetching user data:", error);
-          document.getElementById("result").innerText += "Error: Could not retrieve user data. Please try again later.\n";
-        });
-      };
-
-      function updateResultText() {
-        if (scannedNames.length === 0) {
-          document.getElementById("result").innerText = "You haven't scanned any users yet.";
-          finishScanningButton.style.display = "none"; // Hide the button
-          return;
-        }
-
-        let resultText = "You've scanned ";
-        for (let i = 0; i < scannedNames.length; i++) {
-          resultText += scannedNames[i];
-          if (i < scannedNames.length - 2) {
-            resultText += ", ";
-          } else if (i === scannedNames.length - 2) {
-            resultText += ", and ";
-          }
-        }
-        resultText += ".";
-
-        document.getElementById("result").innerText = resultText;
-        finishScanningButton.style.display = "inline-flex"; // Show the button
-      }
-
-      // Initialize the video element
-      const scanningVideo = document.getElementById('scanningVideo');
-      window.onload = (event) => {
-        scanningVideo.play();
-      };
-
-      const html5QrCode = new Html5Qrcode("reader");
-      // Get available cameras
-      Html5Qrcode.getCameras().then(devices => {
-        if (devices && devices.length) {
-          console.log(devices.length);
-          console.log(devices);
-          // Start scanning with selected camera
-          html5QrCode.start({
-              facingMode: {
-                exact: "environment"
-              }
-            }, {
-              fps: 60,
-            },
-            (decodedText, decodedResult) => {
-              window.latestScan = decodedText;
-              scanCode(decodedText);
-            },
-            (errorMessage) => {
-              //console.error("Error during scanning:", errorMessage);
-              //document.getElementById("result").innerText = "Error during scanning: " + errorMessage;
-            }).catch((err) => {
-            console.error("Error starting scan:", err);
-            // Start scanning with selected camera
-            html5QrCode.start({
-                facingMode: {
-                  exact: "user"
-                }
-              }, {
-                fps: 60,
-              },
-              (decodedText, decodedResult) => {
-                console.log('Successfully scanned');
-                scanCode(decodedText);
-              },
-              (errorMessage) => {
-                //console.error("Error during scanning:", errorMessage);
-                //document.getElementById("result").innerText = "Error during scanning: " + errorMessage;
-              }).catch((err) => {
-              console.error("Error starting scan:", err);
-              document.getElementById("result").innerText = "Error starting scan: " + err;
-            });
-          });
-        } else {
-          console.error("No cameras found.");
-          document.getElementById("result").innerText = "It looks like you don't have a camera connected. Connect a camera, refresh the page, and try again.";
-        }
-      }).catch(err => {
-        console.error("Error getting cameras:", err);
-        document.getElementById("result").innerText = "It looks like you didn't allow this page to access your camera. Refresh the page and try again. ";
-      });
-
-      finishScanningButton.addEventListener('click', function() {
-        document.querySelector('.barcode-container').style.display = "none"; // Hide scanning elements
-        finishScanningButton.style.display = "none";
-        formContainer.style.display = "block"; // Show the form
-      });
-
-      businessForm.addEventListener('submit', function(event) {
-        event.preventDefault(); // Prevent default form submission
-
-        // Get the form data
-        const businessName = document.getElementById('business-name').value;
-        const productService = document.getElementById('product-service').value;
-        const additionalItems = document.getElementById('additional-items').value;
-        const supplyCost = document.getElementById('supply-cost').value;
-        const revenueHE = document.getElementById('revenue-he').value;
-
-        // Get selected marketing options
-        const marketingOptions = Array.from(document.querySelectorAll('input[name="marketing"]:checked'))
-          .map(checkbox => checkbox.value);
-
-        // Generate a unique business ID
-        const businessId = generateBusinessId();
-
-        // Create new business object
-        const newBusiness = {
+  window.capitalizeFirstLetter = function(inputString) {
+      return inputString.charAt(0).toUpperCase() + inputString.slice(1).toLowerCase();
+  }
+    
+  window.addBusiness = function(businessName) {
+      const businessRef = ref(database, 'businesses/' + businessName);
+      set(businessRef, {
           name: businessName,
-          productService: productService,
-          additionalItems: additionalItems,
-          supplyCost: supplyCost,
-          revenueHE: revenueHE,
-          marketing: marketingOptions,
-          balance: 0, // Initial balance set to 0
-          businessId: businessId
-        };
-
-        // Add new business to Firebase database
-        database.ref('/businesses/' + businessName).set(newBusiness).then(function() {
-          // Update users in the business with the business ID
-          uniqueUserIds.forEach(userId => {
-            database.ref('users').orderByChild('id').equalTo(userId).once('value').then(snapshot => {
-              const userKeys = Object.keys(snapshot.val());
-              userKeys.forEach(userName => {
-                database.ref('users/' + userName + '/businessInfo').set({
-                  businessId: businessId,
-                  businessName: businessName
-                }).catch(error => {
-                  console.error("Error updating user with business information:", error);
-                });
-              });
-            }).catch(error => {
-              console.error("Error fetching user data:", error);
-            });
-          });
-
-          showPopup("flex", "Success", "block", "Business information saved successfully!");
-          businessForm.reset(); // Clear the form
-        }).catch(function(error) {
-          showPopup("flex", "Error", "block", "An error occurred while saving business information.");
-          console.error('Error writing new business to Firebase:', error);
-        });
+          balance: 0
+      }).then(() => {
+          console.log('Business added successfully.');
+          businessNameInput.value = '';
+          formInstructions.innerText = "Business saved. Add next business.";
+          updateBusinessCount();
+      }).catch((error) => {
+          console.error('Error adding business:', error);
       });
-    </script>
-  </body>
+  };
+
+  const businessesRef = ref(database, 'businesses');
+
+  function updateBusinessCount() {
+      get(businessesRef).then((snapshot) => {
+          if (snapshot.exists()) {
+              const numberOfBusinesses = Object.keys(snapshot.val()).length;
+              const businessInfoElement = document.getElementById('businessCount');
+              businessInfoElement.innerText = `${numberOfBusinesses} businesses registered`;
+          }
+      }).catch((error) => {
+          console.error("Error fetching data:", error);
+      });
+  }
+
+  updateBusinessCount();
+  setInterval(updateBusinessCount, 500);
+
+  var businessNameInput = document.getElementById("addbusinessname");
+  var formInstructions = document.getElementById("form-instructions");
+
+  businessNameInput.onkeydown = function(e) {
+      if(e.keyCode == 32) {
+          event.preventDefault();
+          let businessName = businessNameInput.value;
+            
+          if (!businessName) {
+              formInstructions.innerText = "Please enter a business name.";
+              return;
+          }
+
+          addBusiness(businessName);
+          businessNameInput.focus();
+      }
+  }
+
+  businessNameInput.focus();
+</script>
+</head>
+<body>
+<div id="businessInfo" style="display: grid; grid-template-columns: 1fr auto 1fr;">
+  <span id="businessName" style="float: left;">Lux Business Registry</span>
+  <img class="logo" src="/lux-bank/assets/Lux_Logo.svg">
+  <span id="businessCount" style="float: right; text-align: right;">0 businesses registered</span>
+</div>
+
+<form id="addbusinessform">
+  <input type="text" id="addbusinessname" placeholder="Business Name..." style="display: block;" oninput="this.value = capitalizeFirstLetter(this.value)">
+  <p id="form-instructions">Press space to save business</p>
+</form>
+</body>
 </html>
