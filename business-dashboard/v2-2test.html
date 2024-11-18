@@ -192,7 +192,7 @@
                         }
 
                         // 3. Run isUnusualPrice and handle result
-                        if (isUnusualPrice(amount, pastTransactionAmounts)) {
+                        if (isUnusualPrice(amount, pastTransactionAmounts) === true) {
                             showPopup("flex", "Transaction Declined", "block", "This transaction amount is unusual and has been declined.");
                             return; // Cancel transaction
                         }
