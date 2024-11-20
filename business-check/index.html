@@ -5,8 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Firebase Transactions</title>
     <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-database-compat.js"></script>
-
+    <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-database-compat.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         body {
@@ -48,7 +47,7 @@
             appId: "1:764922032293:web:573599b6116f025ee15d4c",
             measurementId: "G-JQ7CWEJS9N"
         };
-        const app = firebase.initializeApp(firebaseConfig);
+        firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
 
         // Fetch transactions from Firebase
@@ -61,10 +60,7 @@
                 Object.values(transactions).forEach(transaction => {
                     const businessName = transaction.business;
                     if (!businesses[businessName]) businesses[businessName] = [];
-                    businesses[businessName].push({
-                        timestamp: transaction.timestamp,
-                        amount: Math.abs(transaction.amount)
-                    });
+                    businesses[businessName].push(transaction);
                 });
 
                 // Render businesses and their graphs
@@ -93,13 +89,31 @@
                             labels: data.map(entry => new Date(entry.timestamp).toLocaleString()),
                             datasets: [{
                                 label: "Transaction Amount",
-                                data: data.map(entry => entry.amount),
+                                data: data.map(entry => Math.abs(entry.amount)),
                                 borderColor: "rgba(75, 192, 192, 1)",
                                 backgroundColor: "rgba(75, 192, 192, 0.2)",
                                 tension: 0.4
                             }]
                         },
                         options: {
+                            plugins: {
+                                tooltip: {
+                                    callbacks: {
+                                        label: (tooltipItem) => {
+                                            const index = tooltipItem.dataIndex;
+                                            const transaction = data[index];
+                                            return [
+                                                `Amount: ${transaction.amount}`,
+                                                `Business Balance: ${transaction.businessBalance}`,
+                                                `New Balance: ${transaction.newBalance}`,
+                                                `Timestamp: ${new Date(transaction.timestamp).toLocaleString()}`,
+                                                `User ID: ${transaction.userId}`,
+                                                `User Key: ${transaction.userKey}`
+                                            ];
+                                        }
+                                    }
+                                }
+                            },
                             scales: {
                                 x: {
                                     title: { display: true, text: "Timestamp" }
