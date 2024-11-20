@@ -7,9 +7,9 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
   <script src="https://peemima.github.io/lux-bank/assets/loading-screen.js"></script>
   <noscript>
-    <h1>js_err_noscrpt_popup</h1>
+    <h1>Help is on the way, Javascript is not enabled.</h1>
     <p>A wild error popped out of nowhere!</p>
-    <p>Tell Ian F about it immediately.</p>
+    <p>Help is on the way.</p>
     <br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br>
   </noscript>
   <link rel="stylesheet" href="/lux-bank/assets/styles.css">
@@ -141,7 +141,7 @@
                   })
                   .catch((error) => {
                     console.error('Error updating user balance:', error);
-                    showPopup("flex", "Help is on the way", "none", "There was an error, but don't worry, help is on the way.");
+                    showPopup("flex", "Help is on the way", "none", "Aim this screen toward shoppers so we can find you faster.");
                     err(true);
                   });
                 return; 
@@ -153,7 +153,7 @@
           }
         }).catch((error) => {
           console.error('Error fetching user data:', error);
-          showPopup("flex", "Help is on the way", "none", "There was an error, but don't worry, help is on the way.");
+          showPopup("flex", "Help is on the way", "none", "Aim this screen toward shoppers so we can find you faster.");
           err(true);
         });
       }
@@ -177,7 +177,7 @@
           })
           .catch((error) => {
             console.error('Error logging transaction:', error);
-            showPopup("flex", "Help is on the way", "none", "There was an error, but don't worry, help is on the way.");
+            showPopup("flex", "Help is on the way", "none", "Aim this screen toward shoppers so we can find you faster.");
             err(true);
           });
       }
@@ -193,7 +193,7 @@
             fetchAndDisplayBusinessBalance(); 
           }).catch((error) => {
             console.error('Error updating business balance:', error);
-            showPopup("flex", "Help is on the way", "none", "There was an error, but don't worry, help is on the way.");
+            showPopup("flex", "Help is on the way", "none", "Aim this screen toward shoppers so we can find you faster.");
             err(true);
           });
         }).catch((error) => {
@@ -202,7 +202,7 @@
             console.log('Business balance initialized and set to:', amountToAdd);
           }).catch((initError) => {
             console.error('Error initializing business balance:', initError);
-            showPopup("flex", "Help is on the way", "none", "There was an error, but don't worry, help is on the way.");
+            showPopup("flex", "Help is on the way", "none", "Aim this screen toward shoppers so we can find you faster.");
             err(true);
           });
         });
@@ -219,7 +219,7 @@
           }
         }).catch((error) => {
           console.error('Error fetching business balance:', error);
-          showPopup("flex", "Help is on the way", "none", "There was an error, but don't worry, help is on the way.");
+          showPopup("flex", "Help is on the way", "none", "Aim this screen toward shoppers so we can find you faster.");
           err(true);
         });
       }
@@ -315,12 +315,15 @@ document.getElementById("businessNameInput").addEventListener("keydown", (event)
       showElement('#transactionForm'); // Show the transaction form
     });
     bidButton.addEventListener("click", function() { // Start listening for a click
-      buyButton.classList.remove('menu-item-selected'); // Remove the 'selected' styling from the buy button
+      /* buyButton.classList.remove('menu-item-selected'); // Remove the 'selected' styling from the buy button
       bidButton.classList.add('menu-item-selected'); // Give it the 'selected' styling
       iframeControl('stop');
       hideElement('#homepage-heading'); // Hide the 'What would the customer like to do?' heading
       hideElement('#transactionForm'); // Hide the transaction form
-      showElement('#bidScreen'); // Show the bid screen
+      showElement('#bidScreen'); // Show the bid screen */
+      console.log('Ask For Help button triggered popup.');
+      showPopup("flex", "Help is on the way", "none", "Aim this screen toward shoppers so we can find you faster.");
+      err(true);
     });
 
     window.iframeControl = function(status) {
