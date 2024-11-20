@@ -140,7 +140,7 @@
               //console.error("Please Click The Ask For Help Button above. Error code: ", errorMessage);
               //document.getElementById("result").innerText = "Please Click The Ask For Help Button above.: " + errorMessage;
             }).catch((err) => {
-            console.error("Error starting scan:", err);
+            console.error("Click Ask For Help above. Error starting scan:", err);
             // Start scanning with selected camera
             html5QrCode.start({
               facingMode: {
@@ -154,10 +154,10 @@
                 console.log("caught it back function")
               },
               (errorMessage) => {
-                //console.error("Please Click The Ask For Help Button above. Error code: ", errorMessage);
+                //console.error("Click The Ask For Help Button above. Error code: ", errorMessage);
                 //document.getElementById("result").innerText = "Please Click The Ask For Help Button above. Error code: " + errorMessage;
               }).catch((err) => {
-              console.error("Error starting scan:", err);
+              console.error("Click Ask For Help above. Error starting scan:", err);
             html5QrCode.start({
               deviceId,
                 // facingMode: {
@@ -174,17 +174,17 @@
                 //console.error("Please Click The Ask For Help Button above. Error code: ", errorMessage);
                 //document.getElementById("result").innerText = "Please Click The Ask For Help Button above. Error code: " + errorMessage;
               }).catch((err) => {
-              console.error("Error starting scan:", err);
+              console.error("Please click the Ask For Help button above. Error starting scan:", err);
               document.getElementById("result").innerText = "Error starting scan: " + err;
             });
             });
           });
         } else {
-          console.error("No cameras found.");
+          console.error("No cameras found. If you need help, click Ask For Help.");
           document.getElementById("result").innerText = "It looks like you don't have a camera connected. Connect a camera, refresh the page, and try again.";
         }
       }).catch(err => {
-        console.error("Error getting cameras:", err);
+        console.error("Click Ask For Help above. Error getting cameras:", err);
         document.getElementById("result").innerText = "It looks like you didn't allow this page to access your camera. Refresh the page and try again. ";
       });
 
