@@ -137,8 +137,8 @@
             },
             (errorMessage) => {
               document.getElementById('reader').style.transform = 'scaleX(1)';
-              //console.error("Error during scanning:", errorMessage);
-              //document.getElementById("result").innerText = "Error during scanning: " + errorMessage;
+              //console.error("Please Click The Ask For Help Button above. Error code: ", errorMessage);
+              //document.getElementById("result").innerText = "Please Click The Ask For Help Button above.: " + errorMessage;
             }).catch((err) => {
             console.error("Error starting scan:", err);
             // Start scanning with selected camera
@@ -154,8 +154,8 @@
                 console.log("caught it back function")
               },
               (errorMessage) => {
-                //console.error("Error during scanning:", errorMessage);
-                //document.getElementById("result").innerText = "Error during scanning: " + errorMessage;
+                //console.error("Please Click The Ask For Help Button above. Error code: ", errorMessage);
+                //document.getElementById("result").innerText = "Please Click The Ask For Help Button above. Error code: " + errorMessage;
               }).catch((err) => {
               console.error("Error starting scan:", err);
             html5QrCode.start({
@@ -171,8 +171,8 @@
                 console.log("caught it back function")
               },
               (errorMessage) => {
-                //console.error("Error during scanning:", errorMessage);
-                //document.getElementById("result").innerText = "Error during scanning: " + errorMessage;
+                //console.error("Please Click The Ask For Help Button above. Error code: ", errorMessage);
+                //document.getElementById("result").innerText = "Please Click The Ask For Help Button above. Error code: " + errorMessage;
               }).catch((err) => {
               console.error("Error starting scan:", err);
               document.getElementById("result").innerText = "Error starting scan: " + err;
