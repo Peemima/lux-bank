@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Firebase Transactions</title>
+    <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-database-compat.js"></script>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f9f9f9;
+        }
+        h1 {
+            text-align: center;
+        }
+        .business-container {
+            margin: 20px auto;
+            max-width: 800px;
+            padding: 20px;
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+        }
+        .chart-container {
+            position: relative;
+            height: 400px;
+            width: 100%;
+        }
+    </style>
+</head>
+<body>
+    <h1>Business Transactions</h1>
+    <div id="business-list"></div>
+
+    <script>
+        // Initialize Firebase
+        const firebaseConfig = {
+            apiKey: "AIzaSyASd5JOikXTlRp8eA2j_26Z1NWatZMjZds",
+            authDomain: "lux-bank.firebaseapp.com",
+            databaseURL: "https://lux-bank-default-rtdb.firebaseio.com",
+            projectId: "lux-bank",
+            storageBucket: "lux-bank.appspot.com",
+            messagingSenderId: "764922032293",
+            appId: "1:764922032293:web:573599b6116f025ee15d4c",
+            measurementId: "G-JQ7CWEJS9N"
+        };
+        const app = firebase.initializeApp(firebaseConfig);
+        const db = firebase.database();
+
+        // Fetch transactions from Firebase
+        db.ref("transactions").get().then(snapshot => {
+            if (snapshot.exists()) {
+                const transactions = snapshot.val();
+                const businesses = {};
+
+                // Categorize transactions by business
+                Object.values(transactions).forEach(transaction => {
+                    const businessName = transaction.business;
+                    if (!businesses[businessName]) businesses[businessName] = [];
+                    businesses[businessName].push({
+                        timestamp: transaction.timestamp,
+                        amount: Math.abs(transaction.amount)
+                    });
+                });
+
+                // Render businesses and their graphs
+                const businessList = document.getElementById("business-list");
+                Object.entries(businesses).forEach(([businessName, data]) => {
+                    const container = document.createElement("div");
+                    container.className = "business-container";
+
+                    const label = document.createElement("h2");
+                    label.textContent = businessName;
+                    container.appendChild(label);
+
+                    const canvas = document.createElement("canvas");
+                    canvas.id = `chart-${businessName}`;
+                    container.appendChild(canvas);
+
+                    businessList.appendChild(container);
+
+                    // Sort data by timestamp
+                    data.sort((a, b) => a.timestamp - b.timestamp);
+
+                    // Create chart
+                    new Chart(canvas.getContext("2d"), {
+                        type: "line",
+                        data: {
+                            labels: data.map(entry => new Date(entry.timestamp).toLocaleString()),
+                            datasets: [{
+                                label: "Transaction Amount",
+                                data: data.map(entry => entry.amount),
+                                borderColor: "rgba(75, 192, 192, 1)",
+                                backgroundColor: "rgba(75, 192, 192, 0.2)",
+                                tension: 0.4
+                            }]
+                        },
+                        options: {
+                            scales: {
+                                x: {
+                                    title: { display: true, text: "Timestamp" }
+                                },
+                                y: {
+                                    title: { display: true, text: "Amount (Absolute Value)" }
+                                }
+                            }
+                        }
+                    });
+                });
+            } else {
+                alert("No transactions found!");
+            }
+        }).catch(error => console.error("Error fetching data:", error));
+    </script>
+</body>
+</html>
