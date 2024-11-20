@@ -114,8 +114,11 @@
     // Update the grid every 19 seconds
     setInterval(fetchAndDisplayBusinesses, 19000);
 
-    // Initial display
-    fetchAndDisplayBusinesses();
+
+    document.addEventListener("DOMContentLoaded", (event) => {
+      // Initial display
+      fetchAndDisplayBusinesses();
+    });
   </script>
 </head>
 <body>
