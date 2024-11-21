@@ -221,7 +221,7 @@
         function getTopEntries(data, metric) {
             return Object.entries(data)
                 .sort(([, a], [, b]) => b[metric] - a[metric])
-                .slice(0, 3);
+                .slice(0, 15);
         }
 
         // Utility: Generate HTML for awards list
