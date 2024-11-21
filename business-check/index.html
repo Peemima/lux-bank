@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Firebase Transactions</title>
+    <title>Lux Business Transactions Statistics</title>
     <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-database-compat.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -13,10 +13,10 @@
             margin: 20px;
             background-color: #f9f9f9;
         }
-        h1 {
+        h1, h2 {
             text-align: center;
         }
-        .business-container {
+        .awards-container, .business-container, .stats-container {
             margin: 20px auto;
             max-width: 800px;
             padding: 20px;
@@ -29,10 +29,15 @@
             height: 400px;
             width: 100%;
         }
+        .awards-section {
+            margin-bottom: 20px;
+        }
     </style>
 </head>
 <body>
     <h1>Business Transactions</h1>
+    <div class="stats-container" id="stats-container"></div>
+    <div class="awards-container" id="awards-container"></div>
     <div id="business-list"></div>
 
     <script>
@@ -53,15 +58,79 @@
         // Fetch transactions from Firebase
         db.ref("transactions").get().then(snapshot => {
             if (snapshot.exists()) {
-                const transactions = snapshot.val();
+                const transactions = Object.values(snapshot.val());
                 const businesses = {};
+                const shoppers = {};
 
-                // Categorize transactions by business
-                Object.values(transactions).forEach(transaction => {
+                // Process transactions
+                let totalMoneySpent = 0;
+                let totalTimeDifferences = 0;
+
+                transactions.forEach(transaction => {
                     const businessName = transaction.business;
-                    if (!businesses[businessName]) businesses[businessName] = [];
-                    businesses[businessName].push(transaction);
+                    const shopperName = transaction.userKey;
+                    const amount = Math.abs(transaction.amount);
+
+                    totalMoneySpent += amount;
+
+                    // Categorize by business
+                    if (!businesses[businessName]) businesses[businessName] = { count: 0, total: 0 };
+                    businesses[businessName].count += 1;
+                    businesses[businessName].total += amount;
+
+                    // Categorize by shopper
+                    if (!shoppers[shopperName]) shoppers[shopperName] = { count: 0, total: 0 };
+                    shoppers[shopperName].count += 1;
+                    shoppers[shopperName].total += amount;
                 });
+
+                // Sort transactions by timestamp
+                transactions.sort((a, b) => a.timestamp - b.timestamp);
+
+                // Calculate total transactions, average money spent, and average time between transactions
+                const totalTransactions = transactions.length;
+                const averageMoneySpent = totalMoneySpent / totalTransactions;
+                for (let i = 1; i < transactions.length; i++) {
+                    totalTimeDifferences += (transactions[i].timestamp - transactions[i - 1].timestamp);
+                }
+                const averageTimeBetweenTransactions = totalTransactions > 1
+                    ? totalTimeDifferences / (totalTransactions - 1)
+                    : 0;
+
+                const readableTime = convertToReadableTime(averageTimeBetweenTransactions);
+
+                // Render general statistics
+                const statsContainer = document.getElementById("stats-container");
+                statsContainer.innerHTML = `
+                    <h2>General Statistics</h2>
+                    <p>Total Transactions: ${totalTransactions}</p>
+                    <p>Total Money Spent: ${totalMoneySpent.toFixed(2)}</p>
+                    <p>Average Money Spent: ${averageMoneySpent.toFixed(3)}</p>
+                    <p>Average Time Between Transactions: ${readableTime}</p>
+                `;
+
+                // Generate awards
+                const awardsContainer = document.getElementById("awards-container");
+                awardsContainer.innerHTML = `
+                    <h2>Business Awards</h2>
+                    <div class="awards-section">
+                        <h3>Highest number of transactions</h3>
+                        ${generateAwardList(getTopEntries(businesses, "count"), "count")}
+                    </div>
+                    <div class="awards-section">
+                        <h3>Most money earned</h3>
+                        ${generateAwardList(getTopEntries(businesses, "total"), "total")}
+                    </div>
+                    <h2>Shopper Awards</h2>
+                    <div class="awards-section">
+                        <h3>Bought the most items</h3>
+                        ${generateAwardList(getTopEntries(shoppers, "count"), "count")}
+                    </div>
+                    <div class="awards-section">
+                        <h3>Spent the most money</h3>
+                        ${generateAwardList(getTopEntries(shoppers, "total"), "total")}
+                    </div>
+                `;
 
                 // Render businesses and their graphs
                 const businessList = document.getElementById("business-list");
@@ -79,17 +148,17 @@
 
                     businessList.appendChild(container);
 
-                    // Sort data by timestamp
-                    data.sort((a, b) => a.timestamp - b.timestamp);
+                    // Get transactions for this business
+                    const businessTransactions = transactions.filter(t => t.business === businessName);
 
                     // Create chart
                     new Chart(canvas.getContext("2d"), {
                         type: "line",
                         data: {
-                            labels: data.map(entry => new Date(entry.timestamp).toLocaleString()),
+                            labels: businessTransactions.map(entry => new Date(entry.timestamp).toLocaleString()),
                             datasets: [{
                                 label: "Transaction Amount",
-                                data: data.map(entry => Math.abs(entry.amount)),
+                                data: businessTransactions.map(entry => Math.abs(entry.amount)),
                                 borderColor: "rgba(75, 192, 192, 1)",
                                 backgroundColor: "rgba(75, 192, 192, 0.2)",
                                 tension: 0.4
@@ -101,7 +170,7 @@
                                     callbacks: {
                                         label: (tooltipItem) => {
                                             const index = tooltipItem.dataIndex;
-                                            const transaction = data[index];
+                                            const transaction = businessTransactions[index];
                                             return [
                                                 `Amount: ${transaction.amount}`,
                                                 `Business Balance: ${transaction.businessBalance}`,
@@ -129,6 +198,40 @@
                 alert("No transactions found!");
             }
         }).catch(error => console.error("Error fetching data:", error));
+
+        // Utility: Convert milliseconds to a readable time format
+        function convertToReadableTime(milliseconds) {
+            const seconds = milliseconds / 1000;
+            if (seconds < 60) return `${seconds.toFixed(3)} seconds`;
+
+            const minutes = seconds / 60;
+            if (minutes < 60) return `${minutes.toFixed(3)} minutes`;
+
+            const hours = minutes / 60;
+            if (hours < 24) return `${hours.toFixed(3)} hours`;
+
+            const days = hours / 24;
+            if (days < 30) return `${days.toFixed(3)} days`;
+
+            const months = days / 30;
+            return `${months.toFixed(3)} months`;
+        }
+
+        // Utility: Get top entries by a specific metric
+        function getTopEntries(data, metric) {
+            return Object.entries(data)
+                .sort(([, a], [, b]) => b[metric] - a[metric])
+                .slice(0, 3);
+        }
+
+        // Utility: Generate HTML for awards list
+        function generateAwardList(entries, metric) {
+            return `
+                <ol>
+                    ${entries.map(([name, data], index) => `<li>${name} - ${data[metric]}</li>`).join("")}
+                </ol>
+            `;
+        }
     </script>
 </body>
 </html>
