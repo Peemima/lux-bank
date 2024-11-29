@@ -1,1 +1,231 @@
-create
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lux Kisosk | Check User Balance</title>
+    <link rel="stylesheet" href="https://peemima.github.io/lux-bank/assets/styles.css"/>
+    <script src="https://unpkg.com/html5-qrcode@2.0.9/dist/html5-qrcode.min.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
+    <style>
+      body, html {
+        height: 100%;
+        width: 100%;
+        display: flex;
+        flex-direction: column; /* Important: Use column to stack vertically */
+        justify-content: flex-end; /* Align everything to the bottom */
+        align-items: center;
+      }
+      body {
+          margin: 50px;
+      }
+      #barcode-reader {
+        width: 100%;
+        max-width: 600px;
+      }
+
+      #reader-contaier {
+        position: relative;
+        width: 100%;
+        overflow: hidden;
+        border-radius: 50px;
+      }
+
+      #reader {
+        position: relative;
+        transform: scaleX(-1);
+      }
+
+      #scanOverlay {
+        position: relative; /* No longer absolute */
+        width: 100%;
+        height: 100%;
+        /* Remove flexbox styles from scanOverlay since video is outside */
+      }
+
+      #result {
+        font-size: 18px;
+      }
+      
+      #balanceLabel {
+        color: black;
+        background-color: white;
+        font-size: 25px;
+        font-family: "Poppins", sans-serif !important;
+        width: 200px;
+        height: 200px;
+        box-shadow: rgba(149, 157, 165, 0.25) 0px 8px 24px;
+        text-align: center;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        border-radius: 25%;
+        display: none;
+      }
+
+      scan-area {
+        box-shadow: rgba(149, 157, 165, 0.2) 0px 8px 24px;
+      }
+
+      #scanningVideo {
+        width: 200px;
+        box-shadow: rgba(149, 157, 165, 0.25) 0px 8px 24px;
+        border-radius: 25%;
+        margin-bottom: 20px; /* Add some space between video and reader */
+        background-color: white;
+        transition: all 1s ease-in-out;
+      }
+
+      video {
+        width: 100%;
+        display: block;
+      }
+    </style>
+  </head>
+  <body>
+    <video id="scanningVideo" loop muted="true" src="https://peemima.github.io/lux-bank/assets/scanbarcodecheckbalance.mp4"></video>
+    <div id="balanceLabel">
+        <span>
+            <span id="hawkeyeAmount">no</span>
+            <br>hawkeyes
+        </span>
+    </div>
+    <div id="barcode-reader">
+      <div id="reader-contaier">
+        <div id="scanOverlay">
+        </div>
+        <div id="reader"></div>
+      </div>
+      <div id="result"></div>
+    </div>
+
+
+    <script>
+      const firebaseConfig = {
+        apiKey: "AIzaSyASd5JOikXTlRp8eA2j_26Z1NWatZMjZds",
+        authDomain: "lux-bank.firebaseapp.com",
+        databaseURL: "https://lux-bank-default-rtdb.firebaseio.com",
+        projectId: "lux-bank",
+        storageBucket: "lux-bank.appspot.com",
+        messagingSenderId: "764922032293",
+        appId: "1:764922032293:web:573599b6116f025ee15d4c",
+        measurementId: "G-JQ7CWEJS9N"
+      };
+      const app = firebase.initializeApp(firebaseConfig);
+      const database = firebase.database();
+
+      // Initialize the video element
+      const scanningVideo = document.getElementById('scanningVideo');
+      window.onload = (event) => {
+        scanningVideo.play();
+      };
+
+      const html5QrCode = new Html5Qrcode("reader");
+      // Get available cameras
+      Html5Qrcode.getCameras().then(devices => {
+        if (devices && devices.length) {
+          console.log(devices.length);
+          console.log(devices);
+          var deviceId = devices[0].id;
+          // Start scanning with selected camera
+          html5QrCode.start({
+              facingMode: {
+                exact: "environment"
+              }
+            }, {
+              fps: 60,
+            },
+            (decodedText, decodedResult) => {
+              checkUser(decodedText);
+              console.log("caught it front function")
+            },
+            (errorMessage) => {
+              document.getElementById('reader').style.transform = 'scaleX(1)';
+              //console.error("Please Click The Ask For Help Button above. Error code: ", errorMessage);
+              //document.getElementById("result").innerText = "Please Click The Ask For Help Button above.: " + errorMessage;
+            }).catch((err) => {
+            console.error("Click Ask For Help above. Error starting scan:", err);
+            // Start scanning with selected camera
+            html5QrCode.start({
+              facingMode: {
+                exact: "user"
+              }
+              }, {
+                fps: 60,
+              },
+              (decodedText, decodedResult) => {
+                checkUser(decodedText);
+                console.log("caught it back function")
+              },
+              (errorMessage) => {
+                //console.error("Click The Ask For Help Button above. Error code: ", errorMessage);
+                //document.getElementById("result").innerText = "Please Click The Ask For Help Button above. Error code: " + errorMessage;
+              }).catch((err) => {
+              console.error("Click Ask For Help above. Error starting scan:", err);
+            html5QrCode.start({
+              deviceId,
+                // facingMode: {
+                //   exact: "user"
+                // }
+              }, {
+                fps: 60,
+              },
+              (decodedText, decodedResult) => {
+                checkUser(decodedText);
+                console.log("caught it back function")
+              },
+              (errorMessage) => {
+                //console.error("Please Click The Ask For Help Button above. Error code: ", errorMessage);
+                //document.getElementById("result").innerText = "Please Click The Ask For Help Button above. Error code: " + errorMessage;
+              }).catch((err) => {
+              console.error("Please click the Ask For Help button above. Error starting scan:", err);
+              document.getElementById("result").innerText = "Error starting scan: " + err;
+            });
+            });
+          });
+        } else {
+          console.error("No cameras found. If you need help, click Ask For Help.");
+          document.getElementById("result").innerText = "It looks like you don't have a camera connected. Connect a camera, refresh the page, and try again.";
+        }
+      }).catch(err => {
+        console.error("Click Ask For Help above. Error getting cameras:", err);
+        document.getElementById("result").innerText = "It looks like you didn't allow this page to access your camera. Refresh the page and try again. ";
+      });
+
+    function checkUser(scannedText) {
+        database.ref('users').once('value', (snapshot) => {
+          const users = snapshot.val();
+          let found = false;
+          for (const userId in users) {
+            if (users[userId].id === scannedText) {
+              const balance = users[userId].balance;
+              document.getElementById('hawkeyeAmount').textContent = balance;
+              found = true;
+              document.getElementById("balanceLabel").style.display = "flex";
+              document.getElementById("scanningVideo").style.display = "none";
+              break;
+            }
+          }
+
+          if (!found) {
+            document.getElementById('hawkeyeAmount').textContent = "error";
+          }
+
+          document.getElementById('barcode-reader').style.animation = 'checkmark 1s ease-in-out';
+          setTimeout(() => {
+            document.getElementById("balanceLabel").style.display = "none";
+            document.getElementById("scanningVideo").style.display = "block";
+            document.getElementById('hawkeyeAmount').textContent = "no"; // Reset to "no" unconditionally after 1.5 seconds
+          }, 1500); 
+        });
+      }
+      
+      // function checkBalance(userID) {
+      //     window.top.postMessage(userID, '*');
+      //     console.log("ran function")
+      // }
+    </script>
+  </body>
+</html>
