@@ -67,11 +67,7 @@
       searchForm.addEventListener("submit", function(event) {
     event.preventDefault();
     fetchAndDisplayUsers(currentSearchQuery); // Make sure you pass currentSearchQuery when fetching users
-});
-
-      // Fetch and display users right away
-      fetchAndDisplayUsers();
-    });
+});    });
 
 function fetchAndDisplayUsers(query) {
   get(ref(database, 'users')).then((snapshot) => {
