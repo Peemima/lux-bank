@@ -68,7 +68,9 @@
     event.preventDefault();
     fetchAndDisplayUsers(currentSearchQuery); // Make sure you pass currentSearchQuery when fetching users
 });    });
+fetchAndDisplayUsers(currentSearchQuery);
 
+    
 function fetchAndDisplayUsers(query) {
   get(ref(database, 'users')).then((snapshot) => {
     if (snapshot.exists() && Object.keys(snapshot.val()).length > 0) {
