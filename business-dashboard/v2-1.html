@@ -229,7 +229,7 @@
             if (snapshot.exists()) {
               const timestamp = snapshot.val();
               if (timestamp === 1) {
-                showPopup("flex", "We're glad you're here", "none", "Bring this device to Ian F to get started");
+                showPopup("flex", "We're glad you're here", "none", "Bring this device to Ian F to get started. Or, ask a teacher for help.");
               } else {
                 const businessRef = ref(database, `businesses/${businessValue}/timestamp`);
                 set(businessRef, Date.now()).then(() => {
