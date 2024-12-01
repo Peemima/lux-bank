@@ -154,7 +154,6 @@ function createGridItem(businessKey, businessData) {
     const newTimestamp = businessData.timestamp === 1 ? Date.now() : 1;
     set(ref(database, `businesses/${businessKey}/timestamp`), newTimestamp);
     popup.querySelector('p:nth-child(3)').textContent = `Status: ${newTimestamp === 1 ? 'Not here' : 'Online/Offline'}`; 
-    popup.style.display = 'none'; // Close popup after toggling
   });
 
   return gridItem;
