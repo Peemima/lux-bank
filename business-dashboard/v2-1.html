@@ -33,7 +33,7 @@
     const app = initializeApp(firebaseConfig);
     const database = getDatabase(app);
 
-    console.log("%cVersion: %c1.634", "color: black; font-size:75px;", "color: red; font-size:75px;");
+    console.log("%cVersion: %c1.7", "color: black; font-size:75px;", "color: red; font-size:75px;");
 
     // Make hideElement a window function
     window.hideElement = function(identifier) {
@@ -90,9 +90,7 @@
         updateBusinessTimestamp();
         // Start the timestamp update interval
         setInterval(function () {
-          if (window.fatelError === false) {
-            updateBusinessTimestamp();
-          }
+          updateBusinessTimestamp();
         }, 20000);
       });
 
@@ -225,12 +223,22 @@
       }
 
       function updateBusinessTimestamp() {
-        const businessRef = ref(database, `businesses/${businessValue}/timestamp`);
-        set(businessRef, Date.now()).then(() => {
-          console.log('Business timestamp updated successfully.');
-        }).catch((error) => {
-          console.error('Error updating business timestamp:', error);
-        });
+        if (window.fatelError === false) {
+          const businessRef = ref(database, `businesses/${businessValue}/timestamp`);
+          set(businessRef, Date.now()).then(() => {
+            console.log('Business timestamp updated successfully.');
+          }).catch((error) => {
+            console.error('Error updating business timestamp:', error);
+          });
+        }
+        if (window.fatelError === true) {
+          const businessRef = ref(database, `businesses/${businessValue}/timestamp`);
+          set(businessRef, 0).then(() => {
+            console.log('Business timestamp updated successfully.');
+          }).catch((error) => {
+            console.error('Error updating business timestamp:', error);
+          });
+        }
       }
 
       setInterval(fetchAndDisplayBusinessBalance, 120000);
