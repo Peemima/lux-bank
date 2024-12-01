@@ -74,7 +74,7 @@
       fetchAndDisplayUsers();
     });
 
-function fetchAndDisplayUsers(query = "") {
+function fetchAndDisplayUsers(query) {
   get(ref(database, 'users')).then((snapshot) => {
     if (snapshot.exists() && Object.keys(snapshot.val()).length > 0) {
       const users = snapshot.val();
