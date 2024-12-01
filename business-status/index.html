@@ -72,115 +72,108 @@
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js" defer></script>
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js" defer></script>
   <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-    import { getDatabase, ref, get, set, onValue } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
-    
-    const firebaseConfig = {
-      apiKey: "AIzaSyASd5JOikXTlRp8eA2j_26Z1NWatZMjZds",
-      authDomain: "lux-bank.firebaseapp.com",
-      databaseURL: "https://lux-bank-default-rtdb.firebaseio.com",
-      projectId: "lux-bank",
-      storageBucket: "lux-bank.appspot.com",
-      messagingSenderId: "764922032293",
-      appId: "1:764922032293:web:573599b6116f025ee15d4c",
-      measurementId: "G-JQ7CWEJS9N"
-    };
-    
-    const app = initializeApp(firebaseConfig);
-    const database = getDatabase(app);
-    const businessRef = ref(database, 'businesses');
-    
-    const businessGrid = document.getElementById("businessGrid");
-    
-    function fetchAndDisplayBusinesses() {
-      onValue(businessRef, (snapshot) => {
-        if (snapshot.exists()) {
-          const businesses = snapshot.val();
-          businessGrid.innerHTML = '';
-    
-          for (const businessKey in businesses) {
-            const businessData = businesses[businessKey];
-            const gridItem = createGridItem(businessKey, businessData);
-            businessGrid.appendChild(gridItem);
-          }
-        } else {
-          console.error('No businesses found in the database.');
-        }
-      }, {
-        onlyOnce: false 
-      }).catch((error) => {
-        console.error('Error fetching business data:', error);
-      });
-    }
-    
-    function createGridItem(businessKey, businessData) {
-      const gridItem = document.createElement("div");
-      gridItem.classList.add("grid-item");
-      gridItem.id = `business-${businessKey}`;
-    
-      const timestamp = businessData.timestamp || 0;
-      const now = Date.now();
-      const timeDiff = now - timestamp;
-    
-      let statusClass = "";
-      let statusText = "";
-    
-      if (timestamp === 0) {
-        statusClass = "error";
-        statusText = "Error";
-      } else if (timestamp === 1) {
-        statusClass = "nothere";
-        statusText = "Not here";
-      } else if (timeDiff <= 21000) {
-        statusClass = "online";
-        statusText = "Online";
-      } else {
-        statusClass = "offline";
-        statusText = "Offline";
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+import { getDatabase, ref, get, set, onValue } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyASd5JOikXTlRp8eA2j_26Z1NWatZMjZds",
+  authDomain: "lux-bank.firebaseapp.com",
+  databaseURL: "https://lux-bank-default-rtdb.firebaseio.com",
+  projectId: "lux-bank",
+  storageBucket: "lux-bank.appspot.com",
+  messagingSenderId: "764922032293",
+  appId: "1:764922032293:web:573599b6116f025ee15d4c",
+  measurementId: "G-JQ7CWEJS9N"
+};
+
+const app = initializeApp(firebaseConfig);
+const database = getDatabase(app);
+const businessRef = ref(database, 'businesses');
+
+const businessGrid = document.getElementById("businessGrid");
+
+function fetchAndDisplayBusinesses() {
+  onValue(businessRef, (snapshot) => {
+    if (snapshot.exists()) {
+      const businesses = snapshot.val();
+      businessGrid.innerHTML = '';
+
+      for (const businessKey in businesses) {
+        const businessData = businesses[businessKey];
+        const gridItem = createGridItem(businessKey, businessData);
+        businessGrid.appendChild(gridItem);
       }
-    
-      gridItem.classList.add(statusClass);
-      gridItem.innerHTML = `
-        <h3>${businessKey}</h3>
-        <p>Balance: $${businessData.balance}</p>
-        <p>Status: ${statusText}</p>
-      `;
-    
-      gridItem.addEventListener('click', () => {
-        showPopup(businessKey, businessData);
-      });
-    
-      return gridItem;
+    } else {
+      console.error('No businesses found in the database.');
     }
-    
-    function showPopup(businessKey, businessData) {
-      const popup = document.createElement('div');
-      popup.classList.add('popup');
-      popup.innerHTML = `
-        <h2>${businessKey} Details</h2>
-        <p>Balance: $${businessData.balance}</p>
-        <p>Status: ${businessData.timestamp === 1 ? 'Not here' : (businessData.timestamp === 0 ? 'Error' : 'Online/Offline')}</p>
-        <button class="close-popup">Close</button>
-        <button class="toggle-status">Toggle "Not Here"</button>
-      `;
-    
-      popup.querySelector('.close-popup').addEventListener('click', () => {
-        popup.remove();
-      });
-    
-      popup.querySelector('.toggle-status').addEventListener('click', () => {
-        const newTimestamp = businessData.timestamp === 1 ? Date.now() : 1;
-        set(ref(database, `businesses/${businessKey}/timestamp`), newTimestamp);
-        popup.querySelector('p:nth-child(3)').textContent = `Status: ${newTimestamp === 1 ? 'Not here' : 'Online/Offline'}`; //update status in popup
-    
-      });
-    
-      document.body.appendChild(popup);
-    }
-    
-    
-    setInterval(fetchAndDisplayBusinesses, 19000);
-    document.addEventListener("DOMContentLoaded", fetchAndDisplayBusinesses);
+  }, {
+    onlyOnce: false
+  }).catch((error) => {
+    console.error('Error fetching business data:', error);
+  });
+}
+
+function createGridItem(businessKey, businessData) {
+  const gridItem = document.createElement("div");
+  gridItem.classList.add("grid-item");
+  gridItem.id = `business-${businessKey}`;
+
+  const timestamp = businessData.timestamp || 0;
+  const now = Date.now();
+  const timeDiff = now - timestamp;
+
+  let statusClass = "";
+  let statusText = "";
+
+  if (timestamp === 0) {
+    statusClass = "error";
+    statusText = "Error";
+  } else if (timestamp === 1) {
+    statusClass = "nothere";
+    statusText = "Not here";
+  } else if (timeDiff <= 21000) {
+    statusClass = "online";
+    statusText = "Online";
+  } else {
+    statusClass = "offline";
+    statusText = "Offline";
+  }
+
+  gridItem.classList.add(statusClass);
+  gridItem.innerHTML = `
+    <h3>${businessKey}</h3>
+    <p>Balance: $${businessData.balance}</p>
+    <p>Status: ${statusText}</p>
+    <div class="popup" style="display:none;">  <!-- Initially hidden -->
+      <h2>${businessKey} Details</h2>
+      <p>Balance: $${businessData.balance}</p>
+      <p>Status: ${businessData.timestamp === 1 ? 'Not here' : (businessData.timestamp === 0 ? 'Error' : 'Online/Offline')}</p>
+      <button class="close-popup">Close</button>
+      <button class="toggle-status">Toggle "Not Here"</button>
+    </div>
+  `;
+
+  const popup = gridItem.querySelector('.popup');
+  gridItem.addEventListener('click', () => {
+    popup.style.display = popup.style.display === 'none' ? 'block' : 'none';
+  });
+
+  popup.querySelector('.close-popup').addEventListener('click', () => {
+    popup.style.display = 'none';
+  });
+
+  popup.querySelector('.toggle-status').addEventListener('click', () => {
+    const newTimestamp = businessData.timestamp === 1 ? Date.now() : 1;
+    set(ref(database, `businesses/${businessKey}/timestamp`), newTimestamp);
+    popup.querySelector('p:nth-child(3)').textContent = `Status: ${newTimestamp === 1 ? 'Not here' : 'Online/Offline'}`; 
+    popup.style.display = 'none'; // Close popup after toggling
+  });
+
+  return gridItem;
+}
+
+setInterval(fetchAndDisplayBusinesses, 19000);
+document.addEventListener("DOMContentLoaded", fetchAndDisplayBusinesses);
   </script>
 </head>
 <body>
