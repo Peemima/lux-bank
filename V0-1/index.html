@@ -78,8 +78,14 @@ function fetchAndDisplayUsers(query = "") {
   get(ref(database, 'users')).then((snapshot) => {
     if (snapshot.exists() && Object.keys(snapshot.val()).length > 0) {
       const users = snapshot.val();
-      let content = "", userKeys = Object.keys(users).filter(key => key.toLowerCase().includes(query));
-      if (userKeys.length === 0) { // No user matches the search query
+      let content = "";
+      // Filter users based on grade and query
+      let userKeys = Object.keys(users)
+        .filter(key => users[key].grade === "p") // Filter by grade: "p"
+        .filter(key => key.toLowerCase().includes(query)); //Filter by search query
+
+
+      if (userKeys.length === 0) {
         document.getElementById("allUsers").innerHTML = `<div class="user-info"><p class="list-name">No matching users found.</p><button class="fill-button" style="cursor: not-allowed;" disabled onclick="addUser('${query}', 0)">Add ${query}</button></div>`;
       } else {
         userKeys.forEach((key, index) => {
@@ -96,7 +102,6 @@ function fetchAndDisplayUsers(query = "") {
         document.getElementById("allUsers").innerHTML = content;
       }
     } else {
-      // Adjust here for no users at all in the database
       document.getElementById("allUsers").innerHTML = `<div class="user-info"><p class="list-name">No users found.</p><button style="cursor: not-allowed;" disabled class="fill-button">Search to Add Users</button></div>`;
     }
   }).catch((error) => {
