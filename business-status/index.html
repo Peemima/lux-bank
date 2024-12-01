@@ -145,10 +145,6 @@ function createGridItem(businessKey, businessData) {
     popup.style.display = popup.style.display === 'none' ? 'block' : 'none';
   });
 
-  popup.querySelector('.close-popup').addEventListener('click', () => {
-    popup.style.display = 'none';
-  });
-
   popup.querySelector('.toggle-status').addEventListener('click', () => {
     const newTimestamp = businessData.timestamp === 1 ? Date.now() : 1;
     set(ref(database, `businesses/${businessKey}/timestamp`), newTimestamp);
