@@ -133,7 +133,7 @@ function createGridItem(businessKey, businessData) {
     <p>Balance: $${businessData.balance}</p>
     <p>Status: ${statusText}</p>
     <div class="popup" style="display:none;">  <!-- Initially hidden -->
-      <h2>${businessKey} Details</h2>
+      <h3>${businessKey}</h3>
       <p>Balance: $${businessData.balance}</p>
       <p>Status: ${businessData.timestamp === 1 ? 'Not here' : (businessData.timestamp === 0 ? 'Error' : 'Online/Offline')}</p>
       <button class="close-popup">Close</button>
