@@ -3,14 +3,14 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Market Day Business Dashboard</title>
+  <title>Market Day Business Status</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
   <script src="https://peemima.github.io/lux-bank/assets/loading-screen.js"></script>
   <noscript>
     <h1>js_err_noscrpt_popup</h1>
     <p>A wild error popped out of nowhere!</p>
     <p>Tell Ian F about it immediately.</p>
-    <br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br>
+    <br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br>
   </noscript>
   <link rel="stylesheet" href="https://peemima.github.io/lux-bank/assets/styles.css">
   <style>
@@ -39,6 +39,10 @@
 
     .offline {
       background-color: lightcoral;
+    }
+
+    .error {
+      background-color: orange;
     }
 
     h3 {
@@ -82,18 +86,27 @@
             const gridItem = document.createElement("div");
             gridItem.classList.add("grid-item");
 
-            // Check online/offline status
+            // Check online/offline status and handle timestamp 0
+            const timestamp = businessData.timestamp || 0; // Handle undefined timestamps
             const now = Date.now();
-            const timeDiff = now - businessData.timestamp;
-            if (timeDiff <= 21000) { // Within 21 seconds
-              gridItem.classList.add("online"); 
+            const timeDiff = now - timestamp;
+
+            if (timestamp === 0) {
+              gridItem.classList.add("error");
+              gridItem.innerHTML = `
+                <h3>${businessKey}</h3>
+                <p>Balance: $${businessData.balance}</p>
+                <p>Status: Error</p>
+              `;
+            } else if (timeDiff <= 21000) { // Within 21 seconds
+              gridItem.classList.add("online");
               gridItem.innerHTML = `
                 <h3>${businessKey}</h3>
                 <p>Balance: $${businessData.balance}</p>
                 <p>Status: Online</p>
               `;
             } else { // Offline
-              gridItem.classList.add("offline"); 
+              gridItem.classList.add("offline");
               gridItem.innerHTML = `
                 <h3>${businessKey}</h3>
                 <p>Balance: $${businessData.balance}</p>
