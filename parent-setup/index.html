@@ -293,7 +293,7 @@ function fetchAndDisplayUsers(query) {
 
 
       if (userKeys.length === 0) {
-        document.getElementById("allUsers").innerHTML = `<div class="user-info"><p class="list-name">No matching parent found.</p></div>`;
+        document.getElementById("allUsers").innerHTML = `<div class="user-info"><p class="list-name">No parents found.</p><button onClick="resetSearch(); document.getElementById('adduserfirstname').focus();" class="fill-button">Add new parent</button></div>`;
       } else {
         userKeys.forEach((key, index) => {
           let positionClass = 'user-middle';
@@ -310,7 +310,7 @@ function fetchAndDisplayUsers(query) {
         document.getElementById("allUsers").innerHTML = content;
       }
     } else {
-      document.getElementById("allUsers").innerHTML = `<div class="user-info"><p class="list-name">No users found.</p><button onClick="document.getElementById('adduserfirstname').focus();" class="fill-button">Add new parent</button></div>`;
+      document.getElementById("allUsers").innerHTML = `<div class="user-info"><p class="list-name">No parents found.</p><button onClick="resetSearch(); document.getElementById('adduserfirstname').focus();" class="fill-button">Add new parent</button></div>`;
     }
   }).catch((error) => {
     console.error("Error fetching users: ", error);
@@ -414,10 +414,13 @@ document.addEventListener('DOMContentLoaded', () => {
   resetButton.style.display = 'inline-block'; // Show the button
 
   resetButton.addEventListener('click', () => {
+    resetSearch();
+  });
+  window.resetSearch = function() {
     searchInput.value = ''; // Clear the search input
     currentSearchQuery = ''; // Reset the search query
     fetchAndDisplayUsers(''); // Refresh the user list
-  });
+  }
 });
 
   </script>
@@ -435,6 +438,7 @@ document.addEventListener('DOMContentLoaded', () => {
     <input type="number" id="adduserbalance" placeholder="Balance..." style="display: none;">
     <p id="form-instructions">Press space to enter last name</p>
   </form>
+  <br><br><br><br>
   <form id="searchForm">
     <input type="text" id="searchInput" placeholder="Search users...">
     <button class="fill-button" type="submit">Search</button>
