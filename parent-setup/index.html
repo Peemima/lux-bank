@@ -263,6 +263,164 @@ document.body.appendChild(buttonContainer);
 beBackSoonButton.style.display = 'none';
 iAmBackButton.style.display = 'none'; 
 
+        let currentSearchQuery = ''; 
+
+    document.addEventListener("DOMContentLoaded", function() {
+    const searchForm = document.getElementById("searchForm");
+    searchForm.addEventListener("submit", function(event) {
+        event.preventDefault(); 
+        currentSearchQuery = document.getElementById("searchInput").value.toLowerCase(); 
+        fetchAndDisplayUsers(currentSearchQuery); 
+    });
+});
+
+    document.addEventListener("DOMContentLoaded", function() {
+      const searchForm = document.getElementById("searchForm");
+      searchForm.addEventListener("submit", function(event) {
+    event.preventDefault();
+});    });
+fetchAndDisplayUsers('');
+
+    
+function fetchAndDisplayUsers(query) {
+  get(ref(database, 'users')).then((snapshot) => {
+    if (snapshot.exists() && Object.keys(snapshot.val()).length > 0) {
+      const users = snapshot.val();
+      let content = "";
+      
+      let userKeys = Object.keys(users)
+        .filter(key => users[key].grade === "p") 
+        .filter(key => key.toLowerCase().includes(query)); 
+
+
+      if (userKeys.length === 0) {
+        document.getElementById("allUsers").innerHTML = `<div class="user-info"><p class="list-name">No matching parent found.</p></div>`;
+      } else {
+        userKeys.forEach((key, index) => {
+          let positionClass = 'user-middle';
+          if(userKeys.length === 1) {
+            positionClass = 'only-user';
+          } else if(index === 0){
+            positionClass = 'user-top';
+          } else if(index === userKeys.length - 1){
+            positionClass = 'user-bottom';
+          }
+          content += `<div class="${positionClass}"><p class="list-name">${key}: $${users[key].balance}</p><button class="fill-button" onclick="openModal('${key}')">Select</button></div>`;
+        });
+        document.getElementById("allUsers").innerHTML = content;
+      }
+    } else {
+      document.getElementById("allUsers").innerHTML = `<div class="user-info"><p class="list-name">No users found.</p><button style="cursor: not-allowed;" disabled class="fill-button">Search to Add Users</button></div>`;
+    }
+  }).catch((error) => {
+    console.error("Error fetching users: ", error);
+    document.getElementById("allUsers").innerText = 'Err_fetching_users: A wild error apeared! Contact Ian F *immediately*';
+  });
+}
+    
+    let selectedUserKey = ''; 
+
+window.openModal = function(userKey) {
+  selectedUserKey = userKey; 
+  document.getElementById('userModal').style.display = 'block'; 
+  document.getElementById('modal-header').innerText = selectedUserKey;
+  document.getElementById('amountInput').focus();
+};
+
+document.querySelector('.close').addEventListener('click', function() {
+  document.getElementById('userModal').style.display = 'none';
+}); 
+
+window.addAmount = function() {
+  const amount = Number(document.getElementById('amountInput').value);
+  updateUserBalance(selectedUserKey, amount); 
+};
+
+document.getElementById('amountInput').addEventListener('input', function(e) {
+  const validValue = this.value.replace(/[^0-9]/g, '');
+  
+  if (this.value !== validValue) {
+    this.value = validValue;
+    this.classList.add('jiggle');
+    setTimeout(() => {
+      this.classList.remove('jiggle');
+    }, 500);
+  }
+});
+
+
+function updateUserBalance(userKey, amount) {
+    const userRef = ref(database, 'users/' + userKey);
+
+    get(userRef).then((snapshot) => {
+        if (snapshot.exists()) {
+            const userData = snapshot.val();
+            // Convert balance and amount to numbers, handling potential errors
+            let currentBalance = parseFloat(userData.balance);
+            let amountNum = parseFloat(amount);
+
+
+            if (isNaN(currentBalance) || isNaN(amountNum)) {
+                console.error("Invalid balance or amount.  Could not convert to numbers.");
+                return; // Stop execution if conversion fails
+            }
+
+            let newBalance = currentBalance + amountNum; 
+
+            set(ref(database, 'users/' + userKey + '/balance'), newBalance).then(() => {
+                console.log('User balance updated successfully.');
+                logTransaction(userKey, amountNum, newBalance); // Pass the numeric amount
+                document.getElementById('userModal').style.display = 'none'; 
+            }).catch((error) => {
+                console.error('Error updating user balance:', error);
+            });
+        } else {
+            console.log('No user found with the key:', userKey);
+        }
+    }).catch((error) => {
+        console.error('Error fetching user data:', error);
+    });
+}
+
+function logTransaction(userKey, amount, newBalance) {
+    const transactionID = `trans_${Date.now()}_${Math.floor(Math.random() * 1000)}`; 
+
+    const transactionRef = ref(database, 'transactions/' + transactionID); 
+    
+    const transactionData = {
+        userKey: userKey,
+        amount: amount,
+        newBalance: newBalance,
+        business: "Parent Desk",
+        timestamp: Date.now()
+    };
+
+    set(transactionRef, transactionData)
+        .then(() => {
+            console.log('Transaction logged successfully.');
+        })
+        .catch((error) => {
+            console.error('Error logging transaction:', error);
+        });
+}
+
+setInterval(() => {
+  fetchAndDisplayUsers(currentSearchQuery); 
+}, 20000); 
+
+document.addEventListener('DOMContentLoaded', () => {
+  const resetButton = document.getElementById('resetButton');
+  const searchInput = document.getElementById('searchInput');
+
+  resetButton.style.display = 'inline-block'; // Show the button
+
+  resetButton.addEventListener('click', () => {
+    searchInput.value = ''; // Clear the search input
+    currentSearchQuery = ''; // Reset the search query
+    fetchAndDisplayUsers(''); // Refresh the user list
+  });
+});
+
   </script>
 </head>
 <body>
@@ -278,5 +436,18 @@ iAmBackButton.style.display = 'none';
     <input type="number" id="adduserbalance" placeholder="Balance..." style="display: none;">
     <p id="form-instructions">Press space to enter last name</p>
   </form>
+  <form id="searchForm">
+    <input type="text" id="searchInput" placeholder="Search users...">
+    <button class="fill-button" type="submit">Search</button>
+    <button id="resetButton" class="outline-button">Reset</button> </form>
+  <div id="allUsers" class="container"></div>
+  <div id="userModal" class="modal">
+  <div class="modal-content">
+    <span class="close">×</span>
+    <h2 id="modal-header" style="font-family: 'poppins';">Edit User Balance</h2>
+    <p>Transactions are measured in Hawkeyes</p>
+    <input type="text" id="amountInput" placeholder="Enter amount..." pattern="\d*">
+    <button class="fill-button" onclick="addAmount()">Add</button>
+  </div>
 </body>
 </html>
