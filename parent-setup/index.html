@@ -305,7 +305,7 @@ function fetchAndDisplayUsers(query) {
             positionClass = 'user-bottom';
           }
           // The fix is here:
-          content += `<div class="${positionClass}"><p class="list-name">${key}: ${users[key].balance}</p><button class="fill-button" onclick="openModal('${key}')">Select</button></div>`;
+          content += `<div class="${positionClass}"><p class="list-name">${key}: $${users[key].balance}</p><button class="fill-button" onclick="openModal('${key}')">Select</button></div>`;
         });
         document.getElementById("allUsers").innerHTML = content;
       }
@@ -432,6 +432,8 @@ document.addEventListener('DOMContentLoaded', () => {
   <span id="businessBalance" style="float: right; text-align: right;">Loading</span>
   </div>
 
+  <h1>Add a new parent</h1>
+
   <form id="adduserform">
     <input type="text" id="adduserfirstname" placeholder="First Name..." style="display: block;" oninput="this.value = capitalizeFirstLetter(this.value)">
     <input type="text" id="adduserlastname" placeholder="Last Name..." style="display: none;" oninput="this.value = capitalizeFirstLetter(this.value)">
@@ -439,6 +441,7 @@ document.addEventListener('DOMContentLoaded', () => {
     <p id="form-instructions">Press space to enter last name</p>
   </form>
   <br><br><br><br>
+  <h1>Manage Existing Parents</h1>
   <form id="searchForm">
     <input type="text" id="searchInput" placeholder="Search users...">
     <button class="fill-button" type="submit">Search</button>
