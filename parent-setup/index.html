@@ -304,7 +304,8 @@ function fetchAndDisplayUsers(query) {
           } else if(index === userKeys.length - 1){
             positionClass = 'user-bottom';
           }
-          content += `<div class="${positionClass}"><p class="list-name">${key}: $${users[key].balance}</p><button class="fill-button" onclick="openModal('${key}')">Select</button></div>`;
+          // The fix is here:
+          content += `<div class="${positionClass}"><p class="list-name">${key}: ${users[key].balance}</p><button class="fill-button" onclick="openModal('${key}')">Select</button></div>`;
         });
         document.getElementById("allUsers").innerHTML = content;
       }
@@ -316,7 +317,6 @@ function fetchAndDisplayUsers(query) {
     document.getElementById("allUsers").innerText = 'Err_fetching_users: A wild error apeared! Contact Ian F *immediately*';
   });
 }
-    
     let selectedUserKey = ''; 
 
 window.openModal = function(userKey) {
