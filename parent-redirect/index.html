@@ -50,7 +50,7 @@
           // Remove the old user entry (with the original name)
           remove(userRef).then(()=> {
             window.redirectUrl = `${window.location.origin}/lux-bank/parent-card/?id=${window.latestParentID}`;
-            window.location.href = window.redirectUrl;
+            // window.location.href = window.redirectUrl;
           })
         }).catch((error) => {
           console.error("Error updating user name:", error);
