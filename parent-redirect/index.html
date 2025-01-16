@@ -33,82 +33,78 @@
     const app = initializeApp(firebaseConfig);
     const database = getDatabase(app);
 
-    const latestParentRef = ref(database, 'latestParentID');
-    const usersRef = ref(database, 'users'); // Reference to the users node
+        const latestParentRef = ref(database, 'latestParentID');
+    const usersRef = ref(database, 'users');
+    const inputName = document.querySelector('.bottomselect');
+    const saveButton = document.querySelector('.bottom button');
 
-    window.saveName = function() {
-      const newName = document.querySelector('.bottomselect').value.trim(); // Get the entered name
+    // crucial!
+    let currentUserName = '';
 
-      if (newName !== "" && window.latestParentID) { 
-        const userRef = ref(database, `users/${window.userName}`); // Reference to the user using the ORIGINAL name
 
-        // Update the user's key (name) in the database
-        set(ref(database, `users/${newName}`), get(userRef).then((snapshot) => {
-            return snapshot.val();
-          })
-        ).then(() => {
-          // Remove the old user entry (with the original name)
-          remove(userRef).then(()=> {
-            window.redirectUrl = `${window.location.origin}/lux-bank/parent-card/?id=${window.latestParentID}`;
-            // window.location.href = window.redirectUrl;
-          })
-        }).catch((error) => {
-          console.error("Error updating user name:", error);
-          alert("There was a problem updating your name."); // Show an error message to the user
-        });
-      } else {
-          window.redirectUrl = `${window.location.origin}/lux-bank/parent-card/?id=${window.latestParentID}`;
-          window.location.href = window.redirectUrl;
-      }
-    };
-
-    get(latestParentRef).then((snapshot) => {
+      get(latestParentRef).then((snapshot) => {
       if (snapshot.exists()) {
         window.latestParentID = snapshot.val().id;
 
         if (latestParentID !== "0" && latestParentID !== "1") {
-          // Get the user data based on latestParentID
+
           get(usersRef).then((usersSnapshot) => {
             if (usersSnapshot.exists()) {
-              let userName = ""; // Initialize userName
-
               usersSnapshot.forEach((userSnapshot) => {
-                const user = userSnapshot.val();
-                if (user.id === latestParentID) {
-                  userName = userSnapshot.key; // Get the user's name (the key)
-                  return true; // Stop iterating once the user is found
+                if (userSnapshot.val().id === latestParentID) {
+                  currentUserName = userSnapshot.key;
+                  inputName.value = currentUserName; // set the input field value
+                  return true;
                 }
               });
-
-              // Set the input field value *after* getting the user name
-              document.querySelector('.bottomselect').value = userName;
-              window.userName = userName;
-
-
-              set(latestParentRef, { id: "0" })
-                .then(() => {
-                  const baseUrl = window.location.origin;
-                  window.redirectUrl = `${baseUrl}/lux-bank/parent-card/?id=${latestParentID}`;
-                  // window.location.href = redirectUrl;
-                })
-                .catch((error) => {
-                  console.error("Error resetting latest parent ID:", error);
-                });
-            } else {
-              console.log("No users found.");
+              // Handle case where user with ID isn't found:
+              if (!currentUserName) {
+                  console.error('User not found for ID', latestParentID)
+                  // Handle the situation gracefully.  Maybe display an error message.
+              }
             }
           }).catch((error) => {
-            console.error("Error fetching users:", error);
+              console.error("Error fetching users:", error);
           });
-
-        } else {
-          console.log("Latest parent ID is either 0 or 1. No redirection.");
         }
-      } else {
-        console.log("No latest parent ID found.");
       }
     }).catch((error) => {
       console.error("Error fetching latest parent ID:", error);
+    });
+
+
+    saveButton.addEventListener('click', () => {
+      const newUserName = inputName.value;
+
+      // only update if the name has changed
+      if (newUserName !== currentUserName) {
+        update(usersRef.child(currentUserName), { id: latestParentID})
+          .then(() => {
+            // Update in database, critical to use child.
+              set(ref(database, `users/${newUserName}`), {id: latestParentID})
+              .then(() => {
+                currentUserName = newUserName; // Update local copy
+                console.log("User name updated successfully.");
+
+                set(latestParentRef, { id: "0" })
+                  .then(() => {
+                      const baseUrl = window.location.origin;
+                      const redirectUrl = `${baseUrl}/lux-bank/parent-card/?id=${latestParentID}`;
+                      window.location.href = redirectUrl;
+                    })
+                  .catch((error) => {
+                      console.error("Error resetting latest parent ID:", error);
+                  });
+              }).catch((error) => {
+                console.error("Error updating user in database:", error);
+              });
+
+        }).catch((error) => {
+          console.error("Error updating user in database:", error);
+        });
+      } else {
+          console.log("No name change detected.");
+      }
     });
 
   </script>
