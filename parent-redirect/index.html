@@ -36,6 +36,32 @@
     const latestParentRef = ref(database, 'latestParentID');
     const usersRef = ref(database, 'users'); // Reference to the users node
 
+    window.saveName = function() {
+      const newName = document.querySelector('.bottomselect').value.trim(); // Get the entered name
+
+      if (newName !== "" && window.latestParentID) { 
+        const userRef = ref(database, `users/${window.userName}`); // Reference to the user using the ORIGINAL name
+
+        // Update the user's key (name) in the database
+        set(ref(database, `users/${newName}`), get(userRef).then((snapshot) => {
+            return snapshot.val();
+          })
+        ).then(() => {
+          // Remove the old user entry (with the original name)
+          remove(userRef).then(()=> {
+            window.redirectUrl = `${window.location.origin}/lux-bank/parent-card/?id=${window.latestParentID}`;
+            window.location.href = window.redirectUrl;
+          })
+        }).catch((error) => {
+          console.error("Error updating user name:", error);
+          alert("There was a problem updating your name."); // Show an error message to the user
+        });
+      } else {
+          window.redirectUrl = `${window.location.origin}/lux-bank/parent-card/?id=${window.latestParentID}`;
+          window.location.href = window.redirectUrl;
+      }
+    };
+
     get(latestParentRef).then((snapshot) => {
       if (snapshot.exists()) {
         window.latestParentID = snapshot.val().id;
@@ -56,6 +82,7 @@
 
               // Set the input field value *after* getting the user name
               document.querySelector('.bottomselect').value = userName;
+              window.userName = userName;
 
 
               set(latestParentRef, { id: "0" })
