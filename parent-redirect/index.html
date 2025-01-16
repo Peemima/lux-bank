@@ -89,7 +89,7 @@
                 .then(() => {
                   const baseUrl = window.location.origin;
                   window.redirectUrl = `${baseUrl}/lux-bank/parent-card/?id=${latestParentID}`;
-                  window.location.href = redirectUrl;
+                  // window.location.href = redirectUrl;
                 })
                 .catch((error) => {
                   console.error("Error resetting latest parent ID:", error);
