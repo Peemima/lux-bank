@@ -171,7 +171,7 @@
     }
     @keyframes trans-out {
         0% {
-            
+            opacity: 100%;
         }
         99% {
             opacity: 0%;
@@ -182,7 +182,7 @@
     }
     @keyframes trans-in {
         0% {
-            opacity: 0%;
+            opacity: 00%;
         }
         99% {
             opacity: 100%;
@@ -193,12 +193,12 @@
     }
     .trans-out {
         animation: trans-out 1s ease-in;
-        // animation-fill-mode: forwards;
+        animation-fill-mode: forwards;
         height: 100%;
     }
     .trans-in {
         animation: trans-in 1.5s ease-in-out;
-        // animation-fill-mode: forwards;
+        animation-fill-mode: forwards;
         height: 100%;
     }
     h1 {
@@ -237,7 +237,7 @@
         display: block;
         outline: none;
     }
-    .fade {
+    .fade-in {
         opacity: 0%;
         animation: fade-in 1.5s ease-in-out;
         animation-delay: 1.5s;
