@@ -57,12 +57,19 @@
               // Set the input field value *after* getting the user name
               document.querySelector('.bottomselect').value = userName;
 
-              const saveButton = document.querySelector('.outline-button');
+              const saveButton = document.querySelector('#namesave');
               saveButton.addEventListener('click', () => {
                   const step1 = document.getElementById("step1");
                   const step2 = document.getElementById("step2");
                   step1.classList.add('trans-out');
-                  step2.classList.add('trans-in');
+                
+                  setTimeout(() => {
+                    step1.style.display = 'none';
+                    step2.style.display = 'block';
+                    step2.classList.add('trans-in');
+                    document.querySelector('#animation').src = "https://peemima.github.io/lux-bank/assets/simple-parent-usercard.gif";
+                  }, 1500);
+          
                 const newName = document.querySelector('.bottomselect').value.trim(); // Trim whitespace
         
                 if (newName !== "" && newName !== userName) { // Check if name has changed and is not empty
@@ -173,19 +180,13 @@
         0% {
             opacity: 100%;
         }
-        99% {
-            opacity: 0%;
-        }
         100% {
-            display: none;
+            opacity: 0%;
         }
     }
     @keyframes trans-in {
         0% {
             opacity: 0%;
-        }
-        0% {
-            display: none;
         }
         100% {
             opacity: 100%;
@@ -245,6 +246,7 @@
     }
     #step2 {
         display: none;
+        animation-fill-mode: forwards;
     }
     .bottom {
         position: absolute;
@@ -274,7 +276,7 @@
         <div class="fade">
             <p>Let's get you ready to shop.<br>First, double check your name spelling.<br></p>
             <div class="bottom">
-                <input id="" class="bottomselect" placeholder="Full Name"><button class="outline-button">Save
+                <input id="" class="bottomselect" placeholder="Full Name"><button id="namesave" class="outline-button">Save
             </div>
         </div>
     </div>
@@ -282,9 +284,10 @@
         <h1>Scan, shop, & go</h1>
         <br>
         <div class="fade">
-            <p>Let's get you ready to shop.<br>First, double check your name spelling.<br></p>
+            <p>To buy things, scan the symbol in the middle of your screen. <br>Your hawkeye balance is shown in the top right corner.</p>
+            <img id="animation" src="https://peemima.github.io/lux-bank/assets/simple-parent-usercard.gif">
             <div class="bottom">
-                <input id="" class="bottomselect" placeholder="Full Name"><button class="outline-button">Save
+                <input id="" class="bottomselect" placeholder="Full Name"><button id="redirecter" class="outline-button">Save
             </div>
         </div>
     </div>
