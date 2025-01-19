@@ -144,6 +144,7 @@
     redbtn.addEventListener('click', () => {
         redcover.classList.add('fade');
         redcover.style.animationDelay = '0s';
+        redcover.style.display = 'flex';
         setTimeout(() => {
             window.location.href = redirectUrl;
         }, 1500);
