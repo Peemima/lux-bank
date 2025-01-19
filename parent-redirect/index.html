@@ -67,7 +67,6 @@
                     step1.style.display = 'none';
                     step2.style.display = 'block';
                     step2.classList.add('trans-in');
-                    document.querySelector('#animation').src = "https://peemima.github.io/lux-bank/assets/simple-parent-usercard.gif";
                   }, 1500);
           
                 const newName = document.querySelector('.bottomselect').value.trim(); // Trim whitespace
@@ -248,13 +247,10 @@
         display: none;
         animation-fill-mode: forwards;
     }
-    #animation {
-      width: 100%;
-    }
     .bottom {
         position: absolute;
         display: flex;
-        align-items: center;
+        align-items: right;
         bottom: 0;
         left: 0;
         width: 100%;
@@ -287,10 +283,9 @@
         <h1>Scan, shop, & go</h1>
         <br>
         <div class="fade">
-            <p>To buy things, scan the symbol in the middle of your screen. <br>Your hawkeye balance is shown in the top right corner.</p>
-            <img id="animation" src="https://peemima.github.io/lux-bank/assets/simple-parent-usercard.gif">
+            <p>To buy things, scan the symbol in the middle of your screen. <br><br>Your hawkeye balance is shown in the top right corner.<br><br></p>
             <div class="bottom">
-                <input id="" class="bottomselect" placeholder="Full Name"><button id="redirecter" class="outline-button">Save
+                <button id="redirecter" class="outline-button">Finish
             </div>
         </div>
     </div>
