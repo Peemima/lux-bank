@@ -13,6 +13,7 @@
     <br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br>
   </noscript>
   <link rel="stylesheet" href="https://peemima.github.io/lux-bank/assets/styles.css">
+  <link rel="stylesheet" href="https://peemima.github.io/lux-bank/assets/popup-code.js">
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js" defer></script>
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js" defer></script>
   <script type="module">
@@ -116,7 +117,6 @@
                 .then(() => {
                   const baseUrl = window.location.origin;
                   window.redirectUrl = `${baseUrl}/lux-bank/parent-card/?id=${latestParentID}`;
-                  // window.location.href = redirectUrl;
                 })
                 .catch((error) => {
                   console.error("Error resetting latest parent ID:", error);
@@ -137,6 +137,17 @@
     }).catch((error) => {
       console.error("Error fetching latest parent ID:", error);
     });
+    
+    const redcover = document.querySelector('#cover');
+    const redbtn = document.querySelector('#redirecter');
+    
+    redbtn.addEventListener('click', () => {
+        redcover.classList.add('fade');
+        redcover.style.animationDelay = '0s';
+        setTimeout(() => {
+            window.location.href = redirectUrl;
+        }, 1500);
+    }
 
   </script>
   <style>
@@ -242,6 +253,7 @@
         animation: fade-in 1.5s ease-in-out;
         animation-delay: 1.5s;
         animation-fill-mode: forwards;
+        display: flex;
     }
     #step2 {
         display: none;
@@ -266,16 +278,27 @@
         height: 48px; /* Match input height */
         border-radius: 20px; /* Match input border radius */
     }
+    #cover {
+      width: 100%;
+      height: 100%;
+      z-index: 100;
+      position: absolute;
+      top: 0;
+      left: 0;
+      background-color: #FBFCFF;
+      display: none;
+    }
   </style>
 </head>
 <body>
+    <div id="cover"></div>
     <div id="step1">
         <h1>We're glad<br> you're here.</h1>
         <br>
         <div class="fade">
             <p>Let's get you ready to shop.<br>First, double check your name spelling.<br></p>
             <div class="bottom">
-                <input id="" class="bottomselect" placeholder="Full Name"><button id="namesave" class="outline-button">Save
+                <input id="" class="bottomselect" placeholder="Full Name"><button id="namesave" class="outline-button">Confirm
             </div>
         </div>
     </div>
