@@ -4,7 +4,6 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>One More Step</title>
-  <meta name="theme-color" content="#c0f0fb" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
   <noscript>
     <h1>js_err_noscrpt_popup</h1>
@@ -145,6 +144,7 @@
         redcover.classList.add('fade');
         redcover.style.animationDelay = '0s';
         redcover.style.display = 'flex';
+        document.body.style.backgroundColor = '#FBFCFF';
         setTimeout(() => {
             window.location.href = redirectUrl;
         }, 1500);
@@ -156,6 +156,7 @@
         height: 100%;
     }
     body {
+        transition: 1.5s;
         background-color: #c0f0fb;
         color: black;
         padding: 20px;
