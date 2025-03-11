@@ -67,7 +67,7 @@
                     step1.style.display = 'none';
                     step2.style.display = 'block';
                     step2.classList.add('trans-in');
-                  }, 1500);
+                  }, 500);
           
                 const newName = document.querySelector('.bottomselect').value.trim(); // Trim whitespace
         
@@ -89,7 +89,6 @@
                           document.getElementById("parentName").textContent = newName; // Update name on the parent card page
                         }
                         userName = newName; // Update userName locally
-                        alert('Your name has been updated!');
                     })
                     .catch((error) => {
                       console.error("Error creating new user node:", error);
@@ -106,7 +105,6 @@
         
         
                 } else if (newName === "") {
-                  alert("Name cannot be empty."); // Inform the user if they try to save an empty name
                 }
         
               });
@@ -147,7 +145,7 @@
         document.body.style.backgroundColor = '#FBFCFF';
         setTimeout(() => {
             window.location.href = redirectUrl;
-        }, 1500);
+        }, 500);
     });
 
   </script>
@@ -156,7 +154,7 @@
         height: 100%;
     }
     body {
-        transition: 1.5s;
+        transition: 0.5s;
         background-color: #c0f0fb;
         color: black;
         padding: 20px;
