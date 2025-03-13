@@ -48,7 +48,7 @@
 
               usersSnapshot.forEach((userSnapshot) => {
                 const user = userSnapshot.val();
-                if (user.id === latestParentID) {
+                if (user.id == latestParentID) {
                   userName = userSnapshot.key; // Get the user's name (the key)
                   document.querySelector('.bottomselect').value = userName;
                   return true; // Stop iterating once the user is found
