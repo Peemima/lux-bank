@@ -18,7 +18,7 @@
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
     import { getDatabase, ref, get, set } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
-
+  
     const firebaseConfig = {
       apiKey: "AIzaSyASd5JOikXTlRp8eA2j_26Z1NWatZMjZds",
       authDomain: "lux-bank.firebaseapp.com",
@@ -29,75 +29,84 @@
       appId: "1:764922032293:web:573599b6116f025ee15d4c",
       measurementId: "G-JQ7CWEJS9N"
     };
-
+  
     const app = initializeApp(firebaseConfig);
     const database = getDatabase(app);
-
+  
     const latestParentRef = ref(database, 'latestParentID');
     const usersRef = ref(database, 'users'); // Reference to the users node
-
+  
     get(latestParentRef).then((snapshot) => {
       if (snapshot.exists()) {
         window.latestParentID = snapshot.val().id;
-    
+  
         if (latestParentID !== "0" && latestParentID !== "1") {
+          // Get the user data based on latestParentID
           get(usersRef).then((usersSnapshot) => {
             if (usersSnapshot.exists()) {
-              let userName = "";
-              let userObject = null; 
-    
+              let userName = ""; // Initialize userName
+  
               usersSnapshot.forEach((userSnapshot) => {
                 const user = userSnapshot.val();
                 if (user.id == latestParentID) {
-                  userName = user.name || userSnapshot.key; 
-                  userObject = user; 
-                  return true;
+                  userName = userSnapshot.key; // Get the user's name (the key)
+                  document.querySelector('.bottomselect').value = userName;
+                  return true; // Stop iterating once the user is found
                 }
               });
-    
-              if (userName === "") {
-                console.error("User not found with ID:", latestParentID);
-                return; 
-              }
-    
-              document.querySelector('.bottomselect').value = userName;
-    
-              const saveButton = document.getElementById('namesave');
+  
+              const saveButton = document.querySelector('#namesave');
               saveButton.addEventListener('click', () => {
-                const newName = document.querySelector('.bottomselect').value.trim();
-    
-                if (newName !== "" && newName !== userName) {
-                  const userRef = ref(database, `users/${userName}`);
-                  set(userRef, {...userObject, name: newName})
+                const step1 = document.getElementById("step1");
+                const step2 = document.getElementById("step2");
+                step1.classList.add('trans-out');
+                
+                setTimeout(() => {
+                  step1.style.display = 'none';
+                  step2.style.display = 'block';
+                  step2.classList.add('trans-in');
+                }, 1500);
+        
+                const newName = document.querySelector('.bottomselect').value.trim(); // Trim whitespace
+        
+                if (newName !== "" && newName !== userName) { // Check if name has changed and is not empty
+                  // Update the user's name in the database
+                  const userRef = ref(database, `users/${userName}`); 
+          
+                  // Remove the old user node
+                  set(userRef, null)
                     .then(() => {
-                      if (window.location.href.includes("parent-card")) {
-                        document.getElementById("parentName").textContent = newName;
-                      }
-                      userName = newName;
+                      console.log("Removed old name node")
+          
+                      const newUserRef = ref(database, `users/${newName}`);
+                      const userObj = usersSnapshot.child(userName).val();
+          
+                      set(newUserRef, userObj).then(() => {
+                        // Update the parent card display immediately if on parent-card page
+                        if (window.location.href.includes("parent-card")) {
+                          document.getElementById("parentName").textContent = newName; // Update name on the parent card page
+                        }
+                        userName = newName; // Update userName locally
+                      })
+                      .catch((error) => {
+                        console.error("Error creating new user node:", error);
+                        alert("Failed to update name."); // Inform the user
+                      });
+                      
                     })
                     .catch((error) => {
-                      console.error("Error updating user:", error);
-                      alert("Failed to update name.");
+                      console.error("Error removing old user node:", error);
+                      alert("Failed to update name."); // Inform the user
                     });
-    
+          
                 } else if (newName === "") {
-                  alert("Name cannot be empty.");
+                  alert("Name cannot be empty."); // Inform the user if they try to save an empty name
                 }
               });
-    
-              set(latestParentRef, { id: "0" })
-                .then(() => {
-                  const baseUrl = window.location.origin;
-                  window.redirectUrl = `${baseUrl}/lux-bank/parent-card/?id=${latestParentID}`;
-                })
-                .catch((error) => {
-                  console.error("Error resetting latest parent ID:", error);
-                });
             } else {
               console.log("No users found.");
             }
-          })
-          .catch((error) => {
+          }).catch((error) => {
             console.error("Error fetching users:", error);
           });
         } else {
@@ -119,12 +128,22 @@
         redcover.style.animationSpeed = '0.5s';
         redcover.style.display = 'flex';
         document.body.style.backgroundColor = '#FBFCFF';
-        setTimeout(() => {
-            window.location.href = redirectUrl;
-        }, 500);
+        
+        // Now that the UI has been updated and the user's name is in place, reset latestParentID.
+        set(latestParentRef, { id: "0" })
+          .then(() => {
+            const baseUrl = window.location.origin;
+            window.redirectUrl = `${baseUrl}/lux-bank/parent-card/?id=${latestParentID}`;
+            setTimeout(() => {
+                window.location.href = redirectUrl;
+            }, 500);
+          })
+          .catch((error) => {
+            console.error("Error resetting latest parent ID:", error);
+          });
     });
-
-  </script>
+  
+  </script>  
   <style>
     html {
         height: 100%;
@@ -274,7 +293,7 @@
         <div class="fade">
             <p>Let's get you ready to shop.<br>First, double check your name spelling.<br></p>
             <div class="bottom">
-                <input id="" class="bottomselect" placeholder="Full Name"><button id="namesave" class="outline-button">Confirm
+                <input class="bottomselect" placeholder="Full Name"><button id="namesave" class="outline-button">Confirm
             </div>
         </div>
     </div>
