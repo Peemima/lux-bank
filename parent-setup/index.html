@@ -423,7 +423,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 });
 
-function replaceQR() {
+window.replaceQR = function() {
   const userRef = ref(database, 'users/' + selectedUserKey);
   
   get(userRef).then((snapshot) => {
