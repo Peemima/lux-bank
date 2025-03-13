@@ -12,7 +12,7 @@
     <p>Tell Ian F about it immediately.</p>
     <br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br>
   </noscript>
-<link rel="stylesheet" href="/lux-bank/assets/styles.css">
+<link rel="stylesheet" href="https://peemima.github.io/lux-bank/assets/styles.css">
 
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js" defer></script>
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js" defer></script>
@@ -317,10 +317,11 @@ function fetchAndDisplayUsers(query) {
     document.getElementById("allUsers").innerText = 'Err_fetching_users: A wild error apeared! Contact Ian F *immediately*';
   });
 }
-    let selectedUserKey = ''; 
+    window.selectedUserKey = ''; 
 
 window.openModal = function(userKey) {
   window.selectedUserKey = userKey; 
+  console.log("openModal - selectedUserKey set to:", selectedUserKey); 
   document.getElementById('userModal').style.display = 'block'; 
   document.getElementById('modal-header').innerText = selectedUserKey;
   document.getElementById('amountInput').focus();
