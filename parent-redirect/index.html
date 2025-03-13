@@ -39,76 +39,52 @@
     get(latestParentRef).then((snapshot) => {
       if (snapshot.exists()) {
         window.latestParentID = snapshot.val().id;
-
+    
         if (latestParentID !== "0" && latestParentID !== "1") {
-          // Get the user data based on latestParentID
           get(usersRef).then((usersSnapshot) => {
             if (usersSnapshot.exists()) {
-              let userName = ""; // Initialize userName
-
+              let userName = "";
+              let userObject = null; 
+    
               usersSnapshot.forEach((userSnapshot) => {
                 const user = userSnapshot.val();
                 if (user.id == latestParentID) {
-                  userName = userSnapshot.key; // Get the user's name (the key)
-                  document.querySelector('.bottomselect').value = userName;
-                  return true; // Stop iterating once the user is found
+                  userName = user.name || userSnapshot.key; 
+                  userObject = user; 
+                  return true;
                 }
               });
-
-              const saveButton = document.querySelector('#namesave');
+    
+              if (userName === "") {
+                console.error("User not found with ID:", latestParentID);
+                return; 
+              }
+    
+              document.querySelector('.bottomselect').value = userName;
+    
+              const saveButton = document.getElementById('namesave');
               saveButton.addEventListener('click', () => {
-                  const step1 = document.getElementById("step1");
-                  const step2 = document.getElementById("step2");
-                  step1.classList.add('trans-out');
-                
-                  setTimeout(() => {
-                    step1.style.display = 'none';
-                    step2.style.display = 'block';
-                    step2.classList.add('trans-in');
-                  }, 1500);
-          
-                const newName = document.querySelector('.bottomselect').value.trim(); // Trim whitespace
-        
-                if (newName !== "" && newName !== userName) { // Check if name has changed and is not empty
-                  // Update the user's name in the database
-                  const userRef = ref(database, `users/${userName}`); // Reference to the specific user
-        
-                  //Remove the old user node
-                  set(userRef, null)
-                  .then(() => {
-                    console.log("Removed old name node")
-        
-                    const newUserRef = ref(database, `users/${newName}`);
-                    const userObj = usersSnapshot.child(userName).val()
-        
-                    set(newUserRef, userObj).then(() => {
-                      // Update the parent card display immediately if on parent-card page
-                        if (window.location.href.includes("parent-card")) {
-                          document.getElementById("parentName").textContent = newName; // Update name on the parent card page
-                        }
-                        userName = newName; // Update userName locally
+                const newName = document.querySelector('.bottomselect').value.trim();
+    
+                if (newName !== "" && newName !== userName) {
+                  const userRef = ref(database, `users/${userName}`);
+                  set(userRef, {...userObject, name: newName})
+                    .then(() => {
+                      if (window.location.href.includes("parent-card")) {
+                        document.getElementById("parentName").textContent = newName;
+                      }
+                      userName = newName;
                     })
                     .catch((error) => {
-                      console.error("Error creating new user node:", error);
-                      alert("Failed to update name."); // Inform the user
-                    });;
-        
-                  })
-                  .catch((error) => {
-                    console.error("Error removing old user node:", error);
-                    alert("Failed to update name."); // Inform the user
-                  });
-        
-        
-        
-        
+                      console.error("Error updating user:", error);
+                      alert("Failed to update name.");
+                    });
+    
                 } else if (newName === "") {
-                  alert("Name cannot be empty."); // Inform the user if they try to save an empty name
+                  alert("Name cannot be empty.");
                 }
-        
               });
-
-
+    
               set(latestParentRef, { id: "0" })
                 .then(() => {
                   const baseUrl = window.location.origin;
@@ -120,10 +96,10 @@
             } else {
               console.log("No users found.");
             }
-          }).catch((error) => {
+          })
+          .catch((error) => {
             console.error("Error fetching users:", error);
           });
-
         } else {
           console.log("Latest parent ID is either 0 or 1. No redirection.");
         }
