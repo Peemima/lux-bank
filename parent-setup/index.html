@@ -429,6 +429,7 @@ document.addEventListener('DOMContentLoaded', () => {
         id: selectedUserKey
       }).then(() => {
         console.log('Latest Parent Updated Succesfully.');
+        resetSearch();
         document.getElementById('userModal').style.display = 'none';
       }).catch((error) => {
       console.error('Error setting:', error); 
