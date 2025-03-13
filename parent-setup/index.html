@@ -321,7 +321,6 @@ function fetchAndDisplayUsers(query) {
 
 window.openModal = function(userKey) {
   window.selectedUserKey = userKey; 
-  console.log("openModal - selectedUserKey set to:", selectedUserKey); 
   document.getElementById('userModal').style.display = 'block'; 
   document.getElementById('modal-header').innerText = selectedUserKey;
   document.getElementById('amountInput').focus();
