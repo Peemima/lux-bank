@@ -423,19 +423,32 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 });
 
-    window.replaceQR = function() {
+function replaceQR() {
+  const userRef = ref(database, 'users/' + selectedUserKey);
+  
+  get(userRef).then((snapshot) => {
+    if (snapshot.exists()) {
+      const userData = snapshot.val();
+      const userId = userData.id; // Get the id from the user data
+      
       const latestParentRef = ref(database, 'latestParentID');
       set(latestParentRef, { 
-        id: selectedUserKey
+        id: userId // Set the latest parent ID to the user's ID
       }).then(() => {
-        console.log('Latest Parent Updated Succesfully.');
+        console.log('Latest Parent Updated Successfully.');
         resetSearch();
         document.getElementById('userModal').style.display = 'none';
       }).catch((error) => {
-      console.error('Error setting:', error); 
-        alert('Error, come get Ian F: '. error);
+        console.error('Error setting:', error); 
+        alert('Error, come get Ian F: ' + error);
       });
+    } else {
+      console.log('No user found with the key:', selectedUserKey);
     }
+  }).catch((error) => {
+    console.error('Error fetching user data:', error);
+  });
+}
   </script>
 </head>
 <body>
