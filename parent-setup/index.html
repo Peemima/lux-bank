@@ -320,7 +320,7 @@ function fetchAndDisplayUsers(query) {
     let selectedUserKey = ''; 
 
 window.openModal = function(userKey) {
-  selectedUserKey = userKey; 
+  window.selectedUserKey = userKey; 
   document.getElementById('userModal').style.display = 'block'; 
   document.getElementById('modal-header').innerText = selectedUserKey;
   document.getElementById('amountInput').focus();
@@ -423,6 +423,17 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 });
 
+    window.replaceQR = function() {
+      const latestParentRef = ref(database, 'latestParentID');
+      set(latestParentRef, { 
+        id: selectedUserKey
+      }).then(() => {
+        console.log('Latest Parent Updated Succesfully.');
+      }).catch((error) => {
+      console.error('Error setting:', error); 
+        alert('Error, come get Ian F: '. error);
+      });
+    }
   </script>
 </head>
 <body>
@@ -454,6 +465,7 @@ document.addEventListener('DOMContentLoaded', () => {
     <p>Transactions are measured in Hawkeyes</p>
     <input type="text" id="amountInput" placeholder="Enter amount..." pattern="\d*">
     <button class="fill-button" onclick="addAmount()">Add</button>
+    <button class="outline-button" onclick="replaceQR()">Replace QR</button>
   </div>
 </body>
 </html>
