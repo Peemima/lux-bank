@@ -50,12 +50,10 @@
                 const user = userSnapshot.val();
                 if (user.id === latestParentID) {
                   userName = userSnapshot.key; // Get the user's name (the key)
+                  document.querySelector('.bottomselect').value = userName;
                   return true; // Stop iterating once the user is found
                 }
               });
-
-              // Set the input field value *after* getting the user name
-              document.querySelector('.bottomselect').value = userName;
 
               const saveButton = document.querySelector('#namesave');
               saveButton.addEventListener('click', () => {
