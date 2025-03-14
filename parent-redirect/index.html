@@ -162,12 +162,14 @@
     }
     @keyframes magic-gradient {
         0% {
+            opacity: 0%;
             background-position: 100% 100%; /* Start from the end */
-            background-size: 2000000% 2000000%;
+            background-size: 1000% 1000%;
             transform: scale(1.02);
         }
         40% {
-            background-size: 2000% 2000%;
+            opacity: 100%;
+            background-size: 500% 500%;
         }
         90% {
             background-position: 0% 0%; /* Move to the start */
@@ -214,7 +216,7 @@
     }
     h1 {
         display: inline-block;
-        animation: magic-gradient 2s ease-in-out;
+        animation: magic-gradient 2.5s ease-in-out;
         animation-fill-mode: forwards;
         /* Flipped gradient */
         background: linear-gradient(130deg, rgba(82,113,255,1) 0%, rgba(158,69,255,1) 25%, rgba(56,182,255,1) 51%, rgba(192,240,251,1) 100%); 
@@ -306,7 +308,7 @@
         <h1>Scan, shop, & go</h1>
         <br>
         <div class="fade">
-            <p>To buy things, scan the symbol in the middle of your screen. <br><br>Your hawkeye balance is shown in the top right corner.<br><br></p>
+            <p>To buy things, scan the symbol in the middle of your screen. </p>
             <div class="bottom">
                 <button id="redirecter" class="outline-button">Finish
             </div>
