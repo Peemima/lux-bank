@@ -110,6 +110,7 @@ function createGridItem(businessKey, businessData) {
   const timeDiff = now - timestamp;
   let statusClass = "";
   let statusText = "";
+
   if (timestamp === 0) {
     statusClass = "error";
     statusText = "Error";
@@ -123,17 +124,39 @@ function createGridItem(businessKey, businessData) {
     statusClass = "offline";
     statusText = "Offline";
   }
+
   gridItem.classList.add(statusClass);
-  gridItem.innerHTML = ` <h3>${businessKey}</h3> <p>Balance: $${businessData.balance}</p> <p>Status: ${statusText}</p> <div class="popup" style="display:none;"> <!-- Initially hidden --> <button class="toggle-status">Toggle "Not Here"</button> </div> `;
+  gridItem.innerHTML = `
+    <h3>${businessKey}</h3>
+    <p>Balance: $${businessData.balance}</p>
+    <p>Status: ${statusText}</p>
+    <div class="popup" style="display:none;">
+      ${
+        statusClass === "error"
+          ? `<button class="fix-error">Fixed Error</button>`
+          : `<button class="toggle-status">Toggle "Not Here"</button>`
+      }
+    </div>
+  `;
+
   const popup = gridItem.querySelector(".popup");
   gridItem.addEventListener("click", () => {
     popup.style.display = popup.style.display === "none" ? "block" : "none";
   });
-  popup.querySelector(".toggle-status").addEventListener("click", () => {
-    const newTimestamp = businessData.timestamp === 1 ? Date.now() : 1;
-    set(ref(database, `businesses/${businessKey}/timestamp`), newTimestamp);
-    popup.querySelector("p:nth-child(3)").textContent = `Status: ${newTimestamp === 1 ? "Not here" : "Online/Offline"}`;
-  });
+
+  if (statusClass === "error") {
+    popup.querySelector(".fix-error").addEventListener("click", () => {
+      set(ref(database, `businesses/${businessKey}/timestamp`), Date.now());
+      popup.querySelector("p:nth-child(3)").textContent = "Status: Online";
+    });
+  } else {
+    popup.querySelector(".toggle-status").addEventListener("click", () => {
+      const newTimestamp = businessData.timestamp === 1 ? Date.now() : 1;
+      set(ref(database, `businesses/${businessKey}/timestamp`), newTimestamp);
+      popup.querySelector("p:nth-child(3)").textContent = `Status: ${newTimestamp === 1 ? "Not here" : "Online/Offline"}`;
+    });
+  }
+
   return gridItem;
 }
 
