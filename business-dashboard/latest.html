@@ -1,0 +1,14 @@
+<noscript>
+  JavaScript is not turned on. Please find Ian F to help fix this.
+</noscript>
+<script>
+  const baseURL = "https://peemima.github.io/lux-bank/business-dashboard/v2-1.html";
+  const urlParams = new URLSearchParams(window.location.search);
+  const paramsString = urlParams.toString();
+
+  if (paramsString) {
+    window.location.href = baseURL + "?" + paramsString;
+  } else {
+    window.location.href = baseURL;
+  }
+</script>
