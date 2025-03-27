@@ -112,19 +112,24 @@ function createGridItem(businessKey, businessData) {
 
   let statusClass = "";
   let statusText = "";
+  let buttonText = "";
 
   if (timestamp === 0) {
     statusClass = "error";
     statusText = "Error";
+    buttonText = "Error Fixed";
   } else if (timestamp === 1) {
     statusClass = "nothere";
     statusText = "Not here";
+    buttonText = "Toggle 'Not Here'";
   } else if (timeDiff <= 21000) {
     statusClass = "online";
     statusText = "Online";
+    buttonText = ""; // No button needed for 'Online' status.
   } else {
     statusClass = "offline";
     statusText = "Offline";
+    buttonText = ""; // No button needed for 'Offline' status.
   }
 
   gridItem.classList.add(statusClass);
@@ -133,7 +138,7 @@ function createGridItem(businessKey, businessData) {
     <p>Balance: $${businessData.balance}</p>
     <p>Status: ${statusText}</p>
     <div class="popup" style="display:none;">  <!-- Initially hidden -->
-      <button class="toggle-status">Toggle "Not Here"</button>
+      ${buttonText ? `<button class="toggle-status">${buttonText}</button>` : ''}
     </div>
   `;
 
@@ -142,11 +147,20 @@ function createGridItem(businessKey, businessData) {
     popup.style.display = popup.style.display === 'none' ? 'block' : 'none';
   });
 
-  popup.querySelector('.toggle-status').addEventListener('click', () => {
-    const newTimestamp = businessData.timestamp === 1 ? Date.now() : 1;
-    set(ref(database, `businesses/${businessKey}/timestamp`), newTimestamp);
-    popup.querySelector('p:nth-child(3)').textContent = `Status: ${newTimestamp === 1 ? 'Not here' : 'Online/Offline'}`; 
-  });
+  if (buttonText) {
+    popup.querySelector('.toggle-status').addEventListener('click', () => {
+      const newTimestamp = statusClass === "error" ? Date.now() : (businessData.timestamp === 1 ? Date.now() : 1);
+      set(ref(database, `businesses/${businessKey}/timestamp`), newTimestamp);
+
+      statusText = newTimestamp === 1 ? 'Not here' : 'Online/Offline';
+      buttonText = newTimestamp === 1 ? "Toggle 'Not Here'" : "Error Fixed";
+
+      // Update grid-item after the button action.
+      gridItem.className = `grid-item ${newTimestamp === 0 ? 'error' : (newTimestamp === 1 ? 'nothere' : 'online')}`;
+      gridItem.querySelector('p:nth-child(3)').textContent = `Status: ${statusText}`;
+      popup.querySelector('.toggle-status').textContent = buttonText;
+    });
+  }
 
   return gridItem;
 }
