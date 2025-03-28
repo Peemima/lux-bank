@@ -55,7 +55,7 @@ window.addUser = function(userName, startingBalance) {
       id: userID, 
       balance: startingBalance,
       ogBalance: startingBalance,
-      grade: "p",
+      gradeLevel: "p",
       weeklyPayroll: "0"
     }).then(() => {
       console.log('User added successfully.');
@@ -288,7 +288,7 @@ function fetchAndDisplayUsers(query) {
       let content = "";
       
       let userKeys = Object.keys(users)
-        .filter(key => users[key].grade === "p") 
+        .filter(key => users[key].gradeLevel === "p") 
         .filter(key => key.toLowerCase().includes(query)); 
 
 
