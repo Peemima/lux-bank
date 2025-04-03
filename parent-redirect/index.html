@@ -144,7 +144,7 @@
         redcover.style.display = 'flex';
         document.body.style.backgroundColor = '#FBFCFF';
         setTimeout(() => {
-            window.location.href = redirectUrl;
+            window.location.href = redirectUrl + '&name=' + encodeURIComponent(newName);
         }, 500);
     });
 
@@ -300,7 +300,7 @@
         <div class="fade">
             <p>Let's get you ready to shop.<br>First, double check your name spelling.<br></p>
             <div class="bottom">
-                <input id="" class="bottomselect" placeholder="Full Name"><button id="namesave" class="outline-button">Confirm
+                <input id="" class="bottomselect" placeholder="Full Name"><button id="namesave" class="outline-button">Confirm</button>
             </div>
         </div>
     </div>
@@ -310,7 +310,7 @@
         <div class="fade">
             <p>To buy things, scan the symbol in the middle of your screen. </p>
             <div class="bottom">
-                <button id="redirecter" class="outline-button">Finish
+                <button id="redirecter" class="outline-button">Finish</button>
             </div>
         </div>
     </div>
