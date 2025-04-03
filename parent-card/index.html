@@ -17,7 +17,6 @@
     <script>
     const urlParams = new URLSearchParams(window.location.search);
     const userNameParam = urlParams.get('name');
-
     const userID = urlParams.get('id');
 
     if (userNameParam) {
@@ -29,7 +28,7 @@
           // Create the barcode image using the name parameter
           const barcodeImg = document.createElement("img");
           barcodeImg.className = "usercode-container";
-          barcodeImg.src = `https://barcodeapi.org/api/aztec/${userNameParam}`;
+          barcodeImg.src = `https://barcodeapi.org/api/aztec/${userID}`;
     
           // Create the name element, using the name parameter
           const userNameElement = document.createElement("p1");
