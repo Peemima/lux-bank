@@ -5,7 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Parent Card</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
-  <script src="https://peemima.github.io/lux-bank/assets/loading-screen.js"></script> 
   <noscript>
     <h1>js_err_noscrpt_popup</h1>
     <p>A wild error popped out of nowhere!</p>
@@ -14,15 +13,6 @@
   </noscript>
   <link rel="stylesheet" href="/lux-bank/assets/styles.css">
   <script>
-    function getParameterByName(name, url = window.location.href) {
-      name = name.replace(/[\[\]]/g, '\\$&');
-      const regex = new RegExp('[?&]' + name + '(=([^&#]*)|&|#|$)');
-      const results = regex.exec(url);
-      if (!results) return null;
-      if (!results[2]) return '';
-      return decodeURIComponent(results[2].replace(/\+/g, ' '));
-    }
-
     const urlParams = new URLSearchParams(window.location.search);
     const userNameParam = urlParams.get('name');
 
@@ -62,6 +52,5 @@
   </script>
 </head>
 <body>
-  <div id="loading-screen"></div>
 </body>
 </html>
