@@ -141,7 +141,6 @@
     
     redbtn.addEventListener('click', () => {
         redcover.classList.add('fade-out');
-        document.body.style.backgroundColor = '#FBFCFF';
         setTimeout(() => {
             window.location.href = redirectUrl + '&name=' + encodeURIComponent(newName);
         }, 500);
@@ -221,10 +220,19 @@
         animation-fill-mode: forwards;
         height: 100%;
     }
-    .fade-out {
-      display: flex;
-      animation: fade-out 0.5s ease;
+    #cover {
+      width: 100%;
+      height: 100%;
+      z-index: 100;
+      position: absolute;
+      top: 0;
+      left: 0;
       background-color: #FBFCFF;
+      display: none;
+    }
+    .fade-out {
+      display: flex !important;
+      animation: fade-out 0.5s ease;
     }
     h1 {
         display: inline-block;
@@ -291,16 +299,6 @@
     .bottom button { /* Style the button */
         height: 48px; /* Match input height */
         border-radius: 20px; /* Match input border radius */
-    }
-    #cover {
-      width: 100%;
-      height: 100%;
-      z-index: 100;
-      position: absolute;
-      top: 0;
-      left: 0;
-      background-color: #FBFCFF;
-      display: none;
     }
   </style>
 </head>
