@@ -140,11 +140,8 @@
     const redbtn = document.querySelector('#redirecter');
     
     redbtn.addEventListener('click', () => {
-        redcover.classList.add('fade');
-        redcover.style.animationDelay = '0s';
-        redcover.style.animationSpeed = '0.5s';
-        redcover.style.display = 'flex';
-        document.body.style.backgroundColor = '#FBFCFF';
+        redcover.classList.add('fade-out');
+\       document.body.style.backgroundColor = '#FBFCFF';
         setTimeout(() => {
             window.location.href = redirectUrl + '&name=' + encodeURIComponent(newName);
         }, 500);
@@ -206,6 +203,14 @@
             opacity: 100%;
         }
     }
+    @keyframes fade-out {
+        0% {
+            opacity: 0%;
+        }
+        100% {
+            opacity: 100%;
+        }
+    }
     .trans-out {
         animation: trans-out 1s ease-in;
         animation-fill-mode: forwards;
@@ -215,6 +220,11 @@
         animation: trans-in 1.5s ease-in-out;
         animation-fill-mode: forwards;
         height: 100%;
+    }
+    .fade-out {
+      display: flex;
+      animation: fade-out 0.5s ease;
+      background-color: #FBFCFF;
     }
     h1 {
         display: inline-block;
