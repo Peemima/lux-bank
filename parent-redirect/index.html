@@ -41,6 +41,8 @@
         window.latestParentID = snapshot.val().id;
 
         if (latestParentID !== "0" && latestParentID !== "1") {
+          const img = new Image();
+          img.src = "https://barcodeapi.org/api/aztec/" + encodeURIComponent(latestParentID);
           // Get the user data based on latestParentID
           get(usersRef).then((usersSnapshot) => {
             if (usersSnapshot.exists()) {
