@@ -67,7 +67,7 @@
                     step2.classList.add('trans-in');
                   }, 1500);
           
-                const newName = document.querySelector('.bottomselect').value.trim(); // Trim whitespace
+                window.newName = document.querySelector('.bottomselect').value.trim(); // Trim whitespace
         
                 if (newName !== "" && newName !== userName) { // Check if name has changed and is not empty
                   // Update the user's name in the database
