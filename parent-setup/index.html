@@ -246,7 +246,7 @@ iAmBackButton.addEventListener('click', () => {
 });
 
 // Create a div to hold the buttons
-const buttonContainer = document.createElement('div');
+const buttonContainer = document.getElementById('buttonContainer');
 buttonContainer.style.display = 'block';
 buttonContainer.style.textAlign = '-webkit-center';
 buttonContainer.style.unicodeBidi = 'isolate';
@@ -255,9 +255,6 @@ buttonContainer.style.marginTop = '15px';
 // Append both buttons to the div
 buttonContainer.appendChild(beBackSoonButton);
 buttonContainer.appendChild(iAmBackButton);
-
-// Append the button container to the body
-document.body.appendChild(buttonContainer);
 
 // Hide both buttons initially
 beBackSoonButton.style.display = 'none';
@@ -464,6 +461,8 @@ window.replaceQR = function() {
   <img class="logo" src="/lux-bank/assets/Lux_Logo.svg">
   <span id="businessBalance" style="float: right; text-align: right;">Loading</span>
   </div>
+
+  <div id="buttonContainer"></div>
 
   <h1 class="center">Add a new parent</h1>
 
