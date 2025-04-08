@@ -35,7 +35,6 @@
         z-index: 2;
         background-color: rgba(0, 0, 0, 0.5);
         /* Darken the video */
-        backdrop-filter: blur(10px);
         display: flex;
         align-items: center;
         vertical-align: center;
@@ -189,10 +188,10 @@
       });
 
       function checkUser(scannedText) {
-        document.getElementById('barcode-reader').style.animation = 'checkmark 1s ease-in-out';
+        document.getElementById('barcode-reader').style.animation = 'checkmark 1s ease-in-out forwards';
         setTimeout(function(){
           document.getElementById('barcode-reader').style.display = 'none';
-        }, 995);
+        }, 1010);
         sendToParent(scannedText);
         console.log("called function")
       }
