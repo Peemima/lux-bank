@@ -100,8 +100,14 @@
         const userID = latestUserID;
         const amount = parseFloat(document.getElementById("amountInput").value);
 
-        if (isNaN(userID) || isNaN(amount) || amount <= 0) {
+        if (isNaN(amount) || amount <= 0) {
           showPopup("flex", "Notice", "block", "Please enter a valid price for this product");
+          return;
+        }
+        if (isNaN(userID)) {
+          console.error("The user ID scanned is not a valid number");
+          showPopup("flex", "Help is on the way", "none", "Aim this screen toward shoppers so we can find you faster.");
+          err(true);
           return;
         }
 
