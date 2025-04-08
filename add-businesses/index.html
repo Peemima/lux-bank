@@ -39,7 +39,8 @@
       const businessRef = ref(database, 'businesses/' + businessName);
       set(businessRef, {
           name: businessName,
-          balance: 0
+          balance: 0,
+          timestamp: 2
       }).then(() => {
           console.log('Business added successfully.');
           businessNameInput.value = '';
