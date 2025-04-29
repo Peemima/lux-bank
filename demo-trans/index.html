@@ -63,14 +63,13 @@
         .detail-label.negative-amount { color: #dc3545; /* Red */ }
         .detail-value.negative-amount { color: #dc3545; /* Red */ font-weight: bold; }
 
-
         .message {
             text-align: center;
             padding: 20px;
             color: #c0392b; /* Red */
             font-weight: bold;
         }
-        .loading-message {
+         .loading-message {
             text-align: center;
             padding: 20px;
             color: #3498db; /* Blue */
@@ -81,7 +80,7 @@
 <body>
     <h1>Latest Transaction</h1>
     <div class="transaction-detail-container" id="latest-transaction-container">
-        <!-- Data or loading message will be loaded here -->
+        <!-- Data, message, or loading indicator will be loaded here -->
         <div class="loading-message">Loading latest transaction...</div>
     </div>
 
@@ -103,16 +102,35 @@
         const targetBusinessName = "Demo Market Day Business";
         const container = document.getElementById("latest-transaction-container");
 
-        // Function to fetch and display the latest transaction
+        // Variable to store the details of the transaction currently displayed
+        let currentLatestTransaction = null;
+
+        // Function to fetch and display the latest transaction if it's different
         function fetchAndDisplayLatestTransaction() {
-            // Show loading message while fetching/updating
-            container.innerHTML = '<div class="loading-message">Updating...</div>';
+            console.log("Checking for latest transaction...");
+             // Optionally show a subtle "checking..." indicator here if desired,
+             // but the requirement is not to *change* the page unless needed.
+             // We'll rely on the initial loading message and error messages.
 
             db.ref("transactions").get().then(snapshot => {
-                container.innerHTML = ''; // Clear loading message and previous data on success
+                // Check if the loading message is currently displayed and remove it
+                // when data is successfully fetched (whether there's a change or not)
+                const initialLoadingMessage = container.querySelector('.loading-message');
+                if (initialLoadingMessage) {
+                     // Clear the loader without clearing previous content if any data was already shown
+                     // However, since we set currentLatestTransaction to null initially,
+                     // the first successful fetch will always render regardless,
+                     // so simply clearing and rendering is fine for the first run.
+                     // For subsequent runs where no change happens, we just do nothing.
+                }
+
 
                 if (!snapshot.exists()) {
-                    container.innerHTML = '<div class="message">No transactions found in the database.</div>';
+                    // Only update if the message is different or container is empty
+                    if (!container.innerHTML.includes("No transactions found in the database.")) {
+                         container.innerHTML = '<div class="message">No transactions found in the database.</div>';
+                    }
+                    currentLatestTransaction = null; // Clear the state as there's no data
                     return;
                 }
 
@@ -124,7 +142,12 @@
                 );
 
                 if (businessTransactions.length === 0) {
-                    container.innerHTML = `<div class="message">No transactions found for "${targetBusinessName}".</div>`;
+                     // Only update if the message is different or container is empty
+                     const noTxnMessage = `No transactions found for "${targetBusinessName}".`;
+                     if (!container.innerHTML.includes(noTxnMessage)) {
+                         container.innerHTML = `<div class="message">${noTxnMessage}</div>`;
+                     }
+                    currentLatestTransaction = null; // Clear the state
                     return;
                 }
 
@@ -132,54 +155,94 @@
                 businessTransactions.sort((a, b) => b.timestamp - a.timestamp);
 
                 // Get the latest transaction
-                const latestTransaction = businessTransactions[0];
+                const newLatestTransaction = businessTransactions[0];
 
-                 // Determine amount styling based on sign
-                const amount = latestTransaction.amount || 0;
-                const amountClassLabel = amount >= 0 ? 'detail-label amount' : 'detail-label negative-amount';
-                const amountClassValue = amount >= 0 ? 'detail-value amount' : 'detail-value negative-amount';
+                // *** Check if the latest transaction is different from the one currently displayed ***
+                // We compare timestamps. If timestamps are the same, we assume it's the same transaction.
+                const isSameTransaction = currentLatestTransaction &&
+                                          newLatestTransaction.timestamp === currentLatestTransaction.timestamp;
 
+                if (!isSameTransaction) {
+                    // A new latest transaction is detected OR this is the very first load
 
-                // Beautify and display the data
-                container.innerHTML = `
-                    <h2>Latest Transaction for ${targetBusinessName}</h2>
-                    <div class="detail-item">
-                        <div class="${amountClassLabel}">Amount:</div>
-                        <div class="${amountClassValue}">${amount.toFixed(2)}</div>
-                    </div>
-                    <div class="detail-item">
-                        <div class="detail-label">Timestamp:</div>
-                        <div class="detail-value">${latestTransaction.timestamp ? new Date(latestTransaction.timestamp).toLocaleString() : 'N/A'}</div>
-                    </div>
-                     <div class="detail-item">
-                        <div class="detail-label">Business Balance (After Txn):</div>
-                        <div class="detail-value">${latestTransaction.businessBalance ? latestTransaction.businessBalance.toFixed(2) : 'N/A'}</div>
-                    </div>
-                     <div class="detail-item">
-                        <div class="detail-label">User Key (Shopper):</div>
-                        <div class="detail-value">${latestTransaction.userKey || 'N/A'}</div>
-                    </div>
-                    <div class="detail-item">
-                        <div class="detail-label">User ID:</div>
-                        <div class="detail-value">${latestTransaction.userId || 'N/A'}</div>
-                    </div>
-                     <div class="detail-item">
-                        <div class="detail-label">New Balance (Shopper):</div>
-                        <div class="detail-value">${latestTransaction.newBalance ? latestTransaction.newBalance.toFixed(2) : 'N/A'}</div>
-                    </div>
-                    <!-- Add more fields as needed from your transaction structure -->
-                `;
+                    console.log("New latest transaction detected or first load. Updating UI.");
+
+                    // Determine amount styling based on sign
+                    const amount = newLatestTransaction.amount || 0;
+                    const amountClassLabel = amount >= 0 ? 'detail-label amount' : 'detail-label negative-amount';
+                    const amountClassValue = amount >= 0 ? 'detail-value amount' : 'detail-value negative-amount';
+
+                    // Build the new HTML content
+                    const newHtml = `
+                        <h2>Latest Transaction for ${targetBusinessName}</h2>
+                        <div class="detail-item">
+                            <div class="${amountClassLabel}">Amount:</div>
+                            <div class="${amountClassValue}">${amount.toFixed(2)}</div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label">Timestamp:</div>
+                            <div class="detail-value">${newLatestTransaction.timestamp ? new Date(newLatestTransaction.timestamp).toLocaleString() : 'N/A'}</div>
+                        </div>
+                         <div class="detail-item">
+                            <div class="detail-label">Business Balance (After Txn):</div>
+                            <div class="detail-value">${newLatestTransaction.businessBalance ? newLatestTransaction.businessBalance.toFixed(2) : 'N/A'}</div>
+                        </div>
+                         <div class="detail-item">
+                            <div class="detail-label">User Key (Shopper):</div>
+                            <div class="detail-value">${newLatestTransaction.userKey || 'N/A'}</div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label">User ID:</div>
+                            <div class="detail-value">${newLatestTransaction.userId || 'N/A'}</div>
+                        </div>
+                         <div class="detail-item">
+                            <div class="detail-label">New Balance (Shopper):</div>
+                            <div class="detail-value">${newLatestTransaction.newBalance ? newLatestTransaction.newBalance.toFixed(2) : 'N/A'}</div>
+                        </div>
+                        <!-- Add more fields as needed from your transaction structure -->
+                    `;
+
+                    // Update the container's content
+                    container.innerHTML = newHtml;
+
+                    // Update the state variable to the new latest transaction
+                    currentLatestTransaction = newLatestTransaction;
+
+                } else {
+                    // The latest transaction is the same as what's currently displayed
+                    console.log("Latest transaction is the same. No UI update needed.");
+                    // Ensure the initial loading message is gone if it was the first successful fetch
+                    if (initialLoadingMessage) {
+                         // If the loader was present, just re-set the current HTML content
+                         // This effectively removes the loader without changing the data displayed
+                         // if the data was already the latest on the first check.
+                         // This is a bit of a workaround; ideally, the initial render
+                         // logic could be separate or handle the loading state explicitly.
+                         // For simplicity here, we just re-render the existing data if the loader was visible.
+                          // This is only necessary if the *first* fetch finds data but no *new* latest.
+                          // A cleaner approach would be to manage the loading indicator state separately.
+                          // Let's keep it simple: the successful path clears messages implicitly by setting innerHTML.
+                          // The initial loader is cleared below before the fetch.
+                    }
+                }
 
             }).catch(error => {
                 console.error("Error fetching data:", error);
+                 // Always display an error message, replacing whatever is there
                 container.innerHTML = `<div class="message">Error loading data: ${error.message}</div>`;
+                // Keep the currentLatestTransaction state unchanged in case of fetch errors
+                // so that if it recovers, it knows what was last successfully displayed.
             });
         }
 
-        // Initial fetch on page load
+        // Display initial loading message before the very first fetch
+        container.innerHTML = '<div class="loading-message">Loading latest transaction...</div>';
+
+        // Fetch data immediately on page load
         fetchAndDisplayLatestTransaction();
 
-        // Set interval to fetch and display every 5 seconds (5000 milliseconds)
+        // Set interval to fetch data every 5 seconds (5000 milliseconds)
+        // The function itself decides whether to update the UI
         setInterval(fetchAndDisplayLatestTransaction, 5000);
 
     </script>
