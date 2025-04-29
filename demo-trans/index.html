@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Latest Transaction for Demo Market Day Business</title>
+    <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.1.0/firebase-database-compat.js"></script>
+    <!-- Chart.js is no longer needed as we won't display graphs -->
+    <!-- <script src="https://cdn.jsdelivr.net/npm/chart.js"></script> -->
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 20px;
+            background-color: #eef2f7; /* Light blue-gray background */
+            color: #333;
+            line-height: 1.6;
+        }
+        h1, h2 {
+            text-align: center;
+            color: #2c3e50; /* Dark blue */
+        }
+        .transaction-detail-container {
+            margin: 30px auto;
+            max-width: 600px;
+            padding: 25px;
+            background: #ffffff; /* White background */
+            border: 1px solid #dcdcdc; /* Light gray border */
+            border-radius: 12px; /* More rounded corners */
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Subtle shadow */
+        }
+        .transaction-detail-container h2 {
+            margin-top: 0;
+            color: #3498db; /* Blue */
+            padding-bottom: 15px;
+            border-bottom: 1px solid #eee;
+        }
+        .detail-item {
+            margin-bottom: 15px;
+            padding-bottom: 15px;
+            border-bottom: 1px dashed #eee;
+            display: flex; /* Use flexbox for label/value alignment */
+            justify-content: space-between; /* Space out label and value */
+            align-items: baseline; /* Align text baselines */
+        }
+        .detail-item:last-child {
+            margin-bottom: 0;
+            padding-bottom: 0;
+            border-bottom: none;
+        }
+        .detail-label {
+            font-weight: bold;
+            color: #555;
+            flex-shrink: 0; /* Prevent shrinking */
+            margin-right: 15px; /* Space between label and value */
+        }
+        .detail-value {
+            text-align: right; /* Align value to the right */
+            word-break: break-word; /* Break long words */
+        }
+        .message {
+            text-align: center;
+            padding: 20px;
+            color: #c0392b; /* Red */
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <h1>Latest Transaction</h1>
+    <div class="transaction-detail-container" id="latest-transaction-container">
+        <!-- Data will be loaded here -->
+        <div class="message">Loading latest transaction...</div>
+    </div>
+
+    <script>
+        // Initialize Firebase
+        const firebaseConfig = {
+             apiKey: "AIzaSyASd5JOikXTlRp8eA2j_26Z1NWatZMjZds",
+            authDomain: "lux-bank.firebaseapp.com",
+            databaseURL: "https://lux-bank-default-rtdb.firebaseio.com",
+            projectId: "lux-bank",
+            storageBucket: "lux-bank.appspot.com",
+            messagingSenderId: "764922032293",
+            appId: "1:764922032293:web:573599b6116f025ee15d4c",
+            measurementId: "G-JQ7CWEJS9N"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.database();
+
+        const targetBusinessName = "Demo Market Day Business";
+        const container = document.getElementById("latest-transaction-container");
+
+        // Fetch transactions from Firebase
+        db.ref("transactions").get().then(snapshot => {
+            container.innerHTML = ''; // Clear loading message
+
+            if (!snapshot.exists()) {
+                container.innerHTML = '<div class="message">No transactions found in the database.</div>';
+                return;
+            }
+
+            const allTransactions = Object.values(snapshot.val());
+
+            // Filter transactions for the specific business
+            const businessTransactions = allTransactions.filter(
+                transaction => transaction.business === targetBusinessName
+            );
+
+            if (businessTransactions.length === 0) {
+                container.innerHTML = `<div class="message">No transactions found for "${targetBusinessName}".</div>`;
+                return;
+            }
+
+            // Sort transactions by timestamp in descending order (latest first)
+            businessTransactions.sort((a, b) => b.timestamp - a.timestamp);
+
+            // Get the latest transaction
+            const latestTransaction = businessTransactions[0];
+
+            // Beautify and display the data
+            container.innerHTML = `
+                <h2>Latest Transaction for ${targetBusinessName}</h2>
+                <div class="detail-item">
+                    <div class="detail-label">Amount:</div>
+                    <div class="detail-value">${latestTransaction.amount ? latestTransaction.amount.toFixed(2) : 'N/A'}</div>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-label">Timestamp:</div>
+                    <div class="detail-value">${latestTransaction.timestamp ? new Date(latestTransaction.timestamp).toLocaleString() : 'N/A'}</div>
+                </div>
+                 <div class="detail-item">
+                    <div class="detail-label">Business Balance (After Txn):</div>
+                    <div class="detail-value">${latestTransaction.businessBalance ? latestTransaction.businessBalance.toFixed(2) : 'N/A'}</div>
+                </div>
+                 <div class="detail-item">
+                    <div class="detail-label">User Key (Shopper):</div>
+                    <div class="detail-value">${latestTransaction.userKey || 'N/A'}</div>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-label">User ID:</div>
+                    <div class="detail-value">${latestTransaction.userId || 'N/A'}</div>
+                </div>
+                 <div class="detail-item">
+                    <div class="detail-label">New Balance (Shopper):</div>
+                    <div class="detail-value">${latestTransaction.newBalance ? latestTransaction.newBalance.toFixed(2) : 'N/A'}</div>
+                </div>
+                <!-- Add more fields as needed from your transaction structure -->
+            `;
+
+        }).catch(error => {
+            console.error("Error fetching data:", error);
+            container.innerHTML = `<div class="message">Error loading data: ${error.message}</div>`;
+        });
+    </script>
+</body>
+</html>
