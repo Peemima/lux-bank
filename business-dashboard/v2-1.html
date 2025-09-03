@@ -104,7 +104,7 @@
         const userID = latestUserID;
         const amount = parseFloat(document.getElementById("amountInput").value);
 
-        if (isNaN(amount) || !/^\d+$/.test(str) || amount <= 0) {
+        if (isNaN(amount) || !/^\d+$/.test(amount) || amount <= 0) {
           showPopup("flex", "Notice", "block", "Please enter a valid price for this product");
           return;
         }
