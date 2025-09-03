@@ -104,7 +104,7 @@
         const userID = latestUserID;
         const amount = parseFloat(document.getElementById("amountInput").value);
 
-        if (isNaN(amount) || amount <= 0) {
+        if (isNaN(amount) || !/^\d+$/.test(str) || amount <= 0) {
           showPopup("flex", "Notice", "block", "Please enter a valid price for this product");
           return;
         }
@@ -130,10 +130,6 @@
           const userName = userKey.split(' ')[0]; // Extract only the first word
 
           let currentBalance = users[userKey].balance;
-          if (!isInt(amount)) {
-            showPopup("flex", "Transaction Failed", "block", `Please enter a valid number.`);
-            return;
-          }
           if (amount > currentBalance) {
             showPopup("flex", "Not enough hawkeyes", "block", `It looks like there aren't enough hawkeyes to buy that.`);
             return;
