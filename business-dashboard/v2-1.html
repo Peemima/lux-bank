@@ -94,6 +94,10 @@
         }, 20000);
       });
 
+      function isInt(value) {
+        return !isNaN(value) && (function(x) { return (x | 0) === x; })(parseFloat(value))
+      }
+
       document.getElementById("transactionForm").addEventListener("submit", function(event) {
         event.preventDefault(); 
 
@@ -128,6 +132,7 @@
           let currentBalance = users[userKey].balance;
           if (!isInt(amount)) {
             showPopup("flex", "Transaction Failed", "block", `Please enter a valid number.`);
+            return;
           }
           if (amount > currentBalance) {
             showPopup("flex", "Not enough hawkeyes", "block", `It looks like there aren't enough hawkeyes to buy that.`);
