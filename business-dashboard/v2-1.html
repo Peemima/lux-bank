@@ -126,6 +126,9 @@
           const userName = userKey.split(' ')[0]; // Extract only the first word
 
           let currentBalance = users[userKey].balance;
+          if (!isInt(amount)) {
+            showPopup("flex", "Transaction Failed", "block", `Please enter a valid number.`);
+          }
           if (amount > currentBalance) {
             showPopup("flex", "Not enough hawkeyes", "block", `It looks like there aren't enough hawkeyes to buy that.`);
             return;
