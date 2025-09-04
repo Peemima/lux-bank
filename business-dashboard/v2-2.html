@@ -522,7 +522,7 @@
               cancelButton.style.display = 'none'; // "Back" button for scanner
               productSummaryDiv.style.display = 'none'; // Hide total and clear selection div
               addProductToggleButton.style.display = 'block'; // Show add product form button
-              toggleEditModeButton.innerText = 'Done Editing';
+              // toggleEditModeButton.innerText = 'Done Editing'; // REMOVED THIS LINE
               
               saveAllEditsButton.style.display = 'inline-block';
               cancelAllEditsButton.style.display = 'inline-block';
@@ -533,7 +533,7 @@
               cancelButton.style.display = 'inline-block'; // "Back" button
               productSummaryDiv.style.display = 'block'; // Show total and clear selection div
               addProductToggleButton.style.display = 'none'; // Hide add product form button
-              toggleEditModeButton.innerText = 'Edit Products';
+              toggleEditModeButton.innerText = 'Edit Products'; // Always "Edit Products" in default mode
               window.showAddProductForm(false); // Ensure add product form is hidden
 
               saveAllEditsButton.style.display = 'none';
@@ -606,7 +606,7 @@
             }
             showPopup("flex", "Success!", "block", "All product changes saved successfully.");
             window.editingMode = false; // Exit editing mode
-            window.fetchAndRenderProducts(); // Re-fetch and re-render the updated list
+            window.fetchAndRenderProducts(); // Re-fetch and re-render the updated list in default mode
         } catch (error) {
             console.error('Error saving product changes:', error);
             showPopup("flex", "Help is on the way", "none", "Error saving product changes: " + error.message);
