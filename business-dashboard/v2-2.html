@@ -99,8 +99,9 @@
         }, 20000);
       });
 
-      document.getElementById("transactionForm").addEventListener("submit", function(event) {
-        event.preventDefault(); 
+      // --- Changed from form submit to button click ---
+      document.getElementById("processSaleButton").addEventListener("click", function(event) {
+        event.preventDefault(); // Good practice even for type="button" to prevent any default actions
 
         const userID = window.latestUserID; // Use global latestUserID
         const amount = window.totalSaleAmount; // Use global totalSaleAmount
@@ -139,13 +140,13 @@
                   .then(() => {
                     updateBusinessBalance(amount);
                     logTransaction(userKey, userID, -amount, newBalance, businessValue, window.businessData.balance); 
-                    document.getElementById("transactionForm").reset();
+                    // document.getElementById("transactionForm").reset(); // Removed, as it's no longer a form
                     iframeControl('start'); // Restart scanner
                     hideElement('#transaction-details-area'); // Hide product selection
                     showElement('#homepage-heading');
                     showPopup("flex", "Success!", "block", `The transaction was successful!`);
                     window.clearProductSelection(); // Clear selected products and refresh UI
-                    hideElement('#transactionForm'); // Hide the entire form (scanner + products)
+                    hideElement('#transaction-screen'); // <--- UPDATED THIS LINE
                   })
                   .catch((error) => {
                     console.error('Error updating user balance:', error);
@@ -515,12 +516,11 @@
 
     //Reset the form when cancel button is pressed
     document.getElementById("cancel-button").addEventListener('click', function() {
-      // document.getElementById("transactionForm").reset(); // Not truly needed with new controls
       iframeControl('start'); // Restart scanner
       hideElement('#transaction-details-area'); // Hide the new product selection area
       showElement('#homepage-heading');
       window.clearProductSelection(); // Clear selected quantities
-      window.hideElement('#transactionForm'); // Hide the entire form (scanner + products)
+      window.hideElement('#transaction-screen'); // <--- UPDATED THIS LINE
       window.latestUserID = '0'; // Clear scanned user
     });
 
@@ -551,7 +551,7 @@
       iframeControl('start'); // Start scanner
       hideElement('#homepage-heading'); // Hide the 'What would the customer like to do?' heading
       hideElement('#bidScreen'); // Hide the bid screen
-      showElement('#transactionForm'); // Show the transaction form (contains scanner and product selection)
+      showElement('#transaction-screen'); // <--- UPDATED THIS LINE
       hideElement('#transaction-details-area'); // Hide product selection initially, until user scans
       window.clearProductSelection(); // Reset quantities
       window.fetchAndRenderProducts(); // Fetch and display products
@@ -559,12 +559,6 @@
       window.latestUserID = '0'; // Reset user ID on entry
     });
     bidButton.addEventListener("click", function() { // Start listening for a click
-      /* buyButton.classList.remove('menu-item-selected'); // Remove the 'selected' styling from the buy button
-      bidButton.classList.add('menu-item-selected'); // Give it the 'selected' styling
-      iframeControl('stop');
-      hideElement('#homepage-heading'); // Hide the 'What would the customer like to do?' heading
-      hideElement('#transactionForm'); // Hide the transaction form
-      showElement('#bidScreen'); // Show the bid screen */
       console.log('Ask For Help button triggered popup.');
       showPopup("flex", "Help is on the way", "none", "Aim this screen toward shoppers so we can find you faster.");
       window.err(true);
@@ -607,7 +601,7 @@
     });
     
     // Setup scripting (initial hide/show)
-      hideElement('#transactionForm'); // The whole form (scanner + product details)
+      hideElement('#transaction-screen'); // <--- UPDATED THIS LINE
       hideElement('#bidScreen');
       hideElement('#transaction-details-area'); // The new product selection area
       // hideElement('#login-screen'); (controlled by businessValue check)
@@ -753,12 +747,12 @@
       font-size: 1em;
     }
     /* Specific styling for the action buttons at the bottom of the form */
-    #transactionForm .action-buttons-container {
+    #transaction-screen .action-buttons-container { /* Updated selector */
         text-align: center; 
         margin-top: 20px;
     }
-    #transactionForm .action-buttons-container button.fill-button,
-    #transactionForm .action-buttons-container button.outline-button {
+    #transaction-screen .action-buttons-container button.fill-button, /* Updated selector */
+    #transaction-screen .action-buttons-container button.outline-button { /* Updated selector */
         width: auto; /* Allow buttons to size based on content */
         min-width: 100px;
         margin: 0 5px; /* Adjust margin for spacing between them */
@@ -796,9 +790,10 @@
         <p id="auction-option" class="menu-item">Get Support</p>
       </div>
     </div>
-    <form id="transactionForm" class="center">
+    
+    <!-- Changed from <form id="transactionForm"> to <div id="transaction-screen"> -->
+    <div id="transaction-screen" class="center">
       <iframe id="scaniframe" style="border: 0px;" width="100%" height="500px" src="about:blank"></iframe>
-      <!-- Renamed from transaction-amount to transaction-details-area -->
       <div id="transaction-details-area">
         <h2>Select Products</h2>
         <div id="products-grid" class="product-grid">
@@ -809,6 +804,8 @@
           <button type="button" id="clear-selection-button" class="outline-button">Clear Selection</button>
         </div>
         <button type="button" id="add-product-toggle-button" class="fill-button">Add/Hide New Product Form</button>
+        
+        <!-- The addNewProductForm is now correctly nested within a div, not another form -->
         <div id="add-product-form-container" style="display: none;">
           <h3>Add New Product</h3>
           <form id="addNewProductForm" onsubmit="return false;"> 
@@ -818,13 +815,16 @@
             <button type="button" id="cancelAddProduct" class="outline-button">Cancel</button>
           </form>
         </div>
-        <!-- Existing buttons, now placed after product selection and add form -->
+        
         <div class="action-buttons-container">
           <button type="button" id="cancel-button" class="outline-button">Back</button>
-          <button type="submit" class="fill-button" id="processSaleButton">Process Sale</button>
+          <!-- Changed to type="button" and will be handled by JS click listener -->
+          <button type="button" class="fill-button" id="processSaleButton">Process Sale</button> 
         </div>
       </div>
-    </form>
+    </div>
+    <!-- End of #transaction-screen -->
+
     <div id="bidScreen">
       Bid screen content
     </div>
