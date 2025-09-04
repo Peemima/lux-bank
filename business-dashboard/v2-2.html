@@ -330,11 +330,11 @@
             <h3>${productName}</h3>
             <p>Price: $${product.price}</p>
             <div class="quantity-control">
-              <button onclick="window.adjustProductQuantity('${productName}', -1)">-</button>
+              <button type="button" onclick="window.adjustProductQuantity('${productName}', -1)">-</button>
               <span id="qty-${safeProductNameId}" class="product-quantity">${selectedQty}</span>
-              <button onclick="window.adjustProductQuantity('${productName}', 1)">+</button>
+              <button type="button" onclick="window.adjustProductQuantity('${productName}', 1)">+</button>
             </div>
-            <button class="delete-product-button outline-button" onclick="window.deleteProduct('${productName}')">Delete</button>
+            <button type="button" class="delete-product-button outline-button" onclick="window.deleteProduct('${productName}')">Delete</button>
           `;
           productsGrid.appendChild(productCard);
         }
@@ -426,9 +426,14 @@
 
       // Function to delete a product
       window.deleteProduct = async function(productName) {
+        if (!confirm(`Are you sure you want to delete "${productName}"? This action cannot be undone.`)) {
+          return;
+        }
+
         try {
           const productRef = ref(database, `businesses/${businessValue}/products/${productName}`);
           await remove(productRef);
+          showPopup("flex", "Success!", "block", `${productName} deleted successfully.`);
           
           // Also remove from local state
           delete window.currentProducts[productName];
@@ -594,6 +599,8 @@
               showPopup("flex", "Scan Error", "block", "Failed to scan user ID. Please try again.");
               iframeControl('start'); // Re-enable scanner if scan failed
           } else {
+              // User ID successfully scanned. No specific popup here to avoid interrupting workflow.
+              // The next step is to select products, which is visually clear.
           }
         }, 1000); // Small delay to ensure iframe state is fully updated
       }
@@ -799,19 +806,19 @@
         </div>
         <div class="product-summary">
           <p>Total: <span id="totalSaleAmount">$0.00</span></p>
-          <button id="clear-selection-button" class="outline-button">Clear Selection</button>
+          <button type="button" id="clear-selection-button" class="outline-button">Clear Selection</button>
         </div>
-        <button id="add-product-toggle-button" class="fill-button">Add/Hide New Product Form</button>
+        <button type="button" id="add-product-toggle-button" class="fill-button">Add/Hide New Product Form</button>
         <div id="add-product-form-container" style="display: none;">
           <h3>Add New Product</h3>
           <input type="text" id="newProductName" placeholder="Product Name" required>
           <input type="number" id="newProductPrice" placeholder="Price (Hawkeyes)" step="1" min="1" required>
-          <button id="submitNewProduct" class="fill-button">Create Product</button>
-          <button id="cancelAddProduct" class="outline-button">Cancel</button>
+          <button type="button" id="submitNewProduct" class="fill-button">Create Product</button>
+          <button type="button" id="cancelAddProduct" class="outline-button">Cancel</button>
         </div>
         <!-- Existing buttons, now placed after product selection and add form -->
         <div class="action-buttons-container">
-          <button id="cancel-button" class="outline-button">Back</button>
+          <button type="button" id="cancel-button" class="outline-button">Back</button>
           <button type="submit" class="fill-button" id="processSaleButton">Process Sale</button>
         </div>
       </div>
