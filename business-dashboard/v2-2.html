@@ -61,6 +61,12 @@
     window.totalSaleAmount = 0;
     window.editingMode = false; // NEW: Track editing mode
 
+    // NEW: Global state for pending product changes
+    window.productsMarkedForDeletion = new Set(); // Stores original names of products to be deleted
+    window.productsNewlyAdded = []; // Stores objects { tempId: ..., name: ..., price: ... } for new products
+    window.tempNewProductCounter = 0; // To give unique IDs to newly added products before saving
+
+
     if (businessValue) {
       document.getElementById("businessName").innerText = businessValue;
 
@@ -292,6 +298,11 @@
               }
             }
           }
+          // Clear pending changes when re-fetching from DB to ensure a clean state
+          window.productsMarkedForDeletion.clear();
+          window.productsNewlyAdded = [];
+          window.tempNewProductCounter = 0;
+
           window.renderProductsGrid();
         } catch (error) {
           console.error('Error fetching products:', error);
@@ -304,53 +315,112 @@
         const productsGrid = document.getElementById('products-grid');
         productsGrid.innerHTML = '';
 
-        if (Object.keys(window.currentProducts).length === 0 && !window.editingMode) {
+        const productsToRender = [];
+
+        // Add existing products that are not marked for deletion
+        for (const productName in window.currentProducts) {
+          if (!window.productsMarkedForDeletion.has(productName)) {
+            productsToRender.push({ 
+              isNew: false, 
+              name: productName, 
+              price: window.currentProducts[productName].price, 
+              originalName: productName 
+            });
+          }
+        }
+
+        // Add newly added products
+        productsToRender.push(...window.productsNewlyAdded.map(p => ({
+          isNew: true,
+          tempId: p.tempId, // Use tempId for newly added products
+          name: p.name,
+          price: p.price,
+          originalName: null // No original name for new products
+        })));
+
+        // Sort products alphabetically by name for consistent display
+        productsToRender.sort((a, b) => a.name.localeCompare(b.name));
+
+        if (productsToRender.length === 0 && !window.editingMode) {
           productsGrid.innerHTML = '<p style="text-align: center; color: #666;">No products found.</p>';
-        } else if (Object.keys(window.currentProducts).length === 0 && window.editingMode) {
+        } else if (productsToRender.length === 0 && window.editingMode) {
             productsGrid.innerHTML = '<p style="text-align: center; color: #666;">No products found. Add some using the "Add New Product" form below.</p>';
         }
 
-        for (const productName in window.currentProducts) {
-          const product = window.currentProducts[productName];
-          const selectedQty = window.selectedQuantities[productName] || 0;
-          const safeProductNameId = productName.replace(/[^a-zA-Z0-9]/g, '-');
+        productsToRender.forEach(product => {
+          const selectedQty = window.selectedQuantities[product.name] || 0; // Use current or temp name
+          const safeId = (product.isNew ? `temp-${product.tempId}` : product.name).replace(/[^a-zA-Z0-9]/g, '-');
 
           const productCard = document.createElement('div');
           productCard.classList.add('product-card');
-          // Store original name and price as data attributes for editing mode
-          productCard.setAttribute('data-original-name', productName);
-          productCard.setAttribute('data-original-price', product.price);
+          productCard.setAttribute('data-current-name', product.name); // Current display name (might be temporary or edited)
+          if (!product.isNew) {
+              productCard.setAttribute('data-original-name', product.originalName); // Only for existing DB products
+              productCard.setAttribute('data-original-price', product.price);
+          } else {
+              productCard.setAttribute('data-temp-id', product.tempId); // For newly added products
+          }
+          
 
           let cardContent = '';
           if (window.editingMode) {
             // Editing mode: inputs for name and price, delete button
             cardContent = `
                 <h3>
-                    <input type="text" id="edit-name-${safeProductNameId}" value="${productName}" class="edit-input-name" data-original-name="${productName}" required>
+                    <input type="text" id="edit-name-${safeId}" value="${product.name}" class="edit-input-name" required oninput="window.updateLocalProductName('${product.originalName || product.tempId}', '${product.isNew}', this.value)">
                 </h3>
                 <p class="price-edit-group">
-                    <label for="edit-price-${safeProductNameId}" class="price-label">Price: $</label>
-                    <input type="number" id="edit-price-${safeProductNameId}" value="${product.price}" step="1" min="1" class="edit-input-price" required>
+                    <label for="edit-price-${safeId}" class="price-label">Price: $</label>
+                    <input type="number" id="edit-price-${safeId}" value="${product.price}" step="1" min="1" class="edit-input-price" required oninput="window.updateLocalProductPrice('${product.originalName || product.tempId}', '${product.isNew}', this.value)">
                 </p>
-                <button type="button" class="delete-product-button outline-button" onclick="window.deleteProduct('${productName}')">Delete</button>
+                <button type="button" class="delete-product-button outline-button" onclick="window.deleteProduct('${product.originalName || product.tempId}', ${product.isNew})">Delete</button>
             `;
           } else {
             // Default (sale) mode: display name/price, quantity controls
             cardContent = `
-                <h3>${productName}</h3>
+                <h3>${product.name}</h3>
                 <p>Price: $${product.price}</p>
                 <div class="quantity-control">
-                  <button type="button" onclick="window.adjustProductQuantity('${productName}', -1)">-</button>
-                  <span id="qty-${safeProductNameId}" class="product-quantity">${selectedQty}</span>
-                  <button type="button" onclick="window.adjustProductQuantity('${productName}', 1)">+</button>
+                  <button type="button" onclick="window.adjustProductQuantity('${product.name}', -1)">-</button>
+                  <span id="qty-${safeId}" class="product-quantity">${selectedQty}</span>
+                  <button type="button" onclick="window.adjustProductQuantity('${product.name}', 1)">+</button>
                 </div>
             `;
           }
           productCard.innerHTML = cardContent;
           productsGrid.appendChild(productCard);
-        }
+        });
         window.calculateTotalSale();
         window.updateTransactionAreaButtons(); // NEW: Update buttons based on mode
+      };
+
+      // NEW: Update local state for product name changes in editing mode
+      window.updateLocalProductName = function(identifier, isNew, newName) {
+          if (isNew === 'true') { // Identifier is tempId for new products
+              const product = window.productsNewlyAdded.find(p => p.tempId == identifier);
+              if (product) product.name = newName;
+          } else { // Identifier is originalName for existing products
+              // The card's data-current-name is updated in the event listener directly below.
+              // We're not modifying window.currentProducts directly here.
+              // The save function will read the final state from the inputs.
+          }
+          // Update data-current-name attribute on the card for correct lookup later
+          const safeId = (isNew === 'true' ? `temp-${identifier}` : identifier).replace(/[^a-zA-Z0-9]/g, '-');
+          const nameInput = document.getElementById(`edit-name-${safeId}`);
+          if (nameInput) {
+              nameInput.closest('.product-card').setAttribute('data-current-name', newName);
+          }
+      };
+
+      // NEW: Update local state for product price changes in editing mode
+      window.updateLocalProductPrice = function(identifier, isNew, newPrice) {
+          if (isNew === 'true') { // Identifier is tempId for new products
+              const product = window.productsNewlyAdded.find(p => p.tempId == identifier);
+              if (product) product.price = parseFloat(newPrice);
+          } else { // Identifier is originalName for existing products
+              // Not modifying window.currentProducts directly.
+              // The save function will read the final state from the inputs.
+          }
       };
 
       window.adjustProductQuantity = function(productName, delta) {
@@ -428,57 +498,61 @@
             return;
         }
         
-        const newProductName = newProductNameInput.value.trim();
-        const newProductPrice = parseFloat(newProductPriceInput.value);
+        const newName = newProductNameInput.value.trim();
+        const newPrice = parseFloat(newProductPriceInput.value);
 
-        // Client-side check for existing name
-        if (window.currentProducts[newProductName]) {
-            showPopup("flex", "Notice", "block", `A product named "${newProductName}" already exists.`);
+        // Check for duplicate name among existing (from DB) AND newly added (pending) products in the current session
+        const allCurrentAndPendingNames = new Set(Object.keys(window.currentProducts));
+        window.productsNewlyAdded.forEach(p => allCurrentAndPendingNames.add(p.name));
+
+        if (allCurrentAndPendingNames.has(newName)) {
+            showPopup("flex", "Notice", "block", `A product named "${newName}" already exists in your current list or pending additions.`);
             return;
         }
 
-        try {
-          const productRef = ref(database, `businesses/${businessValue}/products/${newProductName}`);
-          await set(productRef, newProductPrice);
-          showPopup("flex", "Success!", "block", `${newProductName} added successfully.`);
-          window.showAddProductForm(false);
-          window.fetchAndRenderProducts(); // Refresh product list in editing mode
-        } catch (error) {
-          console.error('Error adding new product:', error);
-          showPopup("flex", "Help is on the way", "none", "Error adding product.");
-          window.err(true);
-        }
+        // Add to temporary new products list
+        window.productsNewlyAdded.push({
+            tempId: window.tempNewProductCounter++,
+            name: newName,
+            price: newPrice
+        });
+
+        showPopup("flex", "Added for Save", "block", `${newName} added to pending changes. Click "Save All Changes" to confirm.`);
+        window.showAddProductForm(false);
+        window.renderProductsGrid(); // Re-render to show the newly added product
       };
 
-      window.deleteProduct = async function(productName) {
+      window.deleteProduct = async function(identifier, isNew) {
         if (!window.editingMode) return; // Only allow deletion in editing mode
 
-        if (!confirm(`Are you sure you want to delete "${productName}"? This action cannot be undone.`)) {
-          return;
+        if (isNew) {
+            // It's a newly added product, remove it from pending list
+            const product = window.productsNewlyAdded.find(p => p.tempId == identifier);
+            if (!product || !confirm(`Are you sure you want to remove the pending addition of "${product.name}"?`)) {
+                return;
+            }
+            window.productsNewlyAdded = window.productsNewlyAdded.filter(p => p.tempId != identifier);
+            showPopup("flex", "Removed", "block", `Pending addition for "${product.name}" removed.`);
+        } else {
+            // It's an existing product from DB, mark for deletion
+            const productName = identifier; // originalName
+            if (!confirm(`Are you sure you want to delete "${productName}"? This will be permanent after saving.`)) {
+                return;
+            }
+            window.productsMarkedForDeletion.add(productName);
+            showPopup("flex", "Marked for Deletion", "block", `${productName} marked for deletion. Click "Save All Changes" to confirm.`);
         }
-
-        try {
-          const productRef = ref(database, `businesses/${businessValue}/products/${productName}`);
-          await remove(productRef);
-          showPopup("flex", "Success!", "block", `${productName} deleted successfully.`);
-          
-          delete window.currentProducts[productName];
-          delete window.selectedQuantities[productName]; // Also remove from selected quantities
-
-          window.renderProductsGrid(); // Re-render to reflect deletion
-        } catch (error) {
-          console.error('Error deleting product:', error);
-          showPopup("flex", "Help is on the way", "none", "Error deleting product.");
-          window.err(true);
-        }
+        window.renderProductsGrid(); // Re-render to reflect changes
       };
 
       // NEW: Toggle Editing Mode
       window.toggleEditingMode = function() {
         window.editingMode = !window.editingMode;
-        // Reset selected quantities when entering/exiting editing mode
+        // When entering editing mode, clear pending changes to start fresh, and then re-render
+        // When exiting, changes are either saved (handled by saveAllProductEdits) or canceled (handled by cancelAllProductEdits).
+        // This toggle only switches the visual state and re-renders.
         window.clearProductSelection(); 
-        window.fetchAndRenderProducts(); // Re-render everything to apply mode changes
+        window.fetchAndRenderProducts(); // Re-render everything to apply mode changes (and clear pending state)
       };
 
       // NEW: Update visibility and text of buttons in transaction area
@@ -522,7 +596,7 @@
               cancelButton.style.display = 'none'; // "Back" button for scanner
               productSummaryDiv.style.display = 'none'; // Hide total and clear selection div
               addProductToggleButton.style.display = 'block'; // Show add product form button
-              // toggleEditModeButton.innerText = 'Done Editing'; // REMOVED THIS LINE
+              // toggleEditModeButton.innerText is already 'Edit Products' and won't change here
               
               saveAllEditsButton.style.display = 'inline-block';
               cancelAllEditsButton.style.display = 'inline-block';
@@ -543,68 +617,87 @@
 
       // NEW: Save all edited products
       window.saveAllProductEdits = async function() {
-        if (!confirm('Are you sure you want to save all changes?')) {
+        if (!confirm('Are you sure you want to save all changes to your products? This action cannot be undone.')) {
             return;
         }
 
-        const updates = []; // Array to store {originalName, newName, newPrice} for processing
-        const newProductNames = new Set(); // To check for duplicate names within the current batch of edits
-        const originalProductNamesInDb = new Set(Object.keys(window.currentProducts)); // Snapshot of names from DB for conflict checking
+        const firebaseOperations = [];
+        const productsAfterSave = {}; // Will hold the final state of products for uniqueness check
 
-        // First pass: Validate inputs and collect all proposed changes
+        // Step 1: Validate all currently visible/editable product names/prices and build the desired final state
         const productCards = document.querySelectorAll('#products-grid .product-card');
         for (const card of productCards) {
-            const originalName = card.getAttribute('data-original-name');
-            const originalPrice = parseFloat(card.getAttribute('data-original-price'));
+            const originalName = card.getAttribute('data-original-name'); // Null for new products
+            const tempId = card.getAttribute('data-temp-id'); // Null for existing products
             
-            const safeProductNameId = originalName.replace(/[^a-zA-Z0-9]/g, '-');
-            const nameInput = document.getElementById(`edit-name-${safeProductNameId}`);
-            const priceInput = document.getElementById(`edit-price-${safeProductNameId}`);
+            const safeId = (tempId ? `temp-${tempId}` : originalName).replace(/[^a-zA-Z0-9]/g, '-');
+            const nameInput = document.getElementById(`edit-name-${safeId}`);
+            const priceInput = document.getElementById(`edit-price-${safeId}`);
 
             // Perform native HTML5 validation
             if (!nameInput.reportValidity() || !priceInput.reportValidity()) {
-                showPopup("flex", "Validation Error", "block", `Please correct the inputs for product "${originalName}".`);
+                showPopup("flex", "Validation Error", "block", `Please correct the inputs for product "${nameInput.value}".`);
                 return; // Stop processing if any validation fails
             }
 
             const newName = nameInput.value.trim();
             const newPrice = parseFloat(priceInput.value);
 
-            // Check for duplicate names among current *edited* products in this batch
-            // This ensures if user types "A" and "B" into two inputs, they are unique within this edit session
-            if (newProductNames.has(newName) && newName !== originalName) {
-                showPopup("flex", "Validation Error", "block", `Duplicate product name "${newName}". All product names must be unique within this edit session.`);
+            // Check for duplicate names among the *final* set of products after this save operation
+            // This is crucial to prevent saving conflicting product names
+            if (productsAfterSave[newName] !== undefined) {
+                showPopup("flex", "Validation Error", "block", `Duplicate product name "${newName}". All product names must be unique.`);
                 return;
             }
-            newProductNames.add(newName);
-
-            updates.push({ originalName, newName, newPrice, originalPrice });
+            productsAfterSave[newName] = newPrice; // Store final state for uniqueness check
         }
 
-        // Second pass: Execute Firebase operations sequentially
-        try {
-            for (const update of updates) {
-                const { originalName, newName, newPrice, originalPrice } = update;
+        // Step 2: Build Firebase operations
+        
+        // Process deletions first
+        for (const originalName of window.productsMarkedForDeletion) {
+            firebaseOperations.push(remove(ref(database, `businesses/${businessValue}/products/${originalName}`)));
+            console.log(`Marked for Firebase removal: ${originalName}`);
+        }
+
+        // Process adds, updates, renames
+        for (const card of productCards) {
+            const originalName = card.getAttribute('data-original-name');
+            const tempId = card.getAttribute('data-temp-id'); // will be null for existing products
+            
+            const safeId = (tempId ? `temp-${tempId}` : originalName).replace(/[^a-zA-Z0-9]/g, '-');
+            const nameInput = document.getElementById(`edit-name-${safeId}`);
+            const priceInput = document.getElementById(`edit-price-${safeId}`);
+
+            const newName = nameInput.value.trim();
+            const newPrice = parseFloat(priceInput.value);
+
+            if (originalName) { // This is an existing product (not marked for deletion, because those were filtered out earlier)
+                const oldPrice = parseFloat(card.getAttribute('data-original-price'));
 
                 if (newName !== originalName) {
-                    // Scenario 1: Product name has changed (rename)
-                    // Check if the NEW name exists as an ORIGINAL product name in DB that is *not* being renamed itself in this batch.
-                    // This prevents overwriting an existing product if 'newName' was already a product not part of this edit batch.
-                    if (originalProductNamesInDb.has(newName) && !updates.some(u => u.originalName === newName)) {
-                        showPopup("flex", "Validation Error", "block", `Cannot rename "${originalName}" to "${newName}" because a product with that exact name already exists.`);
-                        return; // Stop if there's a conflict
-                    }
-                    await remove(ref(database, `businesses/${businessValue}/products/${originalName}`));
-                    await set(ref(database, `businesses/${businessValue}/products/${newName}`), newPrice);
-                    console.log(`Renamed "${originalName}" to "${newName}" with price $${newPrice}`);
-                } else if (newPrice !== originalPrice) {
-                    // Scenario 2: Only price has changed
-                    await set(ref(database, `businesses/${businessValue}/products/${originalName}`), newPrice);
-                    console.log(`Updated price of "${originalName}" to $${newPrice}`);
+                    // Rename scenario
+                    console.log(`Marked for Firebase rename: ${originalName} to ${newName} with price $${newPrice}`);
+                    // Remove old entry
+                    firebaseOperations.push(remove(ref(database, `businesses/${businessValue}/products/${originalName}`)));
+                    // Add new entry
+                    firebaseOperations.push(set(ref(database, `businesses/${businessValue}/products/${newName}`), newPrice));
+                } else if (newPrice !== oldPrice) {
+                    // Price update scenario (name is the same)
+                    console.log(`Marked for Firebase price update: ${newName} to $${newPrice}`);
+                    firebaseOperations.push(set(ref(database, `businesses/${businessvalue}/products/${newName}`), newPrice));
                 }
-                // Scenario 3: Both name and price are unchanged (do nothing)
+                // If neither name nor price changed, no operation needed for this item
+            } else if (tempId) { // This is a newly added product
+                console.log(`Marked for Firebase add: ${newName} with price $${newPrice}`);
+                firebaseOperations.push(set(ref(database, `businesses/${businessValue}/products/${newName}`), newPrice));
             }
-            showPopup("flex", "Success!", "block", "All product changes saved successfully.");
+        }
+
+        // Step 3: Execute all Firebase operations
+        try {
+            await Promise.all(firebaseOperations); // Execute all collected operations concurrently
+            showPopup("flex", "Success!", "block", "All product changes saved successfully. Reverting to sales mode.");
             window.editingMode = false; // Exit editing mode
             window.fetchAndRenderProducts(); // Re-fetch and re-render the updated list in default mode
         } catch (error) {
@@ -620,6 +713,8 @@
             return;
         }
         window.editingMode = false; // Exit editing mode
+        window.productsMarkedForDeletion.clear(); // Clear pending deletions
+        window.productsNewlyAdded = []; // Clear pending additions
         window.fetchAndRenderProducts(); // Re-fetch and re-render the original list (discards input values)
         showPopup("flex", "Canceled", "block", "All unsaved changes have been discarded.");
       };
