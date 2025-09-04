@@ -804,10 +804,29 @@
         <div id="products-grid" class="product-grid">
           <!-- Products will be rendered here by JavaScript -->
         </div>
-        <div class="product-summary">
-          <p>Total: <span id="totalSaleAmount">$0.00</span></p>
-          <button type="button" id="clear-selection-button" class="outline-button">Clear Selection</button>
-        </div>
+          <div class="product-summary">
+              <p>Total: <span id="totalSaleAmount">$0.00</span></p>
+              <button type="button" id="clear-selection-button" class="outline-button">Clear Selection</button>
+            </div>
+            <button type="button" id="add-product-toggle-button" class="fill-button">Add/Hide New Product Form</button>
+            <div id="add-product-form-container" style="display: none;">
+              <h3>Add New Product</h3>
+              <!-- NEW FORM START -->
+              <form id="addNewProductForm" onsubmit="return false;"> 
+                <input type="text" id="newProductName" name="newProductName" placeholder="Product Name" required>
+                <input type="number" id="newProductPrice" name="newProductPrice" placeholder="Price (Hawkeyes)" step="1" min="1" required>
+                <button type="button" id="submitNewProduct" class="fill-button">Create Product</button>
+                <button type="button" id="cancelAddProduct" class="outline-button">Cancel</button>
+              </form>
+              <!-- NEW FORM END -->
+            </div>
+            <!-- Existing buttons, now placed after product selection and add form -->
+            <div class="action-buttons-container">
+              <button type="button" id="cancel-button" class="outline-button">Back</button>
+              <button type="submit" class="fill-button" id="processSaleButton">Process Sale</button>
+            </div>
+          </div>
+        </form>
         <button type="button" id="add-product-toggle-button" class="fill-button">Add/Hide New Product Form</button>
         <div id="add-product-form-container" style="display: none;">
           <h3>Add New Product</h3>
