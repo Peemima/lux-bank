@@ -426,14 +426,9 @@
 
       // Function to delete a product
       window.deleteProduct = async function(productName) {
-        if (!confirm(`Are you sure you want to delete "${productName}"? This action cannot be undone.`)) {
-          return;
-        }
-
         try {
           const productRef = ref(database, `businesses/${businessValue}/products/${productName}`);
           await remove(productRef);
-          showPopup("flex", "Success!", "block", `${productName} deleted successfully.`);
           
           // Also remove from local state
           delete window.currentProducts[productName];
@@ -599,7 +594,6 @@
               showPopup("flex", "Scan Error", "block", "Failed to scan user ID. Please try again.");
               iframeControl('start'); // Re-enable scanner if scan failed
           } else {
-              showPopup("flex", "User Scanned!", "block", `User ID ${window.latestUserID} scanned. Please select products.`);
           }
         }, 1000); // Small delay to ensure iframe state is fully updated
       }
