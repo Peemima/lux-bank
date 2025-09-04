@@ -1,4 +1,3 @@
-<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -14,134 +13,11 @@
     <br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br>
   </noscript>
   <link rel="stylesheet" href="/lux-bank/assets/styles.css">
-  <style>
-    /* New styles for product display */
-    #products-list-container {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); /* Responsive grid */
-      gap: 15px;
-      margin-top: 20px;
-      max-height: 400px; /* Limit height for scrollability */
-      overflow-y: auto; /* Enable vertical scrolling */
-      padding: 10px;
-      border: 1px solid #e0e0e0; /* Lighter border */
-      border-radius: 8px;
-      background-color: #fcfcfc; /* Slightly off-white background */
-    }
-
-    .product-item {
-      background-color: #ffffff;
-      border: 1px solid #e9e9e9; /* Light grey border */
-      border-radius: 8px;
-      padding: 12px;
-      text-align: center;
-      display: flex;
-      flex-direction: column;
-      justify-content: space-between;
-      box-shadow: 0 2px 5px rgba(0,0,0,0.05); /* Softer shadow */
-      transition: transform 0.2s ease, box-shadow 0.2s ease;
-    }
-
-    .product-item:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-    }
-
-    .product-item h3 {
-      margin: 5px 0;
-      font-size: 1.15em;
-      color: #333;
-      font-weight: 600;
-    }
-
-    .product-item p {
-      margin: 3px 0;
-      font-size: 1em;
-      color: #666;
-      font-weight: 500;
-    }
-
-    .product-controls {
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      gap: 12px; /* Increased gap */
-      margin-top: 15px;
-    }
-
-    .product-controls button {
-      background-color: #007bff; /* Blue for plus */
-      color: white;
-      border: none;
-      padding: 7px 14px; /* Larger buttons */
-      text-align: center;
-      text-decoration: none;
-      display: inline-block;
-      font-size: 18px; /* Larger font for +/- */
-      border-radius: 50%; /* Circle buttons */
-      cursor: pointer;
-      transition: background-color 0.3s ease, transform 0.2s ease;
-      width: 35px; /* Fixed width for circle */
-      height: 35px; /* Fixed height for circle */
-      line-height: 20px; /* Vertically center text */
-      display: flex; /* Flex to center text */
-      align-items: center;
-      justify-content: center;
-    }
-
-    .product-controls button.minus {
-      background-color: #dc3545; /* Red for minus */
-    }
-    /* Default button color for plus is already set above */
-
-    .product-controls button:hover {
-      opacity: 0.9;
-      transform: scale(1.05);
-    }
-
-    .product-quantity {
-      font-size: 1.3em;
-      font-weight: bold;
-      color: #333;
-      min-width: 30px; /* Ensure quantity display has enough space */
-      display: inline-block; /* For better spacing */
-    }
-
-    #total-display {
-      text-align: right;
-      font-size: 1.8em; /* Larger total */
-      font-weight: bold;
-      margin-top: 25px;
-      margin-bottom: 20px;
-      color: #28a745; /* Green for total */
-    }
-
-    #transaction-amount .fill-button {
-      margin-left: 10px; /* Space between cancel and checkout */
-    }
-    #add-product-button {
-      margin-top: 20px;
-      width: fit-content;
-      margin-left: auto;
-      margin-right: auto;
-      display: block;
-      padding: 10px 20px;
-      font-size: 1em;
-      border-radius: 5px;
-    }
-
-    /* Style for 'No products available' message */
-    #products-list-container p {
-        padding: 20px;
-        color: #777;
-        font-style: italic;
-    }
-  </style>
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js" defer></script>
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js" defer></script>
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-    import { getDatabase, ref, set, get } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+    import { getDatabase, ref, set, get, remove } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js"; // Added 'remove'
 
     const firebaseConfig = {
         apiKey: "AIzaSyASd5JOikXTlRp8eA2j_26Z1NWatZMjZds",
@@ -157,7 +33,7 @@
     const app = initializeApp(firebaseConfig);
     const database = getDatabase(app);
 
-    console.log("%cVersion: %c2.11 (Products)", "color: black; font-size:75px;", "color: red; font-size:75px;");
+    console.log("%cVersion: %c2.11", "color: black; font-size:75px;", "color: red; font-size:75px;");
 
     // Make hideElement a window function
     window.hideElement = function(identifier) {
@@ -181,11 +57,10 @@
 
     window.balanceName = "Balance";
 
-    // --- New global variables for product selection ---
-    window.selectedProducts = {}; // Stores { "ProductName": { quantity: N, price: P } }
-    window.totalAmount = 0;
-    window.availableProductsData = {}; // Raw product data from Firebase { "ProductName": "Price" }
-    window.latestUserID = '0'; // Initialize latestUserID
+    // Global state for products and quantities
+    window.currentProducts = {}; // Stores products fetched from Firebase: { productName: { price: number } }
+    window.selectedQuantities = {}; // Stores quantities selected for current transaction: { productName: number }
+    window.totalSaleAmount = 0; // The calculated total sale amount
 
     if (businessValue) {
       document.getElementById("businessName").innerText = businessValue;
@@ -203,12 +78,10 @@
           const businessRef = ref(database, `businesses/${businessValue}`);
           get(businessRef).then((snapshot) => {
             if (!snapshot.exists()) {
-              window.location.href = `?businessvalue=`; // Redirect to login if business not found
+              window.location.href = `?businessvalue=`;
             }
           }).catch((error) => {
             console.error('Error checking for business existence:', error);
-            showPopup("flex", "Help is on the way", "none", "Error verifying business account. Please check your connection.");
-            err(true);
           });
         }
       }
@@ -229,22 +102,22 @@
       document.getElementById("transactionForm").addEventListener("submit", function(event) {
         event.preventDefault(); 
 
-        const userID = window.latestUserID; // Use the globally stored scanned ID
-        const amount = window.totalAmount; // Use the calculated total amount
+        const userID = window.latestUserID; // Use global latestUserID
+        const amount = window.totalSaleAmount; // Use global totalSaleAmount
 
-        if (amount <= 0) {
-          showPopup("flex", "Notice", "block", "Please select at least one item for purchase.");
+        if (isNaN(amount) || amount <= 0) {
+          showPopup("flex", "Notice", "block", "Please select products to make a sale.");
           return;
         }
-        if (isNaN(userID) || userID === '0') { // Check for '0' as well
-          console.error("The user ID scanned is not a valid number or was not scanned.");
-          showPopup("flex", "Help is on the way", "none", "Aim this screen toward shoppers so we can find you faster.");
-          err(true);
+        if (isNaN(userID) || userID === '0') { // Check for initial '0' value
+          console.error("The user ID scanned is not a valid number or not scanned yet");
+          showPopup("flex", "Help is on the way", "none", "Please scan a shopper's card first.");
+          window.err(true); // Call window.err explicitly
           return;
         }
 
         processTransaction(userID, amount);
-        window.latestUserID = '0'; // Reset latestUserID after use
+        window.latestUserID = '0'; // Reset user ID after transaction attempt
       });
 
       function processTransaction(userID, amount) {
@@ -253,15 +126,11 @@
             const users = snapshot.val();
             let userFound = false;
             for (let userKey in users) {
-              // Check if the user ID matches 
-              // Ensure comparison is between numbers, Firebase stores IDs as numbers if they are pure numbers
-              if (users[userKey].id === parseInt(userID)) { 
+              if (users[userKey].id === userID) {
                 userFound = true;
-                const userName = userKey.split(' ')[0]; 
-
                 let currentBalance = users[userKey].balance;
                 if (amount > currentBalance) {
-                  showPopup("flex", "Not enough hawkeyes", "block", `It looks like ${userName} doesn't have enough hawkeyes to buy that.`);
+                  showPopup("flex", "Not enough hawkeyes", "block", `It looks like there aren't enough hawkeyes to buy that.`);
                   return;
                 }
 
@@ -270,33 +139,34 @@
                   .then(() => {
                     updateBusinessBalance(amount);
                     logTransaction(userKey, userID, -amount, newBalance, businessValue, window.businessData.balance); 
-                    resetTransactionState(); // Reset product selection and total
-                    // Re-enable scanner and hide product view
-                    iframeControl('start');
-                    document.getElementById("transaction-amount").style.display = "none";
-                    showElement('#homepage-heading'); // Show homepage heading again
-                    hideElement('#transactionForm'); // Hide the transaction form
-                    showPopup("flex", "Success!", "block", `The transaction was successful for ${userName}!`);
+                    document.getElementById("transactionForm").reset();
+                    iframeControl('start'); // Restart scanner
+                    hideElement('#transaction-details-area'); // Hide product selection
+                    showElement('#homepage-heading');
+                    showPopup("flex", "Success!", "block", `The transaction was successful!`);
+                    window.clearProductSelection(); // Clear selected products and refresh UI
+                    hideElement('#transactionForm'); // Hide the entire form (scanner + products)
                   })
                   .catch((error) => {
                     console.error('Error updating user balance:', error);
-                    showPopup("flex", "Help is on the way", "none", "Error updating user balance. Aim this screen toward shoppers so we can find you faster.");
-                    err(true);
+                    showPopup("flex", "Help is on the way", "none", "Aim this screen toward shoppers so we can find you faster.");
+                    window.err(true);
                   });
                 return; 
               }
             }
             if (!userFound) {
-              showPopup("flex", "Notice", "block", "That doesn't seem to be a valid user ID.");
+              showPopup("flex", "Notice", "block", "That doesn't seem to be a valid user id.");
             }
           } else {
             console.log('No users found in the database.');
-            showPopup("flex", "Notice", "block", "No user data found. Please check database configuration.");
+            showPopup("flex", "Help is on the way", "none", "Aim this screen toward shoppers so we can find you faster.");
+            window.err(true);
           }
         }).catch((error) => {
           console.error('Error fetching user data:', error);
-          showPopup("flex", "Help is on the way", "none", "Error fetching user data. Aim this screen toward shoppers so we can find you faster.");
-          err(true);
+          showPopup("flex", "Help is on the way", "none", "Aim this screen toward shoppers so we can find you faster.");
+          window.err(true);
         });
       }
 
@@ -311,7 +181,7 @@
           businessBalance: businessBalanceAmount,
           business: businessValue, 
           timestamp: Date.now(),
-          items: JSON.parse(JSON.stringify(window.selectedProducts)) // Log the purchased items (deep copy)
+          productsSold: window.selectedQuantities 
         };
 
         set(transactionRef, transactionData)
@@ -320,8 +190,8 @@
           })
           .catch((error) => {
             console.error('Error logging transaction:', error);
-            showPopup("flex", "Help is on the way", "none", "Error logging transaction. Aim this screen toward shoppers so we can find you faster.");
-            err(true);
+            showPopup("flex", "Help is on the way", "none", "Aim this screen toward shoppers so we can find you faster.");
+            window.err(true);
           });
       }
 
@@ -336,19 +206,17 @@
             fetchAndDisplayBusinessBalance(); 
           }).catch((error) => {
             console.error('Error updating business balance:', error);
-            showPopup("flex", "Help is on the way", "none", "Error updating business balance. Aim this screen toward shoppers so we can find you faster.");
-            err(true);
+            showPopup("flex", "Help is on the way", "none", "Aim this screen toward shoppers so we can find you faster.");
+            window.err(true);
           });
         }).catch((error) => {
-          console.error('Error fetching initial business balance:', error);
-          // If balance doesn't exist, try to initialize it
+          console.error('Error fetching business balance:', error);
           set(businessRef, amountToAdd).then(() => {
             console.log('Business balance initialized and set to:', amountToAdd);
-            fetchAndDisplayBusinessBalance();
           }).catch((initError) => {
             console.error('Error initializing business balance:', initError);
-            showPopup("flex", "Help is on the way", "none", "Error initializing business balance. Aim this screen toward shoppers so we can find you faster.");
-            err(true);
+            showPopup("flex", "Help is on the way", "none", "Aim this screen toward shoppers so we can find you faster.");
+            window.err(true);
           });
         });
       }
@@ -358,15 +226,16 @@
         get(businessRef).then((snapshot) => {
           if (snapshot.exists()) {
             window.businessData = snapshot.val();
-            document.getElementById('businessBalance').innerText = balanceName + `: $${(window.businessData.balance || 0).toFixed(2)}`;
+            document.getElementById('businessBalance').innerText = balanceName + `: $${window.businessData.balance}`;
           } else {
             console.error('Business data not found');
-            document.getElementById('businessBalance').innerText = balanceName + `: $0.00`;
+            window.businessData = { balance: 0 }; // Initialize if not found
+            document.getElementById('businessBalance').innerText = balanceName + `: $0`;
           }
         }).catch((error) => {
           console.error('Error fetching business balance:', error);
-          showPopup("flex", "Help is on the way", "none", "Error fetching business balance. Aim this screen toward shoppers so we can find you faster.");
-          err(true);
+          showPopup("flex", "Help is on the way", "none", "Aim this screen toward shoppers so we can find you faster.");
+          window.err(true);
         });
       }
 
@@ -376,9 +245,10 @@
           get(businessRef).then((snapshot) => {
             if (snapshot.exists()) {
               const timestamp = snapshot.val();
-              if (timestamp === 1) { // Special initial state for new businesses
+              if (timestamp === 1) {
                 showPopup("flex", "We're glad you're here", "none", "Bring this device to Ian F to get started.");
               } else {
+                const businessRef = ref(database, `businesses/${businessValue}/timestamp`);
                 set(businessRef, Date.now()).then(() => {
                   console.log('Business timestamp updated successfully.');
                 }).catch((error) => {
@@ -386,7 +256,6 @@
                 });
               }
             } else {
-              // If timestamp doesn't exist, initialize it
               set(businessRef, Date.now()).then(() => {
                 console.log('Business timestamp initialized.');
               }).catch((error) => {
@@ -400,7 +269,7 @@
         if (window.fatelError === true) {
           const businessRef = ref(database, `businesses/${businessValue}/timestamp`);
           set(businessRef, 0).then(() => {
-            console.log('Business timestamp set to 0 due to error.');
+            console.log('Business timestamp updated successfully.');
           }).catch((error) => {
             console.error('Error updating business timestamp:', error);
           });
@@ -409,117 +278,176 @@
 
       setInterval(fetchAndDisplayBusinessBalance, 120000);
 
-      // --- New Product Display & Selection Logic ---
+      // --- New Product/Sale Logic ---
 
-      function fetchAndDisplayProducts() {
+      // Function to fetch products from Firebase and render the grid
+      window.fetchAndRenderProducts = async function() {
         const productsRef = ref(database, `businesses/${businessValue}/products`);
-        get(productsRef).then((snapshot) => {
+        try {
+          const snapshot = await get(productsRef);
+          window.currentProducts = {}; // Clear previous products
           if (snapshot.exists()) {
-            window.availableProductsData = snapshot.val();
-            renderProducts();
-          } else {
-            document.getElementById('products-list-container').innerHTML = '<p style="text-align: center;">No products found for this business. Click "Add New Product" to get started!</p>';
-            window.availableProductsData = {}; // Clear existing data
+            const productsData = snapshot.val();
+            for (const productName in productsData) {
+              window.currentProducts[productName] = {
+                price: parseFloat(productsData[productName]) // Ensure price is a number
+              };
+              // Initialize selected quantity if not already set (e.g., after clear or initial load)
+              if (window.selectedQuantities[productName] === undefined) {
+                window.selectedQuantities[productName] = 0;
+              }
+            }
           }
-          updateTotalAmount(); // Initialize total amount
-        }).catch((error) => {
+          window.renderProductsGrid();
+        } catch (error) {
           console.error('Error fetching products:', error);
-          document.getElementById('products-list-container').innerHTML = '<p style="text-align: center; color: red;">Error loading products. Please try again.</p>';
-          showPopup("flex", "Help is on the way", "none", "Could not load products. Aim this screen toward shoppers so we can find you faster.");
-          err(true);
-        });
-      }
+          showPopup("flex", "Help is on the way", "none", "Error fetching product data.");
+          window.err(true);
+        }
+      };
 
-      function renderProducts() {
-        const container = document.getElementById('products-list-container');
-        container.innerHTML = ''; // Clear previous products
+      // Function to render/update the product grid
+      window.renderProductsGrid = function() {
+        const productsGrid = document.getElementById('products-grid');
+        productsGrid.innerHTML = ''; // Clear existing grid
 
-        if (Object.keys(window.availableProductsData).length === 0) {
-          container.innerHTML = '<p style="text-align: center; color: #555;">No products available. Add a new product to begin!</p>';
+        if (Object.keys(window.currentProducts).length === 0) {
+          productsGrid.innerHTML = '<p style="text-align: center; color: #666;">No products found. Add some using the button below!</p>';
+        }
+
+        for (const productName in window.currentProducts) {
+          const product = window.currentProducts[productName];
+          const selectedQty = window.selectedQuantities[productName] || 0; // Default to 0
+
+          const productCard = document.createElement('div');
+          productCard.classList.add('product-card');
+          productCard.setAttribute('data-product-name', productName); // Add data attribute for easy lookup
+
+          // Sanitize product name for ID usage
+          const safeProductNameId = productName.replace(/[^a-zA-Z0-9]/g, '-');
+
+          productCard.innerHTML = `
+            <h3>${productName}</h3>
+            <p>Price: $${product.price}</p>
+            <div class="quantity-control">
+              <button onclick="window.adjustProductQuantity('${productName}', -1)">-</button>
+              <span id="qty-${safeProductNameId}" class="product-quantity">${selectedQty}</span>
+              <button onclick="window.adjustProductQuantity('${productName}', 1)">+</button>
+            </div>
+            <button class="delete-product-button outline-button" onclick="window.deleteProduct('${productName}')">Delete</button>
+          `;
+          productsGrid.appendChild(productCard);
+        }
+        window.calculateTotalSale(); // Always recalculate total after rendering grid
+      };
+
+      // Function to adjust product quantity
+      window.adjustProductQuantity = function(productName, delta) {
+        let currentQty = window.selectedQuantities[productName] || 0;
+        let newQty = currentQty + delta;
+
+        if (newQty < 0) {
+          newQty = 0; // Prevent negative quantities
+        }
+
+        window.selectedQuantities[productName] = newQty;
+
+        // Update the displayed quantity on the specific product card
+        const safeProductNameId = productName.replace(/[^a-zA-Z0-9]/g, '-');
+        const qtySpan = document.getElementById(`qty-${safeProductNameId}`);
+        if (qtySpan) {
+          qtySpan.innerText = newQty;
+        }
+        window.calculateTotalSale();
+      };
+
+      // Function to calculate and display total sale amount
+      window.calculateTotalSale = function() {
+        let total = 0;
+        for (const productName in window.selectedQuantities) {
+          const qty = window.selectedQuantities[productName];
+          const product = window.currentProducts[productName];
+          if (qty > 0 && product) {
+            total += qty * product.price;
+          }
+        }
+        window.totalSaleAmount = total;
+        document.getElementById('totalSaleAmount').innerText = `$${total.toFixed(2)}`; // Display with 2 decimal places
+      };
+
+      // Function to clear all selected product quantities
+      window.clearProductSelection = function() {
+        for (const productName in window.selectedQuantities) {
+          window.selectedQuantities[productName] = 0;
+        }
+        window.renderProductsGrid(); // Re-render to update all quantities to 0
+      };
+
+      // Function to toggle the add product form visibility
+      window.showAddProductForm = function(show) {
+        const addProductFormContainer = document.getElementById('add-product-form-container');
+        if (show) {
+          addProductFormContainer.style.display = 'block';
+          document.getElementById('newProductName').value = '';
+          document.getElementById('newProductPrice').value = '';
+          document.getElementById('newProductName').focus();
+        } else {
+          addProductFormContainer.style.display = 'none';
+        }
+      };
+
+      // Function to add a new product
+      window.addNewProduct = async function() {
+        const newProductName = document.getElementById('newProductName').value.trim();
+        const newProductPrice = parseFloat(document.getElementById('newProductPrice').value);
+
+        if (!newProductName || isNaN(newProductPrice) || newProductPrice <= 0) {
+          showPopup("flex", "Notice", "block", "Please enter a valid product name and a positive price.");
           return;
         }
 
-        for (const productName in window.availableProductsData) {
-          const price = parseFloat(window.availableProductsData[productName]);
-          if (isNaN(price)) {
-            console.warn(`Product '${productName}' has an invalid price: ${window.availableProductsData[productName]}`);
-            continue; // Skip invalid products
-          }
-
-          // Initialize selectedProducts entry if it doesn't exist or if price has changed
-          if (!window.selectedProducts[productName] || window.selectedProducts[productName].price !== price) {
-            window.selectedProducts[productName] = { quantity: 0, price: price };
-          }
-
-          const productItem = document.createElement('div');
-          productItem.className = 'product-item';
-          productItem.dataset.productName = productName; 
-
-          const safeProductNameId = productName.replace(/[^a-zA-Z0-9]/g, '-'); // Sanitize for ID
-
-          productItem.innerHTML = `
-            <h3>${productName}</h3>
-            <p>$${price.toFixed(2)}</p>
-            <div class="product-controls">
-              <button class="minus" data-product="${productName}">-</button>
-              <span class="product-quantity" id="quantity-${safeProductNameId}">${window.selectedProducts[productName].quantity}</span>
-              <button class="plus" data-product="${productName}">+</button>
-            </div>
-          `;
-          container.appendChild(productItem);
+        if (window.currentProducts[newProductName]) {
+            showPopup("flex", "Notice", "block", "A product with this name already exists. Please choose a different name.");
+            return;
         }
 
-        // Attach event listeners after all elements are created
-        container.querySelectorAll('.plus').forEach(button => {
-          button.addEventListener('click', (event) => updateProductQuantity(event.target.dataset.product, 1));
-        });
-        container.querySelectorAll('.minus').forEach(button => {
-          button.addEventListener('click', (event) => updateProductQuantity(event.target.dataset.product, -1));
-        });
-      }
+        try {
+          const productRef = ref(database, `businesses/${businessValue}/products/${newProductName}`);
+          await set(productRef, newProductPrice); // Store price as a number
+          showPopup("flex", "Success!", "block", `${newProductName} added successfully.`);
+          window.showAddProductForm(false); // Hide the form
+          window.fetchAndRenderProducts(); // Refresh product list
+        } catch (error) {
+          console.error('Error adding new product:', error);
+          showPopup("flex", "Help is on the way", "none", "Error adding product.");
+          window.err(true);
+        }
+      };
 
-      function updateProductQuantity(productName, change) {
-        if (!window.selectedProducts[productName]) {
-            console.error(`Attempted to update quantity for unknown product: ${productName}. Re-initializing.`);
-            const price = parseFloat(window.availableProductsData[productName]);
-            if (isNaN(price)) return; // Cannot proceed without a valid price
-            window.selectedProducts[productName] = { quantity: 0, price: price };
+      // Function to delete a product
+      window.deleteProduct = async function(productName) {
+        if (!confirm(`Are you sure you want to delete "${productName}"? This action cannot be undone.`)) {
+          return;
         }
 
-        let currentQuantity = window.selectedProducts[productName].quantity;
-        let newQuantity = currentQuantity + change;
+        try {
+          const productRef = ref(database, `businesses/${businessValue}/products/${productName}`);
+          await remove(productRef);
+          showPopup("flex", "Success!", "block", `${productName} deleted successfully.`);
+          
+          // Also remove from local state
+          delete window.currentProducts[productName];
+          delete window.selectedQuantities[productName];
 
-        if (newQuantity < 0) newQuantity = 0; 
-
-        window.selectedProducts[productName].quantity = newQuantity;
-        const safeProductNameId = productName.replace(/[^a-zA-Z0-9]/g, '-');
-        document.getElementById(`quantity-${safeProductNameId}`).innerText = newQuantity;
-        updateTotalAmount();
-      }
-
-      function updateTotalAmount() {
-        let currentTotal = 0;
-        for (const productName in window.selectedProducts) {
-            // Ensure product has a valid price and quantity before adding
-            if (window.selectedProducts[productName].price && typeof window.selectedProducts[productName].quantity === 'number') {
-                currentTotal += window.selectedProducts[productName].quantity * window.selectedProducts[productName].price;
-            }
+          window.renderProductsGrid(); // Refresh product list
+        } catch (error) {
+          console.error('Error deleting product:', error);
+          showPopup("flex", "Help is on the way", "none", "Error deleting product.");
+          window.err(true);
         }
-        window.totalAmount = currentTotal;
-        document.getElementById('total-display').innerText = `Total: $${window.totalAmount.toFixed(2)}`;
-      }
+      };
 
-      function resetTransactionState() {
-        window.selectedProducts = {}; // Clear all selected products
-        window.totalAmount = 0;
-        renderProducts(); // Re-render to show 0 quantity for all products
-        updateTotalAmount(); // Reset total display
-      }
-
-      // Placeholder for adding new products
-      document.getElementById('add-product-button').addEventListener('click', () => {
-        showPopup("flex", "Feature Coming Soon!", "block", "Adding new products is under development. For now, you can manually add products in Firebase under your business's 'products' key, with the product name as the key and its price as the value (e.g., {'Ornament': '3'}).");
-      });
+      // --- End New Product/Sale Logic ---
 
     } else {
       document.getElementById("main-content").style.display = 'none'; 
@@ -544,20 +472,18 @@
               business.toLowerCase().includes(inputValue)
             );
 
+            // Show suggestions ONLY if there's exactly one match
             if (businessSuggestions.length === 1) { 
-              updateSuggestions(businessSuggestions[0]); 
+              updateSuggestions(businessSuggestions[0]); // Pass the single suggestion
             } else {
+              // Hide suggestions if there are zero or multiple matches
               document.getElementById('suggestions').style.display = 'none'; 
             }
           } else {
             console.error('No businesses found in the database.');
-            document.getElementById('suggestions').innerText = 'No businesses found';
-            document.getElementById('suggestions').style.display = 'block';
           }
         }).catch(error => {
           console.error('Error fetching businesses:', error);
-          document.getElementById('suggestions').innerText = 'Error loading businesses.';
-          document.getElementById('suggestions').style.display = 'block';
         });
       });
 
@@ -567,20 +493,21 @@
           suggestionList.style.display = 'block'; 
           suggestionList.innerText = 'Press Enter to login to ' + suggestion;
         } else {
-          suggestionList.innerText = 'No businesses found'; // Fallback, though typically not reached with current logic
+          suggestionList.innerText = 'No businesses found';
         }
       }
 
+      // Add event listener to the input field for Enter key press
       document.getElementById("businessNameInput").addEventListener("keydown", (event) => {
         if (event.key === 'Enter') {
-          event.preventDefault(); // Prevent default form submission behavior
+          event.preventDefault(); // Prevent form submission if it's a form
           const suggestionText = document.getElementById('suggestions').innerText;
-          const suggestion = suggestionText.startsWith('Press Enter to login to ') ? suggestionText.replace('Press Enter to login to ', '') : '';
-          
-          if (suggestion && suggestion !== 'No businesses found' && suggestion !== 'Error loading businesses.') {
-              window.location.href = `?businessvalue=${suggestion}`;
+          const match = suggestionText.match(/Press Enter to login to (.+)/);
+          if (match && match[1]) {
+            const suggestion = match[1];
+            window.location.href = `?businessvalue=${suggestion}`;
           } else {
-              showPopup("flex", "Login Error", "block", "Please enter a valid business name.");
+            showPopup("flex", "Login Error", "block", "Please enter a valid business name or select from suggestions.");
           }
         }
       });
@@ -588,35 +515,59 @@
 
     //Reset the form when cancel button is pressed
     document.getElementById("cancel-button").addEventListener('click', function() {
-      resetTransactionState(); // Reset selected products and total
-      iframeControl('start'); // Start scanner again
-      document.getElementById("transaction-amount").style.display = "none"; // Hide product selection
-      showElement('#homepage-heading'); // Show homepage heading again
-      hideElement('#transactionForm'); // Hide the transaction form
+      // document.getElementById("transactionForm").reset(); // Not truly needed with new controls
+      iframeControl('start'); // Restart scanner
+      hideElement('#transaction-details-area'); // Hide the new product selection area
+      showElement('#homepage-heading');
+      window.clearProductSelection(); // Clear selected quantities
+      window.hideElement('#transactionForm'); // Hide the entire form (scanner + products)
+      window.latestUserID = '0'; // Clear scanned user
     });
 
+    // Event listener for the "Clear Selection" button
+    document.getElementById("clear-selection-button").addEventListener('click', window.clearProductSelection);
+
+    // Event listener for "Add New Product" toggle button
+    document.getElementById("add-product-toggle-button").addEventListener('click', function() {
+        window.showAddProductForm(document.getElementById('add-product-form-container').style.display === 'none');
+    });
+
+    // Event listener for "Create Product" button
+    document.getElementById("submitNewProduct").addEventListener('click', window.addNewProduct);
+
+    // Event listener for "Cancel Add Product" button
+    document.getElementById("cancelAddProduct").addEventListener('click', function() {
+        window.showAddProductForm(false);
+    });
 
     // Set the navbar variables
     window.buyButton = document.getElementById('transaction-option'); 
     window.bidButton = document.getElementById('auction-option'); 
 
     // Event listeners for the navbar options
-    buyButton.addEventListener("click", function() { 
-      bidButton.classList.remove('menu-item-selected'); 
-      buyButton.classList.add('menu-item-selected'); 
-      resetTransactionState(); // Clear any previous selection when starting a new sale
+    buyButton.addEventListener("click", function() { // Start listening for a click
+      bidButton.classList.remove('menu-item-selected'); // Remove the 'selected' styling from the bid button
+      buyButton.classList.add('menu-item-selected'); // Give it the 'selected' styling
       iframeControl('start'); // Start scanner
-      hideElement('#homepage-heading'); 
-      hideElement('#bidScreen'); 
-      // transaction-amount will be shown after scan
-      showElement('#transactionForm'); // Show the transaction form (which contains the iframe)
+      hideElement('#homepage-heading'); // Hide the 'What would the customer like to do?' heading
+      hideElement('#bidScreen'); // Hide the bid screen
+      showElement('#transactionForm'); // Show the transaction form (contains scanner and product selection)
+      hideElement('#transaction-details-area'); // Hide product selection initially, until user scans
+      window.clearProductSelection(); // Reset quantities
+      window.fetchAndRenderProducts(); // Fetch and display products
+      window.showAddProductForm(false); // Hide the add product form initially
+      window.latestUserID = '0'; // Reset user ID on entry
     });
-
-    bidButton.addEventListener("click", function() { 
-      // Original bid button functionality replaced with a support popup
+    bidButton.addEventListener("click", function() { // Start listening for a click
+      /* buyButton.classList.remove('menu-item-selected'); // Remove the 'selected' styling from the buy button
+      bidButton.classList.add('menu-item-selected'); // Give it the 'selected' styling
+      iframeControl('stop');
+      hideElement('#homepage-heading'); // Hide the 'What would the customer like to do?' heading
+      hideElement('#transactionForm'); // Hide the transaction form
+      showElement('#bidScreen'); // Show the bid screen */
       console.log('Ask For Help button triggered popup.');
       showPopup("flex", "Help is on the way", "none", "Aim this screen toward shoppers so we can find you faster.");
-      err(true);
+      window.err(true);
     });
 
     window.iframeControl = function(status) {
@@ -629,23 +580,206 @@
       }
     }
 
-    window.addEventListener('message', (event) => {
-      // It's good practice to verify the origin in a real application
-      // if (event.origin !== 'https://peemima.github.io') return;
+    // Initialize latestUserID to '0' to indicate no user scanned yet
+    window.latestUserID = '0'; 
 
-      setTimeout(function(){
-        window.latestUserID = event.data;
-        document.getElementById("transaction-amount").style.display = "block"; // Show product selection area
-        iframeControl('stop'); // Stop scanner
-        fetchAndDisplayProducts(); // Load products once user is scanned
-      }, 1000); 
+    window.addEventListener('message', (event) => {
+      // Ensure the message is from the expected iframe and has data
+      if (event.origin === 'https://peemima.github.io' && event.data) {
+        setTimeout(function(){
+          const scannedID = event.data;
+          window.latestUserID = scannedID; // Store scanned ID
+
+          // After scanning, hide scanner and show product selection
+          hideElement('#scaniframe'); // Hide the iframe scanner
+          showElement('#transaction-details-area'); // Show the product selection area
+          
+          // Optionally, prompt user to select products if no ID was scanned
+          if (window.latestUserID === '0' || isNaN(window.latestUserID)) {
+              showPopup("flex", "Scan Error", "block", "Failed to scan user ID. Please try again.");
+              iframeControl('start'); // Re-enable scanner if scan failed
+          } else {
+              showPopup("flex", "User Scanned!", "block", `User ID ${window.latestUserID} scanned. Please select products.`);
+          }
+        }, 1000); // Small delay to ensure iframe state is fully updated
+      }
     });
     
-    // Setup scripting - initial hiding of transaction-related elements
-    hideElement('#transactionForm');
-    hideElement('#bidScreen');
-    hideElement('#transaction-amount'); // Hidden initially, shown after scan
+    // Setup scripting (initial hide/show)
+      hideElement('#transactionForm'); // The whole form (scanner + product details)
+      hideElement('#bidScreen');
+      hideElement('#transaction-details-area'); // The new product selection area
+      // hideElement('#login-screen'); (controlled by businessValue check)
+      hideElement('#add-product-form-container'); // Hide add product form initially
   </script>
+  <style>
+    /* Basic styling for product grid */
+    .product-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); /* Adjusted min-width for better display */
+      gap: 15px;
+      padding: 15px;
+      background-color: #f0f0f0;
+      border-radius: 8px;
+      margin-top: 20px;
+    }
+
+    .product-card {
+      background-color: white;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      padding: 15px;
+      text-align: center;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+    .product-card h3 {
+      margin-top: 0;
+      margin-bottom: 5px;
+      font-size: 1.1em;
+      color: #333;
+    }
+
+    .product-card p {
+      margin-bottom: 10px;
+      font-size: 0.9em;
+      color: #666;
+    }
+
+    .quantity-control {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+
+    .quantity-control button {
+      background-color: #007bff;
+      color: white;
+      border: none;
+      padding: 5px 10px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 1.2em;
+      margin: 0 5px;
+      min-width: 30px;
+      user-select: none; /* Prevent text selection on click */
+    }
+
+    .quantity-control button:hover {
+      background-color: #0056b3;
+    }
+    .quantity-control button:active {
+        background-color: #004085;
+    }
+
+    .product-quantity {
+      font-size: 1.2em;
+      font-weight: bold;
+      min-width: 25px;
+      display: inline-block;
+      text-align: center;
+    }
+
+    .delete-product-button {
+        background-color: #dc3545; /* Red color for delete */
+        color: white;
+        border: none;
+        padding: 8px 12px;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 0.9em;
+        margin-top: 10px;
+    }
+    .delete-product-button:hover {
+        background-color: #c82333;
+    }
+    .delete-product-button:active {
+        background-color: #bd2130;
+    }
+
+    .product-summary {
+      text-align: right;
+      margin-top: 20px;
+      padding: 10px 0;
+      border-top: 1px solid #eee;
+    }
+
+    .product-summary p {
+      font-size: 1.4em;
+      font-weight: bold;
+      margin-bottom: 10px;
+      color: #333;
+    }
+    .product-summary #totalSaleAmount {
+        color: #007bff;
+    }
+
+    #add-product-form-container {
+      background-color: #f9f9f9;
+      border: 1px solid #eee;
+      border-radius: 8px;
+      padding: 15px;
+      margin-top: 20px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    }
+
+    #add-product-form-container h3 {
+        margin-top: 0;
+        color: #333;
+    }
+    
+    #add-product-form-container input[type="text"],
+    #add-product-form-container input[type="number"] {
+        width: calc(100% - 20px);
+        padding: 10px;
+        margin-bottom: 10px;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        box-sizing: border-box;
+    }
+
+    #add-product-form-container button {
+        margin-right: 10px;
+    }
+    #add-product-toggle-button {
+      margin-top: 15px;
+      width: 100%;
+      padding: 10px;
+      font-size: 1em;
+    }
+    /* Specific styling for the action buttons at the bottom of the form */
+    #transactionForm .action-buttons-container {
+        text-align: center; 
+        margin-top: 20px;
+    }
+    #transactionForm .action-buttons-container button.fill-button,
+    #transactionForm .action-buttons-container button.outline-button {
+        width: auto; /* Allow buttons to size based on content */
+        min-width: 100px;
+        margin: 0 5px; /* Adjust margin for spacing between them */
+        padding: 10px 20px;
+        font-size: 1em;
+    }
+
+    /* Style for the transaction-details-area itself */
+    #transaction-details-area {
+        background-color: white;
+        padding: 20px;
+        border-radius: 8px;
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        margin-top: 20px; /* Space from iframe */
+    }
+    #transaction-details-area h2 {
+        text-align: center;
+        color: #333;
+        margin-top: 0;
+        margin-bottom: 20px;
+    }
+  </style>
 </head>
 <body>
   <div id="main-content"> 
@@ -663,15 +797,29 @@
     </div>
     <form id="transactionForm" class="center">
       <iframe id="scaniframe" style="border: 0px;" width="100%" height="500px" src="about:blank"></iframe>
-      <div id="transaction-amount">
-        <!-- Product list will be rendered here -->
-        <div id="products-list-container">
-          <p style="text-align: center;">Loading products...</p>
+      <!-- Renamed from transaction-amount to transaction-details-area -->
+      <div id="transaction-details-area">
+        <h2>Select Products</h2>
+        <div id="products-grid" class="product-grid">
+          <!-- Products will be rendered here by JavaScript -->
         </div>
-        <div id="total-display">Total: $0.00</div>
-        <button id="add-product-button" type="button" class="outline-button">Add New Product</button>
-        <button id="cancel-button" type="button" class="outline-button">Back</button>
-        <button type="submit" class="fill-button">Checkout</button>
+        <div class="product-summary">
+          <p>Total: <span id="totalSaleAmount">$0.00</span></p>
+          <button id="clear-selection-button" class="outline-button">Clear Selection</button>
+        </div>
+        <button id="add-product-toggle-button" class="fill-button">Add/Hide New Product Form</button>
+        <div id="add-product-form-container" style="display: none;">
+          <h3>Add New Product</h3>
+          <input type="text" id="newProductName" placeholder="Product Name" required>
+          <input type="number" id="newProductPrice" placeholder="Price (Hawkeyes)" step="1" min="1" required>
+          <button id="submitNewProduct" class="fill-button">Create Product</button>
+          <button id="cancelAddProduct" class="outline-button">Cancel</button>
+        </div>
+        <!-- Existing buttons, now placed after product selection and add form -->
+        <div class="action-buttons-container">
+          <button id="cancel-button" class="outline-button">Back</button>
+          <button type="submit" class="fill-button" id="processSaleButton">Process Sale</button>
+        </div>
       </div>
     </form>
     <div id="bidScreen">
