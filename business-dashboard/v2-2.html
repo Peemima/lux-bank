@@ -1,3 +1,4 @@
+<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -13,6 +14,129 @@
     <br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br>
   </noscript>
   <link rel="stylesheet" href="/lux-bank/assets/styles.css">
+  <style>
+    /* New styles for product display */
+    #products-list-container {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); /* Responsive grid */
+      gap: 15px;
+      margin-top: 20px;
+      max-height: 400px; /* Limit height for scrollability */
+      overflow-y: auto; /* Enable vertical scrolling */
+      padding: 10px;
+      border: 1px solid #e0e0e0; /* Lighter border */
+      border-radius: 8px;
+      background-color: #fcfcfc; /* Slightly off-white background */
+    }
+
+    .product-item {
+      background-color: #ffffff;
+      border: 1px solid #e9e9e9; /* Light grey border */
+      border-radius: 8px;
+      padding: 12px;
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.05); /* Softer shadow */
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .product-item:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+
+    .product-item h3 {
+      margin: 5px 0;
+      font-size: 1.15em;
+      color: #333;
+      font-weight: 600;
+    }
+
+    .product-item p {
+      margin: 3px 0;
+      font-size: 1em;
+      color: #666;
+      font-weight: 500;
+    }
+
+    .product-controls {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 12px; /* Increased gap */
+      margin-top: 15px;
+    }
+
+    .product-controls button {
+      background-color: #007bff; /* Blue for plus */
+      color: white;
+      border: none;
+      padding: 7px 14px; /* Larger buttons */
+      text-align: center;
+      text-decoration: none;
+      display: inline-block;
+      font-size: 18px; /* Larger font for +/- */
+      border-radius: 50%; /* Circle buttons */
+      cursor: pointer;
+      transition: background-color 0.3s ease, transform 0.2s ease;
+      width: 35px; /* Fixed width for circle */
+      height: 35px; /* Fixed height for circle */
+      line-height: 20px; /* Vertically center text */
+      display: flex; /* Flex to center text */
+      align-items: center;
+      justify-content: center;
+    }
+
+    .product-controls button.minus {
+      background-color: #dc3545; /* Red for minus */
+    }
+    /* Default button color for plus is already set above */
+
+    .product-controls button:hover {
+      opacity: 0.9;
+      transform: scale(1.05);
+    }
+
+    .product-quantity {
+      font-size: 1.3em;
+      font-weight: bold;
+      color: #333;
+      min-width: 30px; /* Ensure quantity display has enough space */
+      display: inline-block; /* For better spacing */
+    }
+
+    #total-display {
+      text-align: right;
+      font-size: 1.8em; /* Larger total */
+      font-weight: bold;
+      margin-top: 25px;
+      margin-bottom: 20px;
+      color: #28a745; /* Green for total */
+    }
+
+    #transaction-amount .fill-button {
+      margin-left: 10px; /* Space between cancel and checkout */
+    }
+    #add-product-button {
+      margin-top: 20px;
+      width: fit-content;
+      margin-left: auto;
+      margin-right: auto;
+      display: block;
+      padding: 10px 20px;
+      font-size: 1em;
+      border-radius: 5px;
+    }
+
+    /* Style for 'No products available' message */
+    #products-list-container p {
+        padding: 20px;
+        color: #777;
+        font-style: italic;
+    }
+  </style>
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js" defer></script>
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js" defer></script>
   <script type="module">
@@ -33,7 +157,7 @@
     const app = initializeApp(firebaseConfig);
     const database = getDatabase(app);
 
-    console.log("%cVersion: %c2.11", "color: black; font-size:75px;", "color: red; font-size:75px;");
+    console.log("%cVersion: %c2.11 (Products)", "color: black; font-size:75px;", "color: red; font-size:75px;");
 
     // Make hideElement a window function
     window.hideElement = function(identifier) {
@@ -57,6 +181,12 @@
 
     window.balanceName = "Balance";
 
+    // --- New global variables for product selection ---
+    window.selectedProducts = {}; // Stores { "ProductName": { quantity: N, price: P } }
+    window.totalAmount = 0;
+    window.availableProductsData = {}; // Raw product data from Firebase { "ProductName": "Price" }
+    window.latestUserID = '0'; // Initialize latestUserID
+
     if (businessValue) {
       document.getElementById("businessName").innerText = businessValue;
 
@@ -73,10 +203,12 @@
           const businessRef = ref(database, `businesses/${businessValue}`);
           get(businessRef).then((snapshot) => {
             if (!snapshot.exists()) {
-              window.location.href = `?businessvalue=`;
+              window.location.href = `?businessvalue=`; // Redirect to login if business not found
             }
           }).catch((error) => {
             console.error('Error checking for business existence:', error);
+            showPopup("flex", "Help is on the way", "none", "Error verifying business account. Please check your connection.");
+            err(true);
           });
         }
       }
@@ -94,74 +226,76 @@
         }, 20000);
       });
 
-      function isInt(value) {
-        return !isNaN(value) && (function(x) { return (x | 0) === x; })(parseFloat(value))
-      }
-
       document.getElementById("transactionForm").addEventListener("submit", function(event) {
         event.preventDefault(); 
 
-        const userID = latestUserID;
-        const amount = parseFloat(document.getElementById("amountInput").value);
+        const userID = window.latestUserID; // Use the globally stored scanned ID
+        const amount = window.totalAmount; // Use the calculated total amount
 
-        if (isNaN(amount) || !/^\d+$/.test(amount) || amount <= 0) {
-          showPopup("flex", "Notice", "block", "Please enter a valid price for this product");
+        if (amount <= 0) {
+          showPopup("flex", "Notice", "block", "Please select at least one item for purchase.");
           return;
         }
-        if (isNaN(userID)) {
-          console.error("The user ID scanned is not a valid number");
+        if (isNaN(userID) || userID === '0') { // Check for '0' as well
+          console.error("The user ID scanned is not a valid number or was not scanned.");
           showPopup("flex", "Help is on the way", "none", "Aim this screen toward shoppers so we can find you faster.");
           err(true);
           return;
         }
 
         processTransaction(userID, amount);
-        latestUserID = '0';
+        window.latestUserID = '0'; // Reset latestUserID after use
       });
-      let userCard  = document.getElementsByClassName("scaniframe");
-      function processTransaction(userID, amount) {
-  get(ref(database, 'users')).then((snapshot) => {
-    if (snapshot.exists()) {
-      const users = snapshot.val();
-      for (let userKey in users) {
-        // Check if the user ID matches 
-        if (users[userKey].id === userID) {
-          // Access the user's first name, which is the key of the user object
-          const userName = userKey.split(' ')[0]; // Extract only the first word
 
-          let currentBalance = users[userKey].balance;
-          if (amount > currentBalance) {
-            showPopup("flex", "Not enough hawkeyes", "block", `It looks like there aren't enough hawkeyes to buy that.`);
-            return;
-          }
+      function processTransaction(userID, amount) {
+        get(ref(database, 'users')).then((snapshot) => {
+          if (snapshot.exists()) {
+            const users = snapshot.val();
+            let userFound = false;
+            for (let userKey in users) {
+              // Check if the user ID matches 
+              // Ensure comparison is between numbers, Firebase stores IDs as numbers if they are pure numbers
+              if (users[userKey].id === parseInt(userID)) { 
+                userFound = true;
+                const userName = userKey.split(' ')[0]; 
+
+                let currentBalance = users[userKey].balance;
+                if (amount > currentBalance) {
+                  showPopup("flex", "Not enough hawkeyes", "block", `It looks like ${userName} doesn't have enough hawkeyes to buy that.`);
+                  return;
+                }
 
                 let newBalance = currentBalance - amount; 
                 set(ref(database, 'users/' + userKey + '/balance'), newBalance)
                   .then(() => {
                     updateBusinessBalance(amount);
-                    logTransaction(userKey, userID, -amount, newBalance, businessValue, businessData.balance); 
-                    document.getElementById("transactionForm").reset();
-                    document.getElementById("scaniframe").style.display = "block";
+                    logTransaction(userKey, userID, -amount, newBalance, businessValue, window.businessData.balance); 
+                    resetTransactionState(); // Reset product selection and total
+                    // Re-enable scanner and hide product view
+                    iframeControl('start');
                     document.getElementById("transaction-amount").style.display = "none";
-                    showElement('#homepage-heading');
-                    showPopup("flex", "Success!", "block", `The transaction was successful!`);
-                    hideElement('#transactionForm');
+                    showElement('#homepage-heading'); // Show homepage heading again
+                    hideElement('#transactionForm'); // Hide the transaction form
+                    showPopup("flex", "Success!", "block", `The transaction was successful for ${userName}!`);
                   })
                   .catch((error) => {
                     console.error('Error updating user balance:', error);
-                    showPopup("flex", "Help is on the way", "none", "Aim this screen toward shoppers so we can find you faster.");
+                    showPopup("flex", "Help is on the way", "none", "Error updating user balance. Aim this screen toward shoppers so we can find you faster.");
                     err(true);
                   });
                 return; 
               }
             }
-            showPopup("flex", "Notice", "block", "That doesn't seem to be a valid user id.");
+            if (!userFound) {
+              showPopup("flex", "Notice", "block", "That doesn't seem to be a valid user ID.");
+            }
           } else {
             console.log('No users found in the database.');
+            showPopup("flex", "Notice", "block", "No user data found. Please check database configuration.");
           }
         }).catch((error) => {
           console.error('Error fetching user data:', error);
-          showPopup("flex", "Help is on the way", "none", "Aim this screen toward shoppers so we can find you faster.");
+          showPopup("flex", "Help is on the way", "none", "Error fetching user data. Aim this screen toward shoppers so we can find you faster.");
           err(true);
         });
       }
@@ -176,7 +310,8 @@
           newBalance: newBalance,
           businessBalance: businessBalanceAmount,
           business: businessValue, 
-          timestamp: Date.now() 
+          timestamp: Date.now(),
+          items: JSON.parse(JSON.stringify(window.selectedProducts)) // Log the purchased items (deep copy)
         };
 
         set(transactionRef, transactionData)
@@ -185,7 +320,7 @@
           })
           .catch((error) => {
             console.error('Error logging transaction:', error);
-            showPopup("flex", "Help is on the way", "none", "Aim this screen toward shoppers so we can find you faster.");
+            showPopup("flex", "Help is on the way", "none", "Error logging transaction. Aim this screen toward shoppers so we can find you faster.");
             err(true);
           });
       }
@@ -201,16 +336,18 @@
             fetchAndDisplayBusinessBalance(); 
           }).catch((error) => {
             console.error('Error updating business balance:', error);
-            showPopup("flex", "Help is on the way", "none", "Aim this screen toward shoppers so we can find you faster.");
+            showPopup("flex", "Help is on the way", "none", "Error updating business balance. Aim this screen toward shoppers so we can find you faster.");
             err(true);
           });
         }).catch((error) => {
-          console.error('Error fetching business balance:', error);
+          console.error('Error fetching initial business balance:', error);
+          // If balance doesn't exist, try to initialize it
           set(businessRef, amountToAdd).then(() => {
             console.log('Business balance initialized and set to:', amountToAdd);
+            fetchAndDisplayBusinessBalance();
           }).catch((initError) => {
             console.error('Error initializing business balance:', initError);
-            showPopup("flex", "Help is on the way", "none", "Aim this screen toward shoppers so we can find you faster.");
+            showPopup("flex", "Help is on the way", "none", "Error initializing business balance. Aim this screen toward shoppers so we can find you faster.");
             err(true);
           });
         });
@@ -221,13 +358,14 @@
         get(businessRef).then((snapshot) => {
           if (snapshot.exists()) {
             window.businessData = snapshot.val();
-            document.getElementById('businessBalance').innerText = balanceName + `: $${businessData.balance}`;
+            document.getElementById('businessBalance').innerText = balanceName + `: $${(window.businessData.balance || 0).toFixed(2)}`;
           } else {
             console.error('Business data not found');
+            document.getElementById('businessBalance').innerText = balanceName + `: $0.00`;
           }
         }).catch((error) => {
           console.error('Error fetching business balance:', error);
-          showPopup("flex", "Help is on the way", "none", "Aim this screen toward shoppers so we can find you faster.");
+          showPopup("flex", "Help is on the way", "none", "Error fetching business balance. Aim this screen toward shoppers so we can find you faster.");
           err(true);
         });
       }
@@ -238,10 +376,9 @@
           get(businessRef).then((snapshot) => {
             if (snapshot.exists()) {
               const timestamp = snapshot.val();
-              if (timestamp === 1) {
+              if (timestamp === 1) { // Special initial state for new businesses
                 showPopup("flex", "We're glad you're here", "none", "Bring this device to Ian F to get started.");
               } else {
-                const businessRef = ref(database, `businesses/${businessValue}/timestamp`);
                 set(businessRef, Date.now()).then(() => {
                   console.log('Business timestamp updated successfully.');
                 }).catch((error) => {
@@ -249,7 +386,12 @@
                 });
               }
             } else {
-              console.error('Business timestamp not found');
+              // If timestamp doesn't exist, initialize it
+              set(businessRef, Date.now()).then(() => {
+                console.log('Business timestamp initialized.');
+              }).catch((error) => {
+                console.error('Error initializing business timestamp:', error);
+              });
             }
           }).catch((error) => {
             console.error('Error fetching business timestamp:', error);
@@ -258,7 +400,7 @@
         if (window.fatelError === true) {
           const businessRef = ref(database, `businesses/${businessValue}/timestamp`);
           set(businessRef, 0).then(() => {
-            console.log('Business timestamp updated successfully.');
+            console.log('Business timestamp set to 0 due to error.');
           }).catch((error) => {
             console.error('Error updating business timestamp:', error);
           });
@@ -266,6 +408,118 @@
       }
 
       setInterval(fetchAndDisplayBusinessBalance, 120000);
+
+      // --- New Product Display & Selection Logic ---
+
+      function fetchAndDisplayProducts() {
+        const productsRef = ref(database, `businesses/${businessValue}/products`);
+        get(productsRef).then((snapshot) => {
+          if (snapshot.exists()) {
+            window.availableProductsData = snapshot.val();
+            renderProducts();
+          } else {
+            document.getElementById('products-list-container').innerHTML = '<p style="text-align: center;">No products found for this business. Click "Add New Product" to get started!</p>';
+            window.availableProductsData = {}; // Clear existing data
+          }
+          updateTotalAmount(); // Initialize total amount
+        }).catch((error) => {
+          console.error('Error fetching products:', error);
+          document.getElementById('products-list-container').innerHTML = '<p style="text-align: center; color: red;">Error loading products. Please try again.</p>';
+          showPopup("flex", "Help is on the way", "none", "Could not load products. Aim this screen toward shoppers so we can find you faster.");
+          err(true);
+        });
+      }
+
+      function renderProducts() {
+        const container = document.getElementById('products-list-container');
+        container.innerHTML = ''; // Clear previous products
+
+        if (Object.keys(window.availableProductsData).length === 0) {
+          container.innerHTML = '<p style="text-align: center; color: #555;">No products available. Add a new product to begin!</p>';
+          return;
+        }
+
+        for (const productName in window.availableProductsData) {
+          const price = parseFloat(window.availableProductsData[productName]);
+          if (isNaN(price)) {
+            console.warn(`Product '${productName}' has an invalid price: ${window.availableProductsData[productName]}`);
+            continue; // Skip invalid products
+          }
+
+          // Initialize selectedProducts entry if it doesn't exist or if price has changed
+          if (!window.selectedProducts[productName] || window.selectedProducts[productName].price !== price) {
+            window.selectedProducts[productName] = { quantity: 0, price: price };
+          }
+
+          const productItem = document.createElement('div');
+          productItem.className = 'product-item';
+          productItem.dataset.productName = productName; 
+
+          const safeProductNameId = productName.replace(/[^a-zA-Z0-9]/g, '-'); // Sanitize for ID
+
+          productItem.innerHTML = `
+            <h3>${productName}</h3>
+            <p>$${price.toFixed(2)}</p>
+            <div class="product-controls">
+              <button class="minus" data-product="${productName}">-</button>
+              <span class="product-quantity" id="quantity-${safeProductNameId}">${window.selectedProducts[productName].quantity}</span>
+              <button class="plus" data-product="${productName}">+</button>
+            </div>
+          `;
+          container.appendChild(productItem);
+        }
+
+        // Attach event listeners after all elements are created
+        container.querySelectorAll('.plus').forEach(button => {
+          button.addEventListener('click', (event) => updateProductQuantity(event.target.dataset.product, 1));
+        });
+        container.querySelectorAll('.minus').forEach(button => {
+          button.addEventListener('click', (event) => updateProductQuantity(event.target.dataset.product, -1));
+        });
+      }
+
+      function updateProductQuantity(productName, change) {
+        if (!window.selectedProducts[productName]) {
+            console.error(`Attempted to update quantity for unknown product: ${productName}. Re-initializing.`);
+            const price = parseFloat(window.availableProductsData[productName]);
+            if (isNaN(price)) return; // Cannot proceed without a valid price
+            window.selectedProducts[productName] = { quantity: 0, price: price };
+        }
+
+        let currentQuantity = window.selectedProducts[productName].quantity;
+        let newQuantity = currentQuantity + change;
+
+        if (newQuantity < 0) newQuantity = 0; 
+
+        window.selectedProducts[productName].quantity = newQuantity;
+        const safeProductNameId = productName.replace(/[^a-zA-Z0-9]/g, '-');
+        document.getElementById(`quantity-${safeProductNameId}`).innerText = newQuantity;
+        updateTotalAmount();
+      }
+
+      function updateTotalAmount() {
+        let currentTotal = 0;
+        for (const productName in window.selectedProducts) {
+            // Ensure product has a valid price and quantity before adding
+            if (window.selectedProducts[productName].price && typeof window.selectedProducts[productName].quantity === 'number') {
+                currentTotal += window.selectedProducts[productName].quantity * window.selectedProducts[productName].price;
+            }
+        }
+        window.totalAmount = currentTotal;
+        document.getElementById('total-display').innerText = `Total: $${window.totalAmount.toFixed(2)}`;
+      }
+
+      function resetTransactionState() {
+        window.selectedProducts = {}; // Clear all selected products
+        window.totalAmount = 0;
+        renderProducts(); // Re-render to show 0 quantity for all products
+        updateTotalAmount(); // Reset total display
+      }
+
+      // Placeholder for adding new products
+      document.getElementById('add-product-button').addEventListener('click', () => {
+        showPopup("flex", "Feature Coming Soon!", "block", "Adding new products is under development. For now, you can manually add products in Firebase under your business's 'products' key, with the product name as the key and its price as the value (e.g., {'Ornament': '3'}).");
+      });
 
     } else {
       document.getElementById("main-content").style.display = 'none'; 
@@ -282,53 +536,63 @@
       });
 
       document.getElementById("businessNameInput").addEventListener("input", function() {
-  const inputValue = this.value.trim().toLowerCase();
-  get(ref(database, 'businesses')).then(snapshot => {
-    if (snapshot.exists()) {
-      const businesses = snapshot.val();
-      businessSuggestions = Object.keys(businesses).filter(business => 
-        business.toLowerCase().includes(inputValue)
-      );
+        const inputValue = this.value.trim().toLowerCase();
+        get(ref(database, 'businesses')).then(snapshot => {
+          if (snapshot.exists()) {
+            const businesses = snapshot.val();
+            businessSuggestions = Object.keys(businesses).filter(business => 
+              business.toLowerCase().includes(inputValue)
+            );
 
-      // Show suggestions ONLY if there's exactly one match
-      if (businessSuggestions.length === 1) { 
-        updateSuggestions(businessSuggestions[0]); // Pass the single suggestion
-      } else {
-        // Hide suggestions if there are zero or multiple matches
-        document.getElementById('suggestions').style.display = 'none'; 
+            if (businessSuggestions.length === 1) { 
+              updateSuggestions(businessSuggestions[0]); 
+            } else {
+              document.getElementById('suggestions').style.display = 'none'; 
+            }
+          } else {
+            console.error('No businesses found in the database.');
+            document.getElementById('suggestions').innerText = 'No businesses found';
+            document.getElementById('suggestions').style.display = 'block';
+          }
+        }).catch(error => {
+          console.error('Error fetching businesses:', error);
+          document.getElementById('suggestions').innerText = 'Error loading businesses.';
+          document.getElementById('suggestions').style.display = 'block';
+        });
+      });
+
+      function updateSuggestions(suggestion) {
+        const suggestionList = document.getElementById('suggestions');
+        if (suggestion) {
+          suggestionList.style.display = 'block'; 
+          suggestionList.innerText = 'Press Enter to login to ' + suggestion;
+        } else {
+          suggestionList.innerText = 'No businesses found'; // Fallback, though typically not reached with current logic
+        }
       }
-    } else {
-      console.error('No businesses found in the database.');
-    }
-  }).catch(error => {
-    console.error('Error fetching businesses:', error);
-  });
-});
 
-function updateSuggestions(suggestion) {
-  const suggestionList = document.getElementById('suggestions');
-  if (suggestion) {
-    suggestionList.style.display = 'block'; 
-    suggestionList.innerText = 'Press Enter to login to ' + suggestion;
-  } else {
-    suggestionList.innerText = 'No businesses found';
-  }
-}
-
-// Add event listener to the input field for Enter key press
-document.getElementById("businessNameInput").addEventListener("keydown", (event) => {
-  if (event.key === 'Enter') {
-    const suggestion = document.getElementById('suggestions').innerText.replace('Press Enter to login to ', '');
-    window.location.href = `?businessvalue=${suggestion}`;
-  }
-});
+      document.getElementById("businessNameInput").addEventListener("keydown", (event) => {
+        if (event.key === 'Enter') {
+          event.preventDefault(); // Prevent default form submission behavior
+          const suggestionText = document.getElementById('suggestions').innerText;
+          const suggestion = suggestionText.startsWith('Press Enter to login to ') ? suggestionText.replace('Press Enter to login to ', '') : '';
+          
+          if (suggestion && suggestion !== 'No businesses found' && suggestion !== 'Error loading businesses.') {
+              window.location.href = `?businessvalue=${suggestion}`;
+          } else {
+              showPopup("flex", "Login Error", "block", "Please enter a valid business name.");
+          }
+        }
+      });
     };
 
-    //Reset the forum when cancel button is pressed
+    //Reset the form when cancel button is pressed
     document.getElementById("cancel-button").addEventListener('click', function() {
-      document.getElementById("transactionForm").reset();
-      iframeControl('start');
-      document.getElementById("transaction-amount").style.display = "none";
+      resetTransactionState(); // Reset selected products and total
+      iframeControl('start'); // Start scanner again
+      document.getElementById("transaction-amount").style.display = "none"; // Hide product selection
+      showElement('#homepage-heading'); // Show homepage heading again
+      hideElement('#transactionForm'); // Hide the transaction form
     });
 
 
@@ -337,22 +601,19 @@ document.getElementById("businessNameInput").addEventListener("keydown", (event)
     window.bidButton = document.getElementById('auction-option'); 
 
     // Event listeners for the navbar options
-    buyButton.addEventListener("click", function() { // Start listening for a click
-      bidButton.classList.remove('menu-item-selected'); // Remove the 'selected' styling from the bid button
-      buyButton.classList.add('menu-item-selected'); // Give it the 'selected' styling
-      iframeControl('start');
-      hideElement('#homepage-heading'); // Hide the 'What would the customer like to do?' heading
-      hideElement('#bidScreen'); // Hide the bid screen
-      hideElement('#transaction-amount'); // Hide the 'How many hawkeyes' screen
-      showElement('#transactionForm'); // Show the transaction form
+    buyButton.addEventListener("click", function() { 
+      bidButton.classList.remove('menu-item-selected'); 
+      buyButton.classList.add('menu-item-selected'); 
+      resetTransactionState(); // Clear any previous selection when starting a new sale
+      iframeControl('start'); // Start scanner
+      hideElement('#homepage-heading'); 
+      hideElement('#bidScreen'); 
+      // transaction-amount will be shown after scan
+      showElement('#transactionForm'); // Show the transaction form (which contains the iframe)
     });
-    bidButton.addEventListener("click", function() { // Start listening for a click
-      /* buyButton.classList.remove('menu-item-selected'); // Remove the 'selected' styling from the buy button
-      bidButton.classList.add('menu-item-selected'); // Give it the 'selected' styling
-      iframeControl('stop');
-      hideElement('#homepage-heading'); // Hide the 'What would the customer like to do?' heading
-      hideElement('#transactionForm'); // Hide the transaction form
-      showElement('#bidScreen'); // Show the bid screen */
+
+    bidButton.addEventListener("click", function() { 
+      // Original bid button functionality replaced with a support popup
       console.log('Ask For Help button triggered popup.');
       showPopup("flex", "Help is on the way", "none", "Aim this screen toward shoppers so we can find you faster.");
       err(true);
@@ -369,20 +630,21 @@ document.getElementById("businessNameInput").addEventListener("keydown", (event)
     }
 
     window.addEventListener('message', (event) => {
+      // It's good practice to verify the origin in a real application
+      // if (event.origin !== 'https://peemima.github.io') return;
+
       setTimeout(function(){
         window.latestUserID = event.data;
-        document.getElementById("transaction-amount").style.display = "block";
-        document.getElementById("amountInput").focus();
-        iframeControl('stop');
-      }, 1000);
+        document.getElementById("transaction-amount").style.display = "block"; // Show product selection area
+        iframeControl('stop'); // Stop scanner
+        fetchAndDisplayProducts(); // Load products once user is scanned
+      }, 1000); 
     });
     
-    // Setup scripting
-    // Hide elements
-      hideElement('#transactionForm');
-      hideElement('#bidScreen')
-      hideElement('#transaction-amount');
-      // hideElement('#login-screen');
+    // Setup scripting - initial hiding of transaction-related elements
+    hideElement('#transactionForm');
+    hideElement('#bidScreen');
+    hideElement('#transaction-amount'); // Hidden initially, shown after scan
   </script>
 </head>
 <body>
@@ -402,10 +664,14 @@ document.getElementById("businessNameInput").addEventListener("keydown", (event)
     <form id="transactionForm" class="center">
       <iframe id="scaniframe" style="border: 0px;" width="100%" height="500px" src="about:blank"></iframe>
       <div id="transaction-amount">
-        <label for="amountInput">How many hawkeyes?</label>
-        <input autocomplete="off" type="text" id="amountInput" name="amountInput" inputmode="numeric" pattern="[0-9]+" style="font-size: 18px;" required>
-        <button id="cancel-button" class="outline-button">Back</button>
-        <button type="submit" class="fill-button">Process</button>
+        <!-- Product list will be rendered here -->
+        <div id="products-list-container">
+          <p style="text-align: center;">Loading products...</p>
+        </div>
+        <div id="total-display">Total: $0.00</div>
+        <button id="add-product-button" type="button" class="outline-button">Add New Product</button>
+        <button id="cancel-button" type="button" class="outline-button">Back</button>
+        <button type="submit" class="fill-button">Checkout</button>
       </div>
     </form>
     <div id="bidScreen">
