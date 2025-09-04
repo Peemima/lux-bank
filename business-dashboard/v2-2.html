@@ -1,3 +1,4 @@
+<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -17,7 +18,7 @@
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js" defer></script>
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-    import { getDatabase, ref, set, get, remove } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js"; // Added 'remove'
+    import { getDatabase, ref, set, get, remove } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
     const firebaseConfig = {
         apiKey: "AIzaSyASd5JOikXTlRp8eA2j_26Z1NWatZMjZds",
@@ -35,12 +36,10 @@
 
     console.log("%cVersion: %c2.11", "color: black; font-size:75px;", "color: red; font-size:75px;");
 
-    // Make hideElement a window function
     window.hideElement = function(identifier) {
       document.querySelectorAll(identifier).forEach(item => { item.style.display= 'none'; });
     };
 
-    // Make showElement a window function
     window.showElement = function(identifier) {
       document.querySelectorAll(identifier).forEach(item => { item.attributeStyleMap.delete('display') });
     };
@@ -54,13 +53,13 @@
     }
     
     window.businessValue = new URLSearchParams(window.location.search).get('businessvalue');
-
     window.balanceName = "Balance";
 
     // Global state for products and quantities
-    window.currentProducts = {}; // Stores products fetched from Firebase: { productName: { price: number } }
-    window.selectedQuantities = {}; // Stores quantities selected for current transaction: { productName: number }
-    window.totalSaleAmount = 0; // The calculated total sale amount
+    window.currentProducts = {}; 
+    window.selectedQuantities = {}; 
+    window.totalSaleAmount = 0;
+    window.editingMode = false; // NEW: Track editing mode
 
     if (businessValue) {
       document.getElementById("businessName").innerText = businessValue;
@@ -72,7 +71,6 @@
         document.getElementById("auction-option").style.display = "none";
       }
 
-      // Function to check if business account exists and redirect if not
       function ensureBusinessAccountExists() {
         if (businessValue != null) {
           const businessRef = ref(database, `businesses/${businessValue}`);
@@ -88,37 +86,35 @@
 
       window.fatelError = false;
 
-      // Call the function to ensure business account exists on load
       document.addEventListener("DOMContentLoaded", function() {
         ensureBusinessAccountExists();
         fetchAndDisplayBusinessBalance();
         updateBusinessTimestamp();
-        // Start the timestamp update interval
         setInterval(function () {
           updateBusinessTimestamp();
         }, 20000);
       });
 
-      // --- Changed from form submit to button click ---
+      // Updated: Process Sale is now handled by a button click, not form submit
       document.getElementById("processSaleButton").addEventListener("click", function(event) {
-        event.preventDefault(); // Good practice even for type="button" to prevent any default actions
+        event.preventDefault(); 
 
-        const userID = window.latestUserID; // Use global latestUserID
-        const amount = window.totalSaleAmount; // Use global totalSaleAmount
+        const userID = window.latestUserID;
+        const amount = window.totalSaleAmount;
 
         if (isNaN(amount) || amount <= 0) {
           showPopup("flex", "Notice", "block", "Please select products to make a sale.");
           return;
         }
-        if (isNaN(userID) || userID === '0') { // Check for initial '0' value
+        if (isNaN(userID) || userID === '0') {
           console.error("The user ID scanned is not a valid number or not scanned yet");
           showPopup("flex", "Help is on the way", "none", "Please scan a shopper's card first.");
-          window.err(true); // Call window.err explicitly
+          window.err(true);
           return;
         }
 
         processTransaction(userID, amount);
-        window.latestUserID = '0'; // Reset user ID after transaction attempt
+        window.latestUserID = '0';
       });
 
       function processTransaction(userID, amount) {
@@ -140,13 +136,12 @@
                   .then(() => {
                     updateBusinessBalance(amount);
                     logTransaction(userKey, userID, -amount, newBalance, businessValue, window.businessData.balance); 
-                    // document.getElementById("transactionForm").reset(); // Removed, as it's no longer a form
-                    iframeControl('start'); // Restart scanner
-                    hideElement('#transaction-details-area'); // Hide product selection
+                    iframeControl('start');
+                    hideElement('#transaction-details-area');
                     showElement('#homepage-heading');
                     showPopup("flex", "Success!", "block", `The transaction was successful!`);
-                    window.clearProductSelection(); // Clear selected products and refresh UI
-                    hideElement('#transaction-screen'); // <--- UPDATED THIS LINE
+                    window.clearProductSelection();
+                    hideElement('#transaction-screen'); // Hide the transaction display
                   })
                   .catch((error) => {
                     console.error('Error updating user balance:', error);
@@ -230,7 +225,7 @@
             document.getElementById('businessBalance').innerText = balanceName + `: $${window.businessData.balance}`;
           } else {
             console.error('Business data not found');
-            window.businessData = { balance: 0 }; // Initialize if not found
+            window.businessData = { balance: 0 };
             document.getElementById('businessBalance').innerText = balanceName + `: $0`;
           }
         }).catch((error) => {
@@ -279,21 +274,19 @@
 
       setInterval(fetchAndDisplayBusinessBalance, 120000);
 
-      // --- New Product/Sale Logic ---
+      // --- Product/Sale/Editing Logic ---
 
-      // Function to fetch products from Firebase and render the grid
       window.fetchAndRenderProducts = async function() {
         const productsRef = ref(database, `businesses/${businessValue}/products`);
         try {
           const snapshot = await get(productsRef);
-          window.currentProducts = {}; // Clear previous products
+          window.currentProducts = {};
           if (snapshot.exists()) {
             const productsData = snapshot.val();
             for (const productName in productsData) {
               window.currentProducts[productName] = {
-                price: parseFloat(productsData[productName]) // Ensure price is a number
+                price: parseFloat(productsData[productName])
               };
-              // Initialize selected quantity if not already set (e.g., after clear or initial load)
               if (window.selectedQuantities[productName] === undefined) {
                 window.selectedQuantities[productName] = 0;
               }
@@ -307,53 +300,70 @@
         }
       };
 
-      // Function to render/update the product grid
       window.renderProductsGrid = function() {
         const productsGrid = document.getElementById('products-grid');
-        productsGrid.innerHTML = ''; // Clear existing grid
+        productsGrid.innerHTML = '';
 
-        if (Object.keys(window.currentProducts).length === 0) {
-          productsGrid.innerHTML = '<p style="text-align: center; color: #666;">No products found. Add some using the button below!</p>';
+        if (Object.keys(window.currentProducts).length === 0 && !window.editingMode) {
+          productsGrid.innerHTML = '<p style="text-align: center; color: #666;">No products found.</p>';
+        } else if (Object.keys(window.currentProducts).length === 0 && window.editingMode) {
+            productsGrid.innerHTML = '<p style="text-align: center; color: #666;">No products found. Add some using the "Add New Product" form below.</p>';
         }
 
         for (const productName in window.currentProducts) {
           const product = window.currentProducts[productName];
-          const selectedQty = window.selectedQuantities[productName] || 0; // Default to 0
+          const selectedQty = window.selectedQuantities[productName] || 0;
+          const safeProductNameId = productName.replace(/[^a-zA-Z0-9]/g, '-');
 
           const productCard = document.createElement('div');
           productCard.classList.add('product-card');
-          productCard.setAttribute('data-product-name', productName); // Add data attribute for easy lookup
+          // Store original name and price as data attributes for editing mode
+          productCard.setAttribute('data-original-name', productName);
+          productCard.setAttribute('data-original-price', product.price);
 
-          // Sanitize product name for ID usage
-          const safeProductNameId = productName.replace(/[^a-zA-Z0-9]/g, '-');
-
-          productCard.innerHTML = `
-            <h3>${productName}</h3>
-            <p>Price: $${product.price}</p>
-            <div class="quantity-control">
-              <button type="button" onclick="window.adjustProductQuantity('${productName}', -1)">-</button>
-              <span id="qty-${safeProductNameId}" class="product-quantity">${selectedQty}</span>
-              <button type="button" onclick="window.adjustProductQuantity('${productName}', 1)">+</button>
-            </div>
-            <button type="button" class="delete-product-button outline-button" onclick="window.deleteProduct('${productName}')">Delete</button>
-          `;
+          let cardContent = '';
+          if (window.editingMode) {
+            // Editing mode: inputs for name and price, delete button
+            cardContent = `
+                <h3>
+                    <input type="text" id="edit-name-${safeProductNameId}" value="${productName}" class="edit-input-name" data-original-name="${productName}" required>
+                </h3>
+                <p>
+                    Price: $<input type="number" id="edit-price-${safeProductNameId}" value="${product.price}" step="1" min="1" class="edit-input-price" required>
+                </p>
+                <button type="button" class="delete-product-button outline-button" onclick="window.deleteProduct('${productName}')">Delete</button>
+            `;
+          } else {
+            // Default (sale) mode: display name/price, quantity controls
+            cardContent = `
+                <h3>${productName}</h3>
+                <p>Price: $${product.price}</p>
+                <div class="quantity-control">
+                  <button type="button" onclick="window.adjustProductQuantity('${productName}', -1)">-</button>
+                  <span id="qty-${safeProductNameId}" class="product-quantity">${selectedQty}</span>
+                  <button type="button" onclick="window.adjustProductQuantity('${productName}', 1)">+</button>
+                </div>
+            `;
+          }
+          productCard.innerHTML = cardContent;
           productsGrid.appendChild(productCard);
         }
-        window.calculateTotalSale(); // Always recalculate total after rendering grid
+        window.calculateTotalSale();
+        window.updateTransactionAreaButtons(); // NEW: Update buttons based on mode
       };
 
-      // Function to adjust product quantity
       window.adjustProductQuantity = function(productName, delta) {
+        if (window.editingMode) return; // Prevent quantity adjustment in editing mode
+
         let currentQty = window.selectedQuantities[productName] || 0;
         let newQty = currentQty + delta;
 
         if (newQty < 0) {
-          newQty = 0; // Prevent negative quantities
+          newQty = 0;
         }
 
         window.selectedQuantities[productName] = newQty;
 
-        // Update the displayed quantity on the specific product card
         const safeProductNameId = productName.replace(/[^a-zA-Z0-9]/g, '-');
         const qtySpan = document.getElementById(`qty-${safeProductNameId}`);
         if (qtySpan) {
@@ -362,8 +372,16 @@
         window.calculateTotalSale();
       };
 
-      // Function to calculate and display total sale amount
       window.calculateTotalSale = function() {
+        // Only calculate total if not in editing mode
+        if (window.editingMode) {
+            window.totalSaleAmount = 0;
+            if (document.getElementById('totalSaleAmount')) {
+                document.getElementById('totalSaleAmount').innerText = `$0.00`;
+            }
+            return;
+        }
+
         let total = 0;
         for (const productName in window.selectedQuantities) {
           const qty = window.selectedQuantities[productName];
@@ -373,18 +391,20 @@
           }
         }
         window.totalSaleAmount = total;
-        document.getElementById('totalSaleAmount').innerText = `$${total.toFixed(2)}`; // Display with 2 decimal places
+        if (document.getElementById('totalSaleAmount')) {
+            document.getElementById('totalSaleAmount').innerText = `$${total.toFixed(2)}`;
+        }
       };
 
-      // Function to clear all selected product quantities
       window.clearProductSelection = function() {
+        if (window.editingMode) return; // Prevent clearing selection in editing mode
+
         for (const productName in window.selectedQuantities) {
           window.selectedQuantities[productName] = 0;
         }
-        window.renderProductsGrid(); // Re-render to update all quantities to 0
+        window.renderProductsGrid();
       };
 
-      // Function to toggle the add product form visibility
       window.showAddProductForm = function(show) {
         const addProductFormContainer = document.getElementById('add-product-form-container');
         if (show) {
@@ -397,27 +417,31 @@
         }
       };
 
-      // Function to add a new product
       window.addNewProduct = async function() {
-        const newProductName = document.getElementById('newProductName').value.trim();
-        const newProductPrice = parseFloat(document.getElementById('newProductPrice').value);
+        // Validation for the Add New Product form itself
+        const newProductNameInput = document.getElementById('newProductName');
+        const newProductPriceInput = document.getElementById('newProductPrice');
 
-        if (!newProductName || isNaN(newProductPrice) || newProductPrice <= 0) {
-          showPopup("flex", "Notice", "block", "Please enter a valid product name and a positive price.");
-          return;
+        if (!newProductNameInput.reportValidity() || !newProductPriceInput.reportValidity()) {
+            // The browser's native validation will show messages if fields are invalid
+            return;
         }
+        
+        const newProductName = newProductNameInput.value.trim();
+        const newProductPrice = parseFloat(newProductPriceInput.value);
 
+        // Client-side check for existing name
         if (window.currentProducts[newProductName]) {
-            showPopup("flex", "Notice", "block", "A product with this name already exists. Please choose a different name.");
+            showPopup("flex", "Notice", "block", `A product named "${newProductName}" already exists.`);
             return;
         }
 
         try {
           const productRef = ref(database, `businesses/${businessValue}/products/${newProductName}`);
-          await set(productRef, newProductPrice); // Store price as a number
+          await set(productRef, newProductPrice);
           showPopup("flex", "Success!", "block", `${newProductName} added successfully.`);
-          window.showAddProductForm(false); // Hide the form
-          window.fetchAndRenderProducts(); // Refresh product list
+          window.showAddProductForm(false);
+          window.fetchAndRenderProducts(); // Refresh product list in editing mode
         } catch (error) {
           console.error('Error adding new product:', error);
           showPopup("flex", "Help is on the way", "none", "Error adding product.");
@@ -425,8 +449,9 @@
         }
       };
 
-      // Function to delete a product
       window.deleteProduct = async function(productName) {
+        if (!window.editingMode) return; // Only allow deletion in editing mode
+
         if (!confirm(`Are you sure you want to delete "${productName}"? This action cannot be undone.`)) {
           return;
         }
@@ -436,11 +461,10 @@
           await remove(productRef);
           showPopup("flex", "Success!", "block", `${productName} deleted successfully.`);
           
-          // Also remove from local state
           delete window.currentProducts[productName];
-          delete window.selectedQuantities[productName];
+          delete window.selectedQuantities[productName]; // Also remove from selected quantities
 
-          window.renderProductsGrid(); // Refresh product list
+          window.renderProductsGrid(); // Re-render to reflect deletion
         } catch (error) {
           console.error('Error deleting product:', error);
           showPopup("flex", "Help is on the way", "none", "Error deleting product.");
@@ -448,7 +472,158 @@
         }
       };
 
-      // --- End New Product/Sale Logic ---
+      // NEW: Toggle Editing Mode
+      window.toggleEditingMode = function() {
+        window.editingMode = !window.editingMode;
+        // Reset selected quantities when entering/exiting editing mode
+        window.clearProductSelection(); 
+        window.fetchAndRenderProducts(); // Re-render everything to apply mode changes
+      };
+
+      // NEW: Update visibility and text of buttons in transaction area
+      window.updateTransactionAreaButtons = function() {
+          const processSaleButton = document.getElementById('processSaleButton');
+          const cancelButton = document.getElementById('cancel-button'); // "Back" button
+          const clearSelectionButton = document.getElementById('clear-selection-button');
+          const addProductToggleButton = document.getElementById('add-product-toggle-button');
+          const toggleEditModeButton = document.getElementById('toggleEditModeButton');
+          const productSummary = document.getElementById('product-summary');
+
+          const actionButtonsContainer = document.querySelector('#transaction-screen .action-buttons-container');
+
+          let saveAllEditsButton = document.getElementById('saveAllEditsButton');
+          let cancelAllEditsButton = document.getElementById('cancelAllEditsButton');
+
+          if (window.editingMode) {
+              // Editing Mode
+              processSaleButton.style.display = 'none';
+              cancelButton.style.display = 'none'; // "Back" button for scanner
+              productSummary.style.display = 'none'; // Hide total and clear selection
+              addProductToggleButton.style.display = 'block'; // Show add product form button
+              toggleEditModeButton.innerText = 'Done Editing';
+              
+              // Add/Show Save/Cancel Edit buttons if not already present
+              if (!saveAllEditsButton) {
+                  saveAllEditsButton = document.createElement('button');
+                  saveAllEditsButton.id = 'saveAllEditsButton';
+                  saveAllEditsButton.type = 'button';
+                  saveAllEditsButton.classList.add('fill-button');
+                  saveAllEditsButton.innerText = 'Save All Changes';
+                  saveAllEditsButton.addEventListener('click', window.saveAllProductEdits);
+                  actionButtonsContainer.appendChild(saveAllEditsButton);
+              } else {
+                  saveAllEditsButton.style.display = 'inline-block';
+              }
+
+              if (!cancelAllEditsButton) {
+                  cancelAllEditsButton = document.createElement('button');
+                  cancelAllEditsButton.id = 'cancelAllEditsButton';
+                  cancelAllEditsButton.type = 'button';
+                  cancelAllEditsButton.classList.add('outline-button');
+                  cancelAllEditsButton.innerText = 'Cancel Edits';
+                  cancelAllEditsButton.addEventListener('click', window.cancelAllProductEdits);
+                  actionButtonsContainer.appendChild(cancelAllEditsButton);
+              } else {
+                  cancelAllEditsButton.style.display = 'inline-block';
+              }
+
+          } else {
+              // Default (Sale) Mode
+              processSaleButton.style.display = 'inline-block';
+              cancelButton.style.display = 'inline-block'; // "Back" button
+              productSummary.style.display = 'block'; // Show total and clear selection
+              addProductToggleButton.style.display = 'none'; // Hide add product form button
+              toggleEditModeButton.innerText = 'Edit Products';
+              window.showAddProductForm(false); // Ensure add product form is hidden
+
+              // Hide Save/Cancel Edit buttons if they exist
+              if (saveAllEditsButton) saveAllEditsButton.style.display = 'none';
+              if (cancelAllEditsButton) cancelAllEditsButton.style.display = 'none';
+          }
+      };
+
+      // NEW: Save all edited products
+      window.saveAllProductEdits = async function() {
+        if (!confirm('Are you sure you want to save all changes?')) {
+            return;
+        }
+
+        const updates = []; // Array to store {originalName, newName, newPrice} for processing
+        const newProductNames = new Set(); // To check for duplicate names within the current batch of edits
+        const originalProductNamesInDb = new Set(Object.keys(window.currentProducts)); // Snapshot of names from DB
+
+        // First pass: Validate inputs and collect all proposed changes
+        const productCards = document.querySelectorAll('#products-grid .product-card');
+        for (const card of productCards) {
+            const originalName = card.getAttribute('data-original-name');
+            const originalPrice = parseFloat(card.getAttribute('data-original-price'));
+            
+            const safeProductNameId = originalName.replace(/[^a-zA-Z0-9]/g, '-');
+            const nameInput = document.getElementById(`edit-name-${safeProductNameId}`);
+            const priceInput = document.getElementById(`edit-price-${safeProductNameId}`);
+
+            // Perform native HTML5 validation
+            if (!nameInput.reportValidity() || !priceInput.reportValidity()) {
+                showPopup("flex", "Validation Error", "block", `Please correct the inputs for product "${originalName}".`);
+                return; // Stop processing if any validation fails
+            }
+
+            const newName = nameInput.value.trim();
+            const newPrice = parseFloat(priceInput.value);
+
+            // Check for duplicate names among current *edited* products
+            if (newProductNames.has(newName) && newName !== originalName) {
+                showPopup("flex", "Validation Error", "block", `Duplicate product name "${newName}". All product names must be unique.`);
+                return;
+            }
+            newProductNames.add(newName);
+
+            // Collect update
+            updates.push({ originalName, newName, newPrice, originalPrice });
+        }
+
+        // Second pass: Execute Firebase operations sequentially
+        try {
+            for (const update of updates) {
+                const { originalName, newName, newPrice, originalPrice } = update;
+
+                if (newName !== originalName) {
+                    // Scenario 1: Product name has changed (rename)
+                    // Check if the new name already exists as an ORIGINAL product name
+                    // that is *not* being renamed to something else in this batch.
+                    if (originalProductNamesInDb.has(newName) && !updates.some(u => u.originalName === newName && u.newName !== newName)) {
+                        showPopup("flex", "Validation Error", "block", `Cannot rename "${originalName}" to "${newName}" because a product with that exact name already exists.`);
+                        return; // Stop if there's a conflict
+                    }
+                    await remove(ref(database, `businesses/${businessValue}/products/${originalName}`));
+                    await set(ref(database, `businesses/${businessValue}/products/${newName}`), newPrice);
+                    console.log(`Renamed "${originalName}" to "${newName}" with price $${newPrice}`);
+                } else if (newPrice !== originalPrice) {
+                    // Scenario 2: Only price has changed
+                    await set(ref(database, `businesses/${businessValue}/products/${originalName}`), newPrice);
+                    console.log(`Updated price of "${originalName}" to $${newPrice}`);
+                }
+                // Scenario 3: Both name and price are unchanged (do nothing)
+            }
+            showPopup("flex", "Success!", "block", "All product changes saved successfully.");
+            window.editingMode = false; // Exit editing mode
+            window.fetchAndRenderProducts(); // Re-fetch and re-render the updated list
+        } catch (error) {
+            console.error('Error saving product changes:', error);
+            showPopup("flex", "Help is on the way", "none", "Error saving product changes: " + error.message);
+            window.err(true);
+        }
+      };
+
+      // NEW: Cancel all product edits
+      window.cancelAllProductEdits = function() {
+        if (!confirm('Are you sure you want to discard all unsaved changes?')) {
+            return;
+        }
+        window.editingMode = false; // Exit editing mode
+        window.fetchAndRenderProducts(); // Re-fetch and re-render the original list (discards input values)
+        showPopup("flex", "Canceled", "block", "All unsaved changes have been discarded.");
+      };
 
     } else {
       document.getElementById("main-content").style.display = 'none'; 
@@ -473,11 +648,9 @@
               business.toLowerCase().includes(inputValue)
             );
 
-            // Show suggestions ONLY if there's exactly one match
             if (businessSuggestions.length === 1) { 
-              updateSuggestions(businessSuggestions[0]); // Pass the single suggestion
+              updateSuggestions(businessSuggestions[0]);
             } else {
-              // Hide suggestions if there are zero or multiple matches
               document.getElementById('suggestions').style.display = 'none'; 
             }
           } else {
@@ -498,10 +671,9 @@
         }
       }
 
-      // Add event listener to the input field for Enter key press
       document.getElementById("businessNameInput").addEventListener("keydown", (event) => {
         if (event.key === 'Enter') {
-          event.preventDefault(); // Prevent form submission if it's a form
+          event.preventDefault();
           const suggestionText = document.getElementById('suggestions').innerText;
           const match = suggestionText.match(/Press Enter to login to (.+)/);
           if (match && match[1]) {
@@ -514,51 +686,48 @@
       });
     };
 
-    //Reset the form when cancel button is pressed
     document.getElementById("cancel-button").addEventListener('click', function() {
-      iframeControl('start'); // Restart scanner
-      hideElement('#transaction-details-area'); // Hide the new product selection area
+      iframeControl('start');
+      hideElement('#transaction-details-area');
       showElement('#homepage-heading');
-      window.clearProductSelection(); // Clear selected quantities
-      window.hideElement('#transaction-screen'); // <--- UPDATED THIS LINE
-      window.latestUserID = '0'; // Clear scanned user
+      window.clearProductSelection(); // Clear selection and recalculate total (which will be 0)
+      window.hideElement('#transaction-screen'); // Hide the transaction display
+      window.latestUserID = '0';
+      window.editingMode = false; // Ensure not in editing mode when going back to homepage/scanner
+      window.updateTransactionAreaButtons(); // Reset buttons to default mode
     });
 
-    // Event listener for the "Clear Selection" button
     document.getElementById("clear-selection-button").addEventListener('click', window.clearProductSelection);
-
-    // Event listener for "Add New Product" toggle button
     document.getElementById("add-product-toggle-button").addEventListener('click', function() {
         window.showAddProductForm(document.getElementById('add-product-form-container').style.display === 'none');
     });
-
-    // Event listener for "Create Product" button
     document.getElementById("submitNewProduct").addEventListener('click', window.addNewProduct);
-
-    // Event listener for "Cancel Add Product" button
     document.getElementById("cancelAddProduct").addEventListener('click', function() {
         window.showAddProductForm(false);
     });
+    // NEW: Add listener for the toggle edit mode button
+    document.getElementById("toggleEditModeButton").addEventListener('click', window.toggleEditingMode);
 
-    // Set the navbar variables
+
     window.buyButton = document.getElementById('transaction-option'); 
     window.bidButton = document.getElementById('auction-option'); 
 
-    // Event listeners for the navbar options
-    buyButton.addEventListener("click", function() { // Start listening for a click
-      bidButton.classList.remove('menu-item-selected'); // Remove the 'selected' styling from the bid button
-      buyButton.classList.add('menu-item-selected'); // Give it the 'selected' styling
-      iframeControl('start'); // Start scanner
-      hideElement('#homepage-heading'); // Hide the 'What would the customer like to do?' heading
-      hideElement('#bidScreen'); // Hide the bid screen
-      showElement('#transaction-screen'); // <--- UPDATED THIS LINE
+    buyButton.addEventListener("click", function() {
+      bidButton.classList.remove('menu-item-selected');
+      buyButton.classList.add('menu-item-selected');
+      iframeControl('start');
+      hideElement('#homepage-heading');
+      hideElement('#bidScreen');
+      showElement('#transaction-screen'); // Show the transaction display (scanner + product area)
       hideElement('#transaction-details-area'); // Hide product selection initially, until user scans
       window.clearProductSelection(); // Reset quantities
-      window.fetchAndRenderProducts(); // Fetch and display products
+      window.editingMode = false; // Ensure not in editing mode when starting a new sale
+      window.fetchAndRenderProducts(); // Fetch and display products in default mode
       window.showAddProductForm(false); // Hide the add product form initially
       window.latestUserID = '0'; // Reset user ID on entry
+      window.updateTransactionAreaButtons(); // Ensure buttons are set for default (sale) mode
     });
-    bidButton.addEventListener("click", function() { // Start listening for a click
+    bidButton.addEventListener("click", function() {
       console.log('Ask For Help button triggered popup.');
       showPopup("flex", "Help is on the way", "none", "Aim this screen toward shoppers so we can find you faster.");
       window.err(true);
@@ -574,44 +743,39 @@
       }
     }
 
-    // Initialize latestUserID to '0' to indicate no user scanned yet
     window.latestUserID = '0'; 
 
     window.addEventListener('message', (event) => {
-      // Ensure the message is from the expected iframe and has data
       if (event.origin === 'https://peemima.github.io' && event.data) {
         setTimeout(function(){
           const scannedID = event.data;
-          window.latestUserID = scannedID; // Store scanned ID
+          window.latestUserID = scannedID;
 
-          // After scanning, hide scanner and show product selection
-          hideElement('#scaniframe'); // Hide the iframe scanner
-          showElement('#transaction-details-area'); // Show the product selection area
+          hideElement('#scaniframe');
+          showElement('#transaction-details-area');
           
-          // Optionally, prompt user to select products if no ID was scanned
           if (window.latestUserID === '0' || isNaN(window.latestUserID)) {
               showPopup("flex", "Scan Error", "block", "Failed to scan user ID. Please try again.");
-              iframeControl('start'); // Re-enable scanner if scan failed
+              iframeControl('start');
           } else {
               // User ID successfully scanned. No specific popup here to avoid interrupting workflow.
               // The next step is to select products, which is visually clear.
           }
-        }, 1000); // Small delay to ensure iframe state is fully updated
+        }, 1000);
       }
     });
     
     // Setup scripting (initial hide/show)
-      hideElement('#transaction-screen'); // <--- UPDATED THIS LINE
+      hideElement('#transaction-screen');
       hideElement('#bidScreen');
-      hideElement('#transaction-details-area'); // The new product selection area
-      // hideElement('#login-screen'); (controlled by businessValue check)
-      hideElement('#add-product-form-container'); // Hide add product form initially
+      hideElement('#transaction-details-area');
+      hideElement('#add-product-form-container');
   </script>
   <style>
     /* Basic styling for product grid */
     .product-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); /* Adjusted min-width for better display */
+      grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
       gap: 15px;
       padding: 15px;
       background-color: #f0f0f0;
@@ -661,7 +825,7 @@
       font-size: 1.2em;
       margin: 0 5px;
       min-width: 30px;
-      user-select: none; /* Prevent text selection on click */
+      user-select: none;
     }
 
     .quantity-control button:hover {
@@ -680,7 +844,7 @@
     }
 
     .delete-product-button {
-        background-color: #dc3545; /* Red color for delete */
+        background-color: #dc3545;
         color: white;
         border: none;
         padding: 8px 12px;
@@ -747,15 +911,15 @@
       font-size: 1em;
     }
     /* Specific styling for the action buttons at the bottom of the form */
-    #transaction-screen .action-buttons-container { /* Updated selector */
+    #transaction-screen .action-buttons-container {
         text-align: center; 
         margin-top: 20px;
     }
-    #transaction-screen .action-buttons-container button.fill-button, /* Updated selector */
-    #transaction-screen .action-buttons-container button.outline-button { /* Updated selector */
-        width: auto; /* Allow buttons to size based on content */
+    #transaction-screen .action-buttons-container button.fill-button,
+    #transaction-screen .action-buttons-container button.outline-button {
+        width: auto;
         min-width: 100px;
-        margin: 0 5px; /* Adjust margin for spacing between them */
+        margin: 0 5px;
         padding: 10px 20px;
         font-size: 1em;
     }
@@ -766,13 +930,47 @@
         padding: 20px;
         border-radius: 8px;
         box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-        margin-top: 20px; /* Space from iframe */
+        margin-top: 20px;
     }
     #transaction-details-area h2 {
         text-align: center;
         color: #333;
         margin-top: 0;
         margin-bottom: 20px;
+    }
+
+    /* New styles for editing mode inputs */
+    .product-card .edit-input-name {
+        width: calc(100% - 10px);
+        padding: 5px;
+        margin-bottom: 5px;
+        font-size: 1em;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        box-sizing: border-box; /* Include padding/border in width */
+    }
+    .product-card .edit-input-price {
+        padding: 5px;
+        margin-bottom: 5px;
+        font-size: 1em;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        text-align: center;
+        box-sizing: border-box; /* Include padding/border in width */
+        flex-grow: 1; /* Allow it to take available space */
+    }
+    .product-card p {
+        display: flex; /* Use flexbox for price label and input */
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 10px;
+    }
+    .product-card p::before {
+        content: 'Price: $';
+        margin-right: 0px;
+        color: #666;
+        font-size: 0.9em;
+        white-space: nowrap; /* Prevent "Price: $" from wrapping */
     }
   </style>
 </head>
@@ -795,19 +993,26 @@
     <div id="transaction-screen" class="center">
       <iframe id="scaniframe" style="border: 0px;" width="100%" height="500px" src="about:blank"></iframe>
       <div id="transaction-details-area">
+        <!-- NEW: Toggle Edit Mode Button -->
+        <button type="button" id="toggleEditModeButton" class="fill-button" style="margin-bottom: 15px; width: 100%;">Edit Products</button>
+        
         <h2>Select Products</h2>
         <div id="products-grid" class="product-grid">
           <!-- Products will be rendered here by JavaScript -->
         </div>
-        <div class="product-summary">
+        
+        <!-- NEW: product-summary will be hidden/shown by JS -->
+        <div id="product-summary" class="product-summary">
           <p>Total: <span id="totalSaleAmount">$0.00</span></p>
           <button type="button" id="clear-selection-button" class="outline-button">Clear Selection</button>
         </div>
+        
+        <!-- NEW: add-product-toggle-button will be hidden/shown by JS -->
         <button type="button" id="add-product-toggle-button" class="fill-button">Add/Hide New Product Form</button>
         
-        <!-- The addNewProductForm is now correctly nested within a div, not another form -->
         <div id="add-product-form-container" style="display: none;">
           <h3>Add New Product</h3>
+          <!-- This is now a completely separate form -->
           <form id="addNewProductForm" onsubmit="return false;"> 
             <input type="text" id="newProductName" name="newProductName" placeholder="Product Name" required>
             <input type="number" id="newProductPrice" name="newProductPrice" placeholder="Price (Hawkeyes)" step="1" min="1" required>
@@ -818,12 +1023,11 @@
         
         <div class="action-buttons-container">
           <button type="button" id="cancel-button" class="outline-button">Back</button>
-          <!-- Changed to type="button" and will be handled by JS click listener -->
           <button type="button" class="fill-button" id="processSaleButton">Process Sale</button> 
+          <!-- NEW: Save All Changes and Cancel Edits buttons will be dynamically added/shown/hidden here by JS -->
         </div>
       </div>
     </div>
-    <!-- End of #transaction-screen -->
 
     <div id="bidScreen">
       Bid screen content
