@@ -328,8 +328,9 @@
                 <h3>
                     <input type="text" id="edit-name-${safeProductNameId}" value="${productName}" class="edit-input-name" data-original-name="${productName}" required>
                 </h3>
-                <p>
-                    Price: $<input type="number" id="edit-price-${safeProductNameId}" value="${product.price}" step="1" min="1" class="edit-input-price" required>
+                <p class="price-edit-group">
+                    <label for="edit-price-${safeProductNameId}" class="price-label">Price: $</label>
+                    <input type="number" id="edit-price-${safeProductNameId}" value="${product.price}" step="1" min="1" class="edit-input-price" required>
                 </p>
                 <button type="button" class="delete-product-button outline-button" onclick="window.deleteProduct('${productName}')">Delete</button>
             `;
@@ -484,61 +485,59 @@
       window.updateTransactionAreaButtons = function() {
           const processSaleButton = document.getElementById('processSaleButton');
           const cancelButton = document.getElementById('cancel-button'); // "Back" button
-          const clearSelectionButton = document.getElementById('clear-selection-button');
+          const productSummaryDiv = document.getElementById('product-summary'); // Changed to div for product-summary
           const addProductToggleButton = document.getElementById('add-product-toggle-button');
           const toggleEditModeButton = document.getElementById('toggleEditModeButton');
-          const productSummary = document.getElementById('product-summary');
-
+          
           const actionButtonsContainer = document.querySelector('#transaction-screen .action-buttons-container');
 
+          // Ensure dynamic buttons exist or create them
           let saveAllEditsButton = document.getElementById('saveAllEditsButton');
           let cancelAllEditsButton = document.getElementById('cancelAllEditsButton');
+
+          if (!saveAllEditsButton) {
+              saveAllEditsButton = document.createElement('button');
+              saveAllEditsButton.id = 'saveAllEditsButton';
+              saveAllEditsButton.type = 'button';
+              saveAllEditsButton.classList.add('fill-button');
+              saveAllEditsButton.innerText = 'Save All Changes';
+              saveAllEditsButton.addEventListener('click', window.saveAllProductEdits);
+              actionButtonsContainer.appendChild(saveAllEditsButton);
+          }
+
+          if (!cancelAllEditsButton) {
+              cancelAllEditsButton = document.createElement('button');
+              cancelAllEditsButton.id = 'cancelAllEditsButton';
+              cancelAllEditsButton.type = 'button';
+              cancelAllEditsButton.classList.add('outline-button');
+              cancelAllEditsButton.innerText = 'Cancel Edits';
+              cancelAllEditsButton.addEventListener('click', window.cancelAllProductEdits);
+              actionButtonsContainer.appendChild(cancelAllEditsButton);
+          }
+
 
           if (window.editingMode) {
               // Editing Mode
               processSaleButton.style.display = 'none';
               cancelButton.style.display = 'none'; // "Back" button for scanner
-              productSummary.style.display = 'none'; // Hide total and clear selection
+              productSummaryDiv.style.display = 'none'; // Hide total and clear selection div
               addProductToggleButton.style.display = 'block'; // Show add product form button
               toggleEditModeButton.innerText = 'Done Editing';
               
-              // Add/Show Save/Cancel Edit buttons if not already present
-              if (!saveAllEditsButton) {
-                  saveAllEditsButton = document.createElement('button');
-                  saveAllEditsButton.id = 'saveAllEditsButton';
-                  saveAllEditsButton.type = 'button';
-                  saveAllEditsButton.classList.add('fill-button');
-                  saveAllEditsButton.innerText = 'Save All Changes';
-                  saveAllEditsButton.addEventListener('click', window.saveAllProductEdits);
-                  actionButtonsContainer.appendChild(saveAllEditsButton);
-              } else {
-                  saveAllEditsButton.style.display = 'inline-block';
-              }
-
-              if (!cancelAllEditsButton) {
-                  cancelAllEditsButton = document.createElement('button');
-                  cancelAllEditsButton.id = 'cancelAllEditsButton';
-                  cancelAllEditsButton.type = 'button';
-                  cancelAllEditsButton.classList.add('outline-button');
-                  cancelAllEditsButton.innerText = 'Cancel Edits';
-                  cancelAllEditsButton.addEventListener('click', window.cancelAllProductEdits);
-                  actionButtonsContainer.appendChild(cancelAllEditsButton);
-              } else {
-                  cancelAllEditsButton.style.display = 'inline-block';
-              }
+              saveAllEditsButton.style.display = 'inline-block';
+              cancelAllEditsButton.style.display = 'inline-block';
 
           } else {
               // Default (Sale) Mode
               processSaleButton.style.display = 'inline-block';
               cancelButton.style.display = 'inline-block'; // "Back" button
-              productSummary.style.display = 'block'; // Show total and clear selection
+              productSummaryDiv.style.display = 'block'; // Show total and clear selection div
               addProductToggleButton.style.display = 'none'; // Hide add product form button
               toggleEditModeButton.innerText = 'Edit Products';
               window.showAddProductForm(false); // Ensure add product form is hidden
 
-              // Hide Save/Cancel Edit buttons if they exist
-              if (saveAllEditsButton) saveAllEditsButton.style.display = 'none';
-              if (cancelAllEditsButton) cancelAllEditsButton.style.display = 'none';
+              saveAllEditsButton.style.display = 'none';
+              cancelAllEditsButton.style.display = 'none';
           }
       };
 
@@ -550,7 +549,7 @@
 
         const updates = []; // Array to store {originalName, newName, newPrice} for processing
         const newProductNames = new Set(); // To check for duplicate names within the current batch of edits
-        const originalProductNamesInDb = new Set(Object.keys(window.currentProducts)); // Snapshot of names from DB
+        const originalProductNamesInDb = new Set(Object.keys(window.currentProducts)); // Snapshot of names from DB for conflict checking
 
         // First pass: Validate inputs and collect all proposed changes
         const productCards = document.querySelectorAll('#products-grid .product-card');
@@ -571,14 +570,14 @@
             const newName = nameInput.value.trim();
             const newPrice = parseFloat(priceInput.value);
 
-            // Check for duplicate names among current *edited* products
+            // Check for duplicate names among current *edited* products in this batch
+            // This ensures if user types "A" and "B" into two inputs, they are unique within this edit session
             if (newProductNames.has(newName) && newName !== originalName) {
-                showPopup("flex", "Validation Error", "block", `Duplicate product name "${newName}". All product names must be unique.`);
+                showPopup("flex", "Validation Error", "block", `Duplicate product name "${newName}". All product names must be unique within this edit session.`);
                 return;
             }
             newProductNames.add(newName);
 
-            // Collect update
             updates.push({ originalName, newName, newPrice, originalPrice });
         }
 
@@ -589,9 +588,9 @@
 
                 if (newName !== originalName) {
                     // Scenario 1: Product name has changed (rename)
-                    // Check if the new name already exists as an ORIGINAL product name
-                    // that is *not* being renamed to something else in this batch.
-                    if (originalProductNamesInDb.has(newName) && !updates.some(u => u.originalName === newName && u.newName !== newName)) {
+                    // Check if the NEW name exists as an ORIGINAL product name in DB that is *not* being renamed itself in this batch.
+                    // This prevents overwriting an existing product if 'newName' was already a product not part of this edit batch.
+                    if (originalProductNamesInDb.has(newName) && !updates.some(u => u.originalName === newName)) {
                         showPopup("flex", "Validation Error", "block", `Cannot rename "${originalName}" to "${newName}" because a product with that exact name already exists.`);
                         return; // Stop if there's a conflict
                     }
@@ -802,11 +801,26 @@
       color: #333;
     }
 
+    /* Adjusted .product-card p to use flex and align content correctly */
     .product-card p {
       margin-bottom: 10px;
-      font-size: 0.9em;
-      color: #666;
+      display: flex; /* Use flexbox for layout inside p */
+      align-items: center; /* Vertically align items */
+      justify-content: center; /* Center horizontally */
+      font-size: 0.9em; /* Default font size for price display */
+      color: #666; /* Default color for price display */
     }
+
+    /* New style for the price label in editing mode */
+    .product-card .price-label {
+        color: #666; /* Color for the label text */
+        font-size: 0.9em; /* Font size for the label text */
+        white-space: nowrap; /* Prevent "Price: $" from wrapping */
+        margin-right: 5px; /* Spacing between label and input */
+    }
+
+    /* REMOVED: .product-card p::before pseudo-element rules */
+
 
     .quantity-control {
       display: flex;
@@ -947,7 +961,7 @@
         font-size: 1em;
         border: 1px solid #ccc;
         border-radius: 4px;
-        box-sizing: border-box; /* Include padding/border in width */
+        box-sizing: border-box;
     }
     .product-card .edit-input-price {
         padding: 5px;
@@ -956,22 +970,11 @@
         border: 1px solid #ccc;
         border-radius: 4px;
         text-align: center;
-        box-sizing: border-box; /* Include padding/border in width */
-        flex-grow: 1; /* Allow it to take available space */
+        box-sizing: border-box;
+        flex-grow: 1;
     }
-    .product-card p {
-        display: flex; /* Use flexbox for price label and input */
-        align-items: center;
-        justify-content: center;
-        margin-bottom: 10px;
-    }
-    .product-card p::before {
-        content: 'Price: $';
-        margin-right: 0px;
-        color: #666;
-        font-size: 0.9em;
-        white-space: nowrap; /* Prevent "Price: $" from wrapping */
-    }
+    
+    /* The .price-edit-group will use the existing .product-card p flex styling */
   </style>
 </head>
 <body>
@@ -989,7 +992,6 @@
       </div>
     </div>
     
-    <!-- Changed from <form id="transactionForm"> to <div id="transaction-screen"> -->
     <div id="transaction-screen" class="center">
       <iframe id="scaniframe" style="border: 0px;" width="100%" height="500px" src="about:blank"></iframe>
       <div id="transaction-details-area">
