@@ -360,6 +360,10 @@
     margin: 0 auto;
 }
 
+#transaction-screen {
+    width: 500px;
+}
+
 .user-info {
   display: flex;
   align-items: center;
