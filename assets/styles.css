@@ -356,7 +356,7 @@
 
 #transactionForm, #transaction-screen, #transaction-details-area {
     width: 500px;
-    max-width: 95%
+    max-width: 95%;
     margin: 0 auto;
 }
 
