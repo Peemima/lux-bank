@@ -354,7 +354,7 @@
     font-family: "Poppins", sans-serif;
 }
 
-#transactionForm {
+#transactionForm, #transaction-screen, #transaction-details-area {
     width: 500px;
     max-width: 95%
 }
