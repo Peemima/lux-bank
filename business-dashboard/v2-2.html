@@ -390,6 +390,25 @@
           productCard.innerHTML = cardContent;
           productsGrid.appendChild(productCard);
         });
+
+        // NEW: Add the "New Product" card if in editing mode
+        if (window.editingMode) {
+            const addProductCard = document.createElement('div');
+            addProductCard.classList.add('product-card');
+            addProductCard.innerHTML = `
+                <h2 style="font-size: 27px;">
+                    New Product
+                </h2>
+                <button type="button" id="add-product-toggle-button">Create</button>
+            `;
+            productsGrid.appendChild(addProductCard);
+            
+            // Add listener to the newly created button
+            addProductCard.querySelector('#add-product-toggle-button').addEventListener('click', function() {
+                window.showAddProductForm(document.getElementById('add-product-form-container').style.display === 'none');
+            });
+        }
+
         window.calculateTotalSale();
         window.updateTransactionAreaButtons(); // NEW: Update buttons based on mode
       };
@@ -559,8 +578,7 @@
       window.updateTransactionAreaButtons = function() {
           const processSaleButton = document.getElementById('processSaleButton');
           const cancelButton = document.getElementById('cancel-button'); // "Back" button
-          const productSummaryDiv = document.getElementById('product-summary'); // Changed to div for product-summary
-          const addProductToggleButton = document.getElementById('add-product-toggle-button');
+          const productSummaryDiv = document.getElementById('product-summary');
           const toggleEditModeButton = document.getElementById('toggleEditModeButton');
           
           const actionButtonsContainer = document.querySelector('#transaction-screen .action-buttons-container');
@@ -595,8 +613,6 @@
               processSaleButton.style.display = 'none';
               cancelButton.style.display = 'none'; // "Back" button for scanner
               productSummaryDiv.style.display = 'none'; // Hide total and clear selection div
-              addProductToggleButton.style.display = 'block'; // Show add product form button
-              // toggleEditModeButton.innerText is already 'Edit Products' and won't change here
               
               saveAllEditsButton.style.display = 'inline-block';
               cancelAllEditsButton.style.display = 'inline-block';
@@ -606,7 +622,6 @@
               processSaleButton.style.display = 'inline-block';
               cancelButton.style.display = 'inline-block'; // "Back" button
               productSummaryDiv.style.display = 'block'; // Show total and clear selection div
-              addProductToggleButton.style.display = 'none'; // Hide add product form button
               toggleEditModeButton.innerText = 'Edit Products'; // Always "Edit Products" in default mode
               window.showAddProductForm(false); // Ensure add product form is hidden
 
@@ -627,6 +642,9 @@
         // Step 1: Validate all currently visible/editable product names/prices and build the desired final state
         const productCards = document.querySelectorAll('#products-grid .product-card');
         for (const card of productCards) {
+            // Skip the "Add New Product" card
+            if (card.querySelector('#add-product-toggle-button')) continue;
+
             const originalName = card.getAttribute('data-original-name'); // Null for new products
             const tempId = card.getAttribute('data-temp-id'); // Null for existing products
             
@@ -662,6 +680,9 @@
 
         // Process adds, updates, renames
         for (const card of productCards) {
+            // Skip the "Add New Product" card again
+            if (card.querySelector('#add-product-toggle-button')) continue;
+
             const originalName = card.getAttribute('data-original-name');
             const tempId = card.getAttribute('data-temp-id'); // will be null for existing products
             
@@ -792,9 +813,6 @@
     });
 
     document.getElementById("clear-selection-button").addEventListener('click', window.clearProductSelection);
-    document.getElementById("add-product-toggle-button").addEventListener('click', function() {
-        window.showAddProductForm(document.getElementById('add-product-form-container').style.display === 'none');
-    });
     document.getElementById("submitNewProduct").addEventListener('click', window.addNewProduct);
     document.getElementById("cancelAddProduct").addEventListener('click', function() {
         window.showAddProductForm(false);
@@ -1095,6 +1113,7 @@
         
         <div id="products-grid" class="product-grid">
           <!-- Products will be rendered here by JavaScript -->
+          <!-- The "New Product" card will also be added here when in editing mode -->
         </div>
         
         <!-- NEW: product-summary will be hidden/shown by JS -->
@@ -1103,8 +1122,7 @@
           <button type="button" id="clear-selection-button" class="outline-button">Clear Selection</button>
         </div>
         
-        <!-- NEW: add-product-toggle-button will be hidden/shown by JS -->
-        <button type="button" id="add-product-toggle-button" class="fill-button">Add/Hide New Product Form</button>
+        <!-- The "Add New Product" button is now a card inside the grid when in editing mode -->
         
         <div id="add-product-form-container" style="display: none;">
           <h3>Add New Product</h3>
