@@ -371,7 +371,7 @@
                 </h3>
                 <p class="price-edit-group">
                     <label for="edit-price-${safeId}" class="price-label">Price: </label>
-                    <input type="number" id="edit-price-${safeId}" style="width: 30px;" value="${product.price}" step="1" min="1" class="edit-input-price" required oninput="window.updateLocalProductPrice('${product.originalName || product.tempId}', '${product.isNew}', this.value)">
+                    <input type="number" id="edit-price-${safeId}" style="width: 20px;" value="${product.price}" step="1" min="1" class="edit-input-price" required oninput="window.updateLocalProductPrice('${product.originalName || product.tempId}', '${product.isNew}', this.value)">
                 </p>
                 <button type="button" class="delete-product-button outline-button" onclick="window.deleteProduct('${product.originalName || product.tempId}', ${product.isNew})">Delete</button>
             `;
@@ -536,7 +536,6 @@
             price: newPrice
         });
 
-        showPopup("flex", "Added for Save", "block", `${newName} added to pending changes. Click "Save All Changes" to confirm.`);
         window.showAddProductForm(false);
         window.renderProductsGrid(); // Re-render to show the newly added product
       };
@@ -555,9 +554,6 @@
         } else {
             // It's an existing product from DB, mark for deletion
             const productName = identifier; // originalName
-            if (!confirm(`Are you sure you want to delete "${productName}"? This will be permanent after saving.`)) {
-                return;
-            }
             window.productsMarkedForDeletion.add(productName);
             showPopup("flex", "Marked for Deletion", "block", `${productName} marked for deletion. Click "Save All Changes" to confirm.`);
         }
@@ -632,10 +628,6 @@
 
       // NEW: Save all edited products
       window.saveAllProductEdits = async function() {
-        if (!confirm('Are you sure you want to save all changes to your products? This action cannot be undone.')) {
-            return;
-        }
-
         const firebaseOperations = [];
         const productsAfterSave = {}; // Will hold the final state of products for uniqueness check
 
@@ -730,14 +722,10 @@
 
       // NEW: Cancel all product edits
       window.cancelAllProductEdits = function() {
-        if (!confirm('Are you sure you want to discard all unsaved changes?')) {
-            return;
-        }
         window.editingMode = false; // Exit editing mode
         window.productsMarkedForDeletion.clear(); // Clear pending deletions
         window.productsNewlyAdded = []; // Clear pending additions
         window.fetchAndRenderProducts(); // Re-fetch and re-render the original list (discards input values)
-        showPopup("flex", "Canceled", "block", "All unsaved changes have been discarded.");
       };
 
     } else {
@@ -1070,6 +1058,7 @@
     .product-card .edit-input-name {
         width: calc(100% - 10px);
         padding: 5px;
+        margin-top: 0px;
         margin-bottom: 5px;
         font-size: 1em;
         border: 1px solid #ccc;
