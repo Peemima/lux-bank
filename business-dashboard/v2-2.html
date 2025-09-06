@@ -646,7 +646,6 @@
 
             // Perform native HTML5 validation
             if (!nameInput.reportValidity() || !priceInput.reportValidity()) {
-                showPopup("flex", "Validation Error", "block", `Please correct the inputs for product "${nameInput.value}".`);
                 return; // Stop processing if any validation fails
             }
 
