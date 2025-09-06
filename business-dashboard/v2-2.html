@@ -371,7 +371,7 @@
                 </h3>
                 <p class="price-edit-group">
                     <label for="edit-price-${safeId}" class="price-label">Price: $</label>
-                    <input type="number" id="edit-price-${safeId}" value="${product.price}" step="1" min="1" class="edit-input-price" required oninput="window.updateLocalProductPrice('${product.originalName || product.tempId}', '${product.isNew}', this.value)">
+                    <input type="number" id="edit-price-${safeId}" style="width: 30px;" value="${product.price}" step="1" min="1" class="edit-input-price" required oninput="window.updateLocalProductPrice('${product.originalName || product.tempId}', '${product.isNew}', this.value)">
                 </p>
                 <button type="button" class="delete-product-button outline-button" onclick="window.deleteProduct('${product.originalName || product.tempId}', ${product.isNew})">Delete</button>
             `;
