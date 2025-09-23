@@ -345,6 +345,10 @@
   border-top-right-radius: var(--border-radius);
 }
 
+:disabled {
+    cursor: not-allowed;
+}
+
 .list-name {
   margin-left: 10px;
 }
