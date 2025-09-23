@@ -338,7 +338,7 @@ function fetchAndDisplayBusinessBalance() {
   get(businessRef).then((snapshot) => {
     if (snapshot.exists()) {
       window.businessData = snapshot.val();
-      document.getElementById('businessBalance').innerText = `Balance: $${businessData.balance}`;
+      document.getElementById('businessBalance').innerText = `Store earnings: $${businessData.balance}`;
     } else {
       console.error('Business data not found');
     }
