@@ -148,9 +148,9 @@ window.addUser = function(userName, startingBalance) {
 // After: Make openModal global by attaching it to the window object
 window.openModal = function(userKey) {
   selectedUserKey = userKey; // Set the selected user key
-  document.getElementById('userModal').style.display = 'block'; // Show the modal
   document.getElementById('modal-header').innerText = selectedUserKey;
-
+  document.getElementById('amountInput').focus();
+  document.getElementById('userModal').style.display = 'block'; // Show the modal
 };
 
 // Close the modal
