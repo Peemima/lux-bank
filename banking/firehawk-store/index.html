@@ -149,8 +149,14 @@ window.addUser = function(userName, startingBalance) {
 window.openModal = function(userKey) {
   selectedUserKey = userKey; // Set the selected user key
   document.getElementById('modal-header').innerText = selectedUserKey;
-  document.getElementById('amountInput').focus();
   document.getElementById('userModal').style.display = 'block'; // Show the modal
+  setTimeout(() => {
+    const input = document.getElementById('amountInput');
+    if (input){
+      input.focus();
+      console.log("157");
+    }
+  }, 50); // 50ms is usually
 };
 
 // Close the modal
