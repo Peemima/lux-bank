@@ -91,7 +91,7 @@ function fetchAndDisplayUsers(query = "") {
           } else if(index === userKeys.length - 1){
             positionClass = 'user-bottom';
           }
-          content += `<div class="${positionClass}"><p class="list-name">${key}: $${users[key].balance}</p><button class="fill-button" style="cursor: not-allowed;" disabled onclick="openModal('${key}')">Select</button></div>`;
+          content += `<div class="${positionClass}"><p class="list-name">${key}: $${users[key].balance}</p><button class="fill-button" onclick="openModal('${key}')">Select</button></div>`;
         });
         document.getElementById("allUsers").innerHTML = content;
       }
@@ -351,11 +351,11 @@ function fetchAndDisplayBusinessBalance() {
 //Code to automsticly update users and business balances
 
 // Call this function to initially display the balance and inside updateBusinessBalance to update it
-setInterval(fetchAndDisplayBusinessBalance, 200);
+setInterval(fetchAndDisplayBusinessBalance, 5000);
 
 setInterval(() => {
   fetchAndDisplayUsers(currentSearchQuery); // Use the updated query for auto-refresh
-}, 750); // Adjust the timing as necessary
+}, 5000); // Adjust the timing as necessary
 
 fetchAndDisplayBusinessBalance()
   </script>
