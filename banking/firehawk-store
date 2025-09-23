@@ -1,0 +1,391 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Lux Banking Dashboard</title>
+  <noscript>
+    <h1>js_err_noscrpt_popup</h1>
+    <p>A wild error popped out of nowhere!</p>
+    <p>Tell Ian F about it immediately.</p>
+    <br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br>
+  </noscript>
+<link rel="stylesheet" href="/lux-bank/assets/styles.css">
+
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js" defer></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js" defer></script>
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+    import { getDatabase, ref, set, get } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+
+    const firebaseConfig = {
+        apiKey: "AIzaSyASd5JOikXTlRp8eA2j_26Z1NWatZMjZds",
+        authDomain: "lux-bank.firebaseapp.com",
+        databaseURL: "https://lux-bank-default-rtdb.firebaseio.com",
+        projectId: "lux-bank",
+        storageBucket: "lux-bank.appspot.com",
+        messagingSenderId: "764922032293",
+        appId: "1:764922032293:web:573599b6116f025ee15d4c",
+        measurementId: "G-JQ7CWEJS9N"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const database = getDatabase(app);
+
+    window.businessValue = new URLSearchParams(window.location.search).get('businessvalue');
+    
+    document.getElementById("businessName").innerText = businessValue;
+
+    let currentSearchQuery = "";
+
+    // Function to check if business account exists and create it if not
+    function ensureBusinessAccountExists() {
+      if (businessValue != null) {
+        const businessRef = ref(database, `businesses/${businessValue}`);
+        get(businessRef).then((snapshot) => {
+          if (!snapshot.exists()) {
+            // Business doesn't exist, create it with initial balance of 0
+            set(businessRef, { balance: 0 }).then(() => {
+              console.log(`Business "${businessValue}" created with balance: 0`);
+            }).catch((error) => {
+              console.error('Error creating business:', error);
+            });
+          }
+        }).catch((error) => {
+          console.error('Error checking for business existence:', error);
+        });
+      }
+    }
+    // Call the function to ensure business account exists on load
+    document.addEventListener("DOMContentLoaded", function() {
+      // ... (rest of your DOMContentLoaded code)
+      ensureBusinessAccountExists();
+    });
+
+    document.addEventListener("DOMContentLoaded", function() {
+      const searchForm = document.getElementById("searchForm");
+      searchForm.addEventListener("submit", function(event) {
+    event.preventDefault();
+    currentSearchQuery = document.getElementById("searchInput").value.trim().toLowerCase();
+    fetchAndDisplayUsers(currentSearchQuery); // Make sure you pass currentSearchQuery when fetching users
+});
+
+      // Fetch and display users right away
+      fetchAndDisplayUsers();
+    });
+
+function fetchAndDisplayUsers(query = "") {
+  get(ref(database, 'users')).then((snapshot) => {
+    if (snapshot.exists() && Object.keys(snapshot.val()).length > 0) {
+      const users = snapshot.val();
+      let content = "", userKeys = Object.keys(users).filter(key => key.toLowerCase().includes(query));
+      if (userKeys.length === 0) { // No user matches the search query
+        document.getElementById("allUsers").innerHTML = `<div class="user-info"><p class="list-name">No matching users found.</p><button class="fill-button" style="cursor: not-allowed;" disabled onclick="addUser('${query}', 0)">Add ${query}</button></div>`;
+      } else {
+        userKeys.forEach((key, index) => {
+          let positionClass = 'user-middle';
+          if(userKeys.length === 1) {
+            positionClass = 'only-user';
+          } else if(index === 0){
+            positionClass = 'user-top';
+          } else if(index === userKeys.length - 1){
+            positionClass = 'user-bottom';
+          }
+          content += `<div class="${positionClass}"><p class="list-name">${key}: $${users[key].balance}</p><button class="fill-button" onclick="openModal('${key}')">Select</button></div>`;
+        });
+        document.getElementById("allUsers").innerHTML = content;
+      }
+    } else {
+      // Adjust here for no users at all in the database
+      document.getElementById("allUsers").innerHTML = `<div class="user-info"><p class="list-name">No users found.</p><button style="cursor: not-allowed;" disabled class="fill-button">Search to Add Users</button></div>`;
+    }
+  }).catch((error) => {
+    console.error("Error fetching users: ", error);
+    document.getElementById("allUsers").innerText = 'Err_fetching_users: A wild error apeared! Contact Ian F *immediately*';
+  });
+}
+    
+window.addUser = function(userName, startingBalance) {
+  const generateUserID = () => {
+    return Math.floor(1000 + Math.random() * 9000).toString();
+  };
+
+  const checkUserIDUnique = (userID) => {
+    return get(ref(database, 'users/' + userID)).then((snapshot) => {
+      return !snapshot.exists(); // Returns true if userID does not exist
+    });
+  };
+
+  const createUser = (userID, userName) => {
+    const newUserRef = ref(database, 'users/' + userName);
+    set(newUserRef, { 
+      id: userID, 
+      balance: 0 
+    }).then(() => {
+      console.log('User added successfully.');
+      fetchAndDisplayUsers(currentSearchQuery);
+    }).catch((error) => {
+      console.error('Error adding user:', error);
+    });
+  };
+
+  const addUserWithUniqueID = async (userName) => {
+    let userID;
+    let isUnique = false;
+
+    while (!isUnique) {
+      userID = generateUserID();
+      isUnique = await checkUserIDUnique(userID);
+    }
+
+    createUser(userID, userName);
+  };
+
+  addUserWithUniqueID(userName);
+};
+
+    let selectedUserKey = ''; // To keep track of which user is selected
+
+// After: Make openModal global by attaching it to the window object
+window.openModal = function(userKey) {
+  selectedUserKey = userKey; // Set the selected user key
+  document.getElementById('userModal').style.display = 'block'; // Show the modal
+  document.getElementById('modal-header').innerText = selectedUserKey;
+
+};
+
+// Close the modal
+document.querySelector('.close').addEventListener('click', function() {
+  document.getElementById('userModal').style.display = 'none';
+}); 
+
+// Make addAmount global
+window.addAmount = function() {
+  const amount = Number(document.getElementById('amountInput').value);
+  updateUserBalance(selectedUserKey, amount); // Positive amount for addition
+};
+
+
+
+
+
+//Jiggle when theres an input error: fix the weird charecter input problem
+document.getElementById('amountInput').addEventListener('input', function(e) {
+  // Remove any non-digit characters from the input.
+  const validValue = this.value.replace(/[^0-9]/g, '');
+  
+  // Check if the input value is not solely composed of digits.
+  if (this.value !== validValue) {
+    // Replace the input value with the cleaned, digit-only version.
+    this.value = validValue;
+    
+    // Add the 'jiggle' class to trigger the animation.
+    this.classList.add('jiggle');
+    
+    // Automatically remove the 'jiggle' class after the animation ends (500ms) to reset the state.
+    setTimeout(() => {
+      this.classList.remove('jiggle');
+    }, 500);
+  }
+});
+
+
+// Update user balance and log the transaction
+function updateUserBalance(userKey, amount) {
+    const userRef = ref(database, 'users/' + userKey);
+
+    // Fetch the current balance first
+    get(userRef).then((snapshot) => {
+        if (snapshot.exists()) {
+            const userData = snapshot.val();
+            let currentBalance = userData.balance;
+            let newBalance = currentBalance + amount; // Calculate the new balance
+
+            // Update the user's balance in Firebase
+            set(ref(database, 'users/' + userKey), {
+                balance: newBalance
+            }).then(() => {
+                console.log('User balance updated successfully.');
+
+                if (amount < 0) {
+                    // Withdrawal - add the amount to the business account
+                    updateBusinessBalance(Math.abs(amount));
+                }
+
+                // Log the transaction, passing in the business name
+                logTransaction(userKey, amount, newBalance, businessValue, businessData);
+
+                document.getElementById('userModal').style.display = 'none'; // Close the modal
+            }).catch((error) => {
+                console.error('Error updating user balance:', error);
+            });
+        } else {
+            console.log('No user found with the key:', userKey);
+        }
+    }).catch((error) => {
+        console.error('Error fetching user data:', error);
+    });
+}
+
+
+
+
+// Function to log transactions with unique IDs based on timestamp
+function logTransaction(userKey, amount, newBalance, businessValue, businessBalanceAmount) {
+    const transactionID = `trans_${Date.now()}_${Math.floor(Math.random() * 1000)}`; // Generate a unique ID
+
+    const transactionRef = ref(database, 'transactions/' + transactionID); // Use the generated ID
+    
+    const transactionData = {
+        userKey: userKey,
+        amount: amount,
+        newBalance: newBalance,
+        businessBalance: businessBalanceAmount,
+        business: businessValue, // Business name is captured here
+        timestamp: Date.now() // Capturing the timestamp
+    };
+
+    set(transactionRef, transactionData)
+        .then(() => {
+            console.log('Transaction logged successfully.');
+        })
+        .catch((error) => {
+            console.error('Error logging transaction:', error);
+        });
+}
+
+
+
+// Function to update the business's balance: Adds the amount to the current balance
+function updateBusinessBalance(amountToAdd) {
+    const businessRef = ref(database, `businesses/${businessValue}/balance`);
+
+    get(businessRef).then((snapshot) => {
+        let newBalance;
+        let currentBalance = snapshot.exists() ? snapshot.val() : 0; // Use current balance or default to 0
+
+        // Addition of the given amount to the business balance
+        newBalance = currentBalance + amountToAdd;
+
+        // Update the balance in Firebase
+        set(businessRef, newBalance).then(() => {
+            console.log(`Business balance updated to ${newBalance}`);
+        }).catch((error) => {
+            console.error('Error updating business balance:', error);
+        });
+
+    }).catch((error) => {
+        console.error('Error fetching business balance:', error);
+        // Initialize if fetching fails and no balance is found (Handling edge case)
+        set(businessRef, amountToAdd).then(() => {
+            console.log('Business balance initialized and set to:', amountToAdd);
+        }).catch((initError) => {
+            console.error('Error initializing business balance:', initError);
+        });
+    });
+}
+
+window.withdrawAmount = function() {
+    const amountInput = document.getElementById('amountInput');
+    const amountToWithdraw = Number(amountInput.value);
+    const userKey = selectedUserKey;
+    const userRef = ref(database, `users/${userKey}`);
+
+    // Fetch the current user balance first
+    get(userRef).then((snapshot) => {
+        if (snapshot.exists()) {
+            const userData = snapshot.val();
+            let currentBalance = userData.balance;
+            if (amountToWithdraw > currentBalance) {
+                // Trigger jiggle animation if withdrawal amount exceeds the balance
+                amountInput.classList.add('jiggle');
+                setTimeout(() => {
+                    amountInput.classList.remove('jiggle');
+                }, 500);
+            } else {
+                let newBalance = currentBalance - amountToWithdraw; // Calculate the new balance after withdrawal
+
+                // Update the user's balance in Firebase
+                set(ref(database, 'users/' + userKey), {
+                    balance: newBalance
+                }).then(() => {
+                    console.log('Withdrawal successful, user balance updated.');
+
+                    // This will add the withdrawn amount to the business balance
+                    updateBusinessBalance(amountToWithdraw);
+
+                    // Log the withdrawal transaction, note here the amount is negative
+                    logTransaction(userKey, -amountToWithdraw, newBalance, businessValue, businessData);
+
+                    // Close the modal
+                    document.getElementById('userModal').style.display = 'none';
+                }).catch((error) => {
+                    console.error('Error updating user balance:', error);
+                });
+            }
+        } else {
+            console.log('User balance could not be found.');
+        }
+    }).catch((error) => {
+        console.error('Error fetching user balance:', error);
+    });
+};
+
+
+
+
+function fetchAndDisplayBusinessBalance() {
+  const businessRef = ref(database, `businesses/${businessValue}`);
+  get(businessRef).then((snapshot) => {
+    if (snapshot.exists()) {
+      window.businessData = snapshot.val();
+      document.getElementById('businessBalance').innerText = `Balance: $${businessData.balance}`;
+    } else {
+      console.error('Business data not found');
+    }
+  }).catch((error) => {
+    console.error('Error fetching business balance:', error);
+  });
+}
+
+//Code to automsticly update users and business balances
+
+// Call this function to initially display the balance and inside updateBusinessBalance to update it
+setInterval(fetchAndDisplayBusinessBalance, 5000);
+
+setInterval(() => {
+  fetchAndDisplayUsers(currentSearchQuery); // Use the updated query for auto-refresh
+}, 5000); // Adjust the timing as necessary
+
+fetchAndDisplayBusinessBalance()
+  </script>
+</head>
+<body>
+  <div id="businessInfo" style="display: grid; grid-template-columns: 1fr auto 1fr;">
+  <span id="businessName" style="float: left;">...</span>
+  <img class="logo" src="/lux-bank/assets/Lux_Logo.svg">
+  <span id="businessBalance" style="float: right; text-align: right;">...</span>
+</div>
+
+  <form id="searchForm">
+    <input type="text" id="searchInput" placeholder="Search users...">
+    <button class="fill-button" type="submit">Search</button>
+    <button id="resetButton" style="display: none;" class="outline-button">Reset</button>
+  </form>
+  <div id="allUsers" class="container"></div>
+  <!-- The Modal -->
+<div id="userModal" class="modal">
+  <div class="modal-content">
+    <span class="close">&times;</span>
+    <h2 id="modal-header" style="font-family: 'poppins';">Edit User Balance</h2>
+    <p>Transactions are measured in Hawkeyes.</p>
+    <!-- Form to add or withdraw -->
+    <input type="text" id="amountInput" placeholder="Enter amount..." pattern="\d*">
+    <button class="fill-button" disabled onclick="addAmount()">Add</button>
+    <button class="outline-button" onclick="withdrawAmount()">Withdraw</button>
+  </div>
+</div>
+
+</body>
+</html>
