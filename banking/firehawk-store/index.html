@@ -33,9 +33,7 @@
     const app = initializeApp(firebaseConfig);
     const database = getDatabase(app);
 
-    window.businessValue = new URLSearchParams(window.location.search).get('businessvalue');
-    
-    document.getElementById("businessName").innerText = businessValue;
+    window.businessValue = "Firehawk Store";
 
     let currentSearchQuery = "";
 
@@ -363,7 +361,7 @@ fetchAndDisplayBusinessBalance()
 </head>
 <body>
   <div id="businessInfo" style="display: grid; grid-template-columns: 1fr auto 1fr;">
-  <span id="businessName" style="float: left;">...</span>
+  <span id="businessName" style="float: left;"><h1>Firehawk Store</h1></span>
   <img class="logo" src="/lux-bank/assets/Lux_Logo.svg">
   <span id="businessBalance" style="float: right; text-align: right;">...</span>
 </div>
