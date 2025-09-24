@@ -204,30 +204,55 @@
         const usersByGrade = {};
         for (const key in filteredUsers) {
           const user = filteredUsers[key];
-          // Ensure gradeLevel exists, provide a default if not (e.g., "Grade Unknown")
-          const gradeLevel = user.gradeLevel || "Grade Unknown";
+          // Ensure gradeLevel exists, provide a default if not (e.g., "Unknown")
+          const gradeLevel = user.gradeLevel || "Unknown";
           if (!usersByGrade[gradeLevel]) {
             usersByGrade[gradeLevel] = [];
           }
           usersByGrade[gradeLevel].push(user);
         }
 
-        // Sort grade levels (e.g., numerically for "Grade X", then "Grade Unknown" last, then alphabetically for other non-numeric grades)
+        // --- START NEW SORTING LOGIC ---
         const sortedGradeLevels = Object.keys(usersByGrade).sort((a, b) => {
-            const getGradeNumber = (gradeStr) => {
-                if (gradeStr === "Grade Unknown") return Infinity; // Put unknown at the end
-                const match = gradeStr.match(/Grade (\d+)/);
-                return match ? parseInt(match[1], 10) : Infinity;
+            const getSortValue = (gradeStr) => {
+                const cleanedGradeStr = gradeStr.trim().toLowerCase();
+
+                // 1. "k" comes first
+                if (cleanedGradeStr === "k") {
+                    return -1; // Assign a value lower than any number
+                }
+
+                // 2. Numeric grades (1 through 12)
+                let num;
+                // Check for "Grade X" format
+                const gradeMatch = cleanedGradeStr.match(/^grade (\d+)$/);
+                if (gradeMatch) {
+                    num = parseInt(gradeMatch[1], 10);
+                } else {
+                    // Check for direct numeric string "X"
+                    num = parseInt(cleanedGradeStr, 10);
+                }
+
+                if (!isNaN(num) && num >= 1 && num <= 12) {
+                    return num; // Use the number for sorting
+                }
+
+                // 3. All other strings (e.g., "Unknown", "High School", "Middle School", or anything else)
+                return Infinity; // Assign a very high value to place them at the end
             };
 
-            const numA = getGradeNumber(a);
-            const numB = getGradeNumber(b);
+            const valA = getSortValue(a);
+            const valB = getSortValue(b);
 
-            if (numA === numB && numA === Infinity) { // Both are "Grade Unknown" or other non-numeric grades
-                return a.localeCompare(b); // Sort alphabetically
+            if (valA === valB && valA === Infinity) {
+                // If both are "others" (Infinity), sort alphabetically
+                return a.localeCompare(b);
             }
-            return numA - numB;
+            // Otherwise, sort by their assigned numeric values
+            return valA - valB;
         });
+        // --- END NEW SORTING LOGIC ---
+
 
         // Render sections
         sortedGradeLevels.forEach(gradeLevel => {
@@ -282,7 +307,7 @@
     }
 
     // Modify addUser to include gradeLevel
-    window.addUser = function(userName, startingBalance = 0, gradeLevel = "Grade Unknown") { // Added gradeLevel parameter
+    window.addUser = function(userName, startingBalance = 0, gradeLevel = "Unknown") { // Added gradeLevel parameter
       const generateUserID = () => {
         return Math.floor(1000 + Math.random() * 9000).toString();
       };
@@ -324,8 +349,9 @@
 
     // New function to handle adding user from search, providing a default grade
     window.addUserFromSearch = function(userName) {
-        // For demonstration, let's assign a random grade for new users added from search
-        const randomGrade = `Grade ${Math.floor(Math.random() * 5) + 1}`; // Grades 1-5
+        // Assign a random grade from "k" or "1" through "12" for new users added from search
+        const gradesPool = ["k", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12"];
+        const randomGrade = gradesPool[Math.floor(Math.random() * gradesPool.length)];
         addUser(userName, 0, randomGrade);
     };
 
