@@ -212,7 +212,6 @@
           usersByGrade[gradeLevel].push(user);
         }
 
-        // --- START NEW SORTING LOGIC ---
         const sortedGradeLevels = Object.keys(usersByGrade).sort((a, b) => {
             const getSortValue = (gradeStr) => {
                 const cleanedGradeStr = gradeStr.trim().toLowerCase();
@@ -251,7 +250,6 @@
             // Otherwise, sort by their assigned numeric values
             return valA - valB;
         });
-        // --- END NEW SORTING LOGIC ---
 
 
         // Render sections
@@ -261,8 +259,12 @@
           const sectionIdSafe = `grade-${gradeLevel.replace(/\s/g, '-')}-content`;
           const labelIdSafe = `label-${gradeLevel.replace(/\s/g, '-')}`;
 
-          // Check collapsedStates for previous state, default to true (collapsed) if not found
-          const isInitiallyCollapsed = collapsedStates[gradeLevel] === undefined ? true : collapsedStates[gradeLevel];
+          let isInitiallyCollapsed;
+          if (query !== "") { // If there's an active search query
+              isInitiallyCollapsed = false; // Force expand all sections
+          } else { // No search query, revert to stored state or default
+              isInitiallyCollapsed = collapsedStates[gradeLevel] === undefined ? true : collapsedStates[gradeLevel];
+          }
 
           let sectionHtml = `
             <div class="collapsible-section">
@@ -518,7 +520,7 @@
 
         const userRef = ref(database, `users/${userKey}`);
 
-        // Fetch the current user balance first
+        // Fetch the current user data first (to preserve all fields)
         get(userRef).then((snapshot) => {
             if (snapshot.exists()) {
                 const userData = snapshot.val();
@@ -557,7 +559,7 @@
                 console.log('User balance could not be found.');
             }
         }).catch((error) => {
-            console.error('Error fetching user balance:', error);
+            console.error('Error fetching user data:', error);
         });
     };
 
