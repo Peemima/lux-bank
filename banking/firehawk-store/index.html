@@ -280,7 +280,7 @@
                 set(ref(database, 'users/' + userKey), {
                     id: userData.id, // Preserve existing ID
                     balance: newBalance,
-                    grade: userData.grade || 'Unassigned' // Preserve existing grade or default
+                    grade: userData.gradeLevel || 'Unassigned' // Preserve existing grade or default
                 }).then(() => {
                     console.log('User balance updated successfully.');
 
@@ -396,7 +396,7 @@
                     set(ref(database, 'users/' + userKey), {
                         id: userData.id, // Preserve existing ID
                         balance: newBalance,
-                        grade: userData.grade || 'Unassigned' // Preserve existing grade or default
+                        grade: userData.gradeLevel || 'Unassigned' // Preserve existing grade or default
                     }).then(() => {
                         console.log('Withdrawal successful, user balance updated.');
 
