@@ -94,7 +94,7 @@
         // Populate groupedUsers and filter by query
         Object.keys(usersData).forEach(userName => {
           const user = usersData[userName];
-          const userGrade = user.grade || 'Unassigned'; // Default grade if not present
+          const userGrade = user.gradeLevel || 'Unassigned'; // Default grade if not present
 
           // Filter by search query
           if (userName.toLowerCase().includes(query.toLowerCase())) {
