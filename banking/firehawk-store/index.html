@@ -35,6 +35,7 @@
     window.businessValue = "Firehawk Store";
 
     let currentSearchQuery = "";
+    let expandedGradeLevels = JSON.parse(localStorage.getItem('expandedGradeLevels') || '[]'); // Load expanded states on start
 
     // Function to check if business account exists and create it if not
     function ensureBusinessAccountExists() {
@@ -62,395 +63,411 @@
 
     document.addEventListener("DOMContentLoaded", function() {
       const searchForm = document.getElementById("searchForm");
+      const resetButton = document.getElementById("resetButton");
+      const searchInput = document.getElementById("searchInput");
+
       searchForm.addEventListener("submit", function(event) {
         event.preventDefault();
-        currentSearchQuery = document.getElementById("searchInput").value.trim().toLowerCase();
-        fetchAndDisplayUsers(currentSearchQuery); // Make sure you pass currentSearchQuery when fetching users
+        currentSearchQuery = searchInput.value.trim().toLowerCase();
+        fetchAndDisplayUsers(currentSearchQuery);
+        resetButton.style.display = 'inline-block'; // Show reset button on search
+      });
+
+      resetButton.addEventListener("click", function() {
+        searchInput.value = '';
+        currentSearchQuery = '';
+        fetchAndDisplayUsers();
+        resetButton.style.display = 'none'; // Hide reset button
       });
 
       // Fetch and display users right away
       fetchAndDisplayUsers();
     });
 
-    // Modified fetchAndDisplayUsers to group by grade
-    function fetchAndDisplayUsers(query = "") {
-      get(ref(database, 'users')).then((snapshot) => {
-        const allUsersDiv = document.getElementById("allUsers");
-        allUsersDiv.innerHTML = ""; // Clear previous content
+// Function to handle collapse/expand of grade level sections
+function toggleGradeLevelSection(event) {
+    const header = event.currentTarget;
+    const list = header.nextElementSibling; // The sibling div (grade-level-list)
+    const gradeLevel = header.dataset.gradeLevel;
 
-        if (!snapshot.exists() || Object.keys(snapshot.val()).length === 0) {
-          allUsersDiv.innerHTML = `<div class="user-info"><p class="list-name">No users found.</p></div>`;
-          // Allow adding a user only if the search query is not empty
-          if (query.length > 0) {
-            allUsersDiv.innerHTML += `<div class="user-info"><button class="fill-button" onclick="promptAndAddUser('${query}')">Add "${query}"</button></div>`;
-          }
-          return;
+    header.classList.toggle('expanded');
+    list.classList.toggle('collapsed');
+
+    // Update expanded states in localStorage
+    if (header.classList.contains('expanded')) {
+        if (!expandedGradeLevels.includes(gradeLevel)) {
+            expandedGradeLevels.push(gradeLevel);
         }
+    } else {
+        expandedGradeLevels = expandedGradeLevels.filter(g => g !== gradeLevel);
+    }
+    localStorage.setItem('expandedGradeLevels', JSON.stringify(expandedGradeLevels));
+}
 
-        const usersData = snapshot.val();
-        const groupedUsers = {}; // To store users by grade
-        let hasMatchingUsers = false; // Flag to check if any user matches the query
+// Function to attach event listeners to grade level headers
+function attachToggleListeners() {
+    const headers = document.querySelectorAll('.grade-level-header');
+    headers.forEach(header => {
+        // Remove existing listener to prevent duplicates on refresh
+        header.removeEventListener('click', toggleGradeLevelSection); 
+        header.addEventListener('click', toggleGradeLevelSection);
+    });
+}
 
-        // Populate groupedUsers and filter by query
-        Object.keys(usersData).forEach(userName => {
-          const user = usersData[userName];
-          const userGrade = user.gradeLevel || 'Unassigned'; // Default grade if not present
 
-          // Filter by search query
-          if (userName.toLowerCase().includes(query.toLowerCase())) {
-            hasMatchingUsers = true;
-            if (!groupedUsers[userGrade]) {
-              groupedUsers[userGrade] = [];
-            }
-            groupedUsers[userGrade].push({ name: userName, ...user });
+function fetchAndDisplayUsers(query = "") {
+  get(ref(database, 'users')).then((snapshot) => {
+    let content = "";
+    if (snapshot.exists()) {
+      const users = snapshot.val();
+      const userList = Object.keys(users).map(key => ({ key, ...users[key] }));
+
+      // Filter users based on query
+      const filteredUsers = userList.filter(user => user.key.toLowerCase().includes(query));
+
+      if (filteredUsers.length === 0) {
+        // No user matches the search query, offer to add one
+        content = `<div class="user-info"><p class="list-name">No matching users found.</p><button class="fill-button" onclick="addUser('${query}')">Add ${query}</button></div>`;
+      } else {
+        // Group users by gradeLevel
+        const groupedUsers = {};
+        filteredUsers.forEach(user => {
+          const gradeLevel = user.gradeLevel != null ? user.gradeLevel : 0; // Default to 0 if gradeLevel is missing
+          if (!groupedUsers[gradeLevel]) {
+            groupedUsers[gradeLevel] = [];
           }
+          groupedUsers[gradeLevel].push(user);
         });
 
-        // Sort grades (e.g., numerically for "Grade X", "Unassigned" last)
-        const sortedGrades = Object.keys(groupedUsers).sort((a, b) => {
-          if (a === 'Unassigned') return 1;
-          if (b === 'Unassigned') return -1;
-          const gradeA = parseInt(a.replace(/\D/g, '')) || 0;
-          const gradeB = parseInt(b.replace(/\D/g, '')) || 0;
-          return gradeA - gradeB;
-        });
+        // Sort grade levels numerically
+        const sortedGradeLevels = Object.keys(groupedUsers).sort((a, b) => parseInt(a) - parseInt(b));
 
-        let content = "";
-        if (sortedGrades.length === 0 && query.length > 0) {
-          // No matching users found for the query in any grade
-          content += `<div class="user-info"><p class="list-name">No matching users found for "${query}".</p><button class="fill-button" onclick="promptAndAddUser('${query}')">Add "${query}"</button></div>`;
-        } else if (sortedGrades.length === 0) {
-          // This case should ideally be caught by the initial `!snapshot.exists()` check
-          content += `<div class="user-info"><p class="list-name">No users found.</p></div>`;
-        } else {
-          sortedGrades.forEach(grade => {
-            const usersInGrade = groupedUsers[grade];
-            // Only create a details section if there are users for this grade after filtering
-            if (usersInGrade && usersInGrade.length > 0) {
-                content += `<details open><summary class="grade-summary">${grade}</summary><div class="grade-list">`;
-                usersInGrade.forEach((user, index) => {
-                    let listItemClass = 'user-info'; // Base class
-                    let specificClass = '';
-                    if(usersInGrade.length === 1) {
-                        specificClass = 'only-user-in-grade';
-                    } else if(index === 0){
-                        specificClass = 'first-user-in-grade';
-                    } else if(index === usersInGrade.length - 1){
-                        specificClass = 'last-user-in-grade';
-                    } else {
-                        specificClass = 'middle-user-in-grade';
-                    }
-                    content += `<div class="${listItemClass} ${specificClass}"><p class="list-name">${user.name}: $${user.balance}</p><button class="fill-button" onclick="openModal('${user.name}')">Select</button></div>`;
-                });
-                content += `</div></details>`;
-            }
+        sortedGradeLevels.forEach(gradeLevel => {
+          const gradeUsers = groupedUsers[gradeLevel].sort((a, b) => a.key.localeCompare(b.key)); // Sort users by name within grade
+          const isExpanded = expandedGradeLevels.includes(gradeLevel); // Check if this grade was previously expanded
+          const headerClass = isExpanded ? "grade-level-header expanded" : "grade-level-header";
+          const listClass = isExpanded ? "grade-level-list" : "grade-level-list collapsed";
+
+          content += `
+            <div class="grade-level-section">
+                <div class="${headerClass}" data-grade-level="${gradeLevel}">
+                    <p>Grade Level ${gradeLevel}</p>
+                    <span class="toggle-icon">&#9660;</span>
+                </div>
+                <div class="${listClass}">
+          `;
+
+          gradeUsers.forEach((user, index) => {
+            // Note: Removed positionClass logic as it's less relevant with the new grouping and borders
+            // You might want to re-introduce specific first/last styling if needed.
+            content += `<div class="user-info"><p class="list-name">${user.key}: $${user.balance}</p><button class="fill-button" onclick="openModal('${user.key}')">Select</button></div>`;
           });
-          // If after iterating grades, no content was added (meaning no users matched query across any grade)
-          if (content === "" && query.length > 0) {
-            content += `<div class="user-info"><p class="list-name">No matching users found for "${query}".</p><button class="fill-button" onclick="promptAndAddUser('${query}')">Add "${query}"</button></div>`;
-          }
-        }
-        allUsersDiv.innerHTML = content;
-      }).catch((error) => {
-        console.error("Error fetching users: ", error);
-        document.getElementById("allUsers").innerText = 'Err_fetching_users: A wild error apeared! Contact Ian F *immediately*';
-      });
+          content += `</div></div>`; // Close grade-level-list and grade-level-section
+        });
+      }
+    } else {
+      // No users at all in the database
+      content = `<div class="user-info"><p class="list-name">No users found.</p><button style="cursor: not-allowed;" disabled class="fill-button">Search to Add Users</button></div>`;
+    }
+    document.getElementById("allUsers").innerHTML = content;
+    attachToggleListeners(); // Attach listeners after rendering new HTML
+  }).catch((error) => {
+    console.error("Error fetching users: ", error);
+    document.getElementById("allUsers").innerText = 'Err_fetching_users: A wild error apeared! Contact Ian F *immediately*';
+  });
+}
+    
+// Modified addUser function to include a default gradeLevel
+window.addUser = function(userName, gradeLevel = 1) { // Default gradeLevel 1 for new users
+  const generateUserID = () => {
+    return Math.floor(1000 + Math.random() * 9000).toString();
+  };
+
+  const checkUserIDUnique = (userID) => {
+    // Check if the user ID (which is the actual name here) exists
+    return get(ref(database, 'users/' + userName)).then((snapshot) => {
+      return !snapshot.exists(); // Returns true if userName does not exist
+    });
+  };
+
+  const createUser = (userID, userName, gradeLevel) => {
+    const newUserRef = ref(database, 'users/' + userName);
+    set(newUserRef, { 
+      id: userID, 
+      balance: 0,
+      gradeLevel: gradeLevel // Include the grade level here
+    }).then(() => {
+      console.log('User added successfully.');
+      fetchAndDisplayUsers(currentSearchQuery);
+    }).catch((error) => {
+      console.error('Error adding user:', error);
+    });
+  };
+
+  const addUserWithUniqueID = async (userName, gradeLevel) => {
+    let userID;
+    let isUnique = false;
+
+    // Check if the userName itself is unique first
+    isUnique = await checkUserIDUnique(userName); 
+    if (!isUnique) {
+      console.log(`User "${userName}" already exists.`);
+      // Optionally provide feedback to the user or prevent adding.
+      // For now, we'll just not add if the name exists.
+      return; 
     }
 
-    // New helper function to prompt for grade and then add user
-    window.promptAndAddUser = function(userName) {
-        const gradeInput = prompt(`Enter grade for "${userName}": (e.g., "Grade 9", "Faculty", "Staff")`);
-        if (gradeInput !== null && gradeInput.trim() !== '') {
-            addUser(userName, 0, gradeInput.trim()); // Call addUser with grade and default balance
-        } else if (gradeInput !== null) { // User clicked OK but entered nothing
-            alert('Grade cannot be empty. User not added.');
-        }
-        // If gradeInput is null, user cancelled the prompt. Do nothing.
-    };
+    // Generate a unique numeric ID for the 'id' property within the user object
+    let numericID;
+    let isNumericIDUnique = false;
+    while (!isNumericIDUnique) {
+        numericID = generateUserID();
+        // This check would require iterating through all users to see if any have this 'id'
+        // For simplicity, we'll assume generateUserID is sufficient for now, or you'd need a more complex query.
+        // Or, more commonly, the key (userName) is the primary identifier, and 'id' is just an internal property.
+        isNumericIDUnique = true; // Placeholder, assuming the userName is the unique identifier for simplicity
+    }
 
-    // Modified addUser function to accept grade
-    window.addUser = function(userName, startingBalance, grade) {
-      const generateUserID = () => {
-        return Math.floor(1000 + Math.random() * 9000).toString();
-      };
+    createUser(numericID, userName, gradeLevel);
+  };
 
-      const checkUserIDUnique = (userID) => {
-        // Checking for ID uniqueness is generally done against a dedicated 'ids' node or by iterating users,
-        // but for simplicity, we'll check against a potential 'users/{userID}' path which is not how IDs are currently stored.
-        // Given current structure is 'users/{userName}', ID is a property. This check needs review for actual uniqueness requirement.
-        // For now, let's assume `id` as a property inside the user object and simply assign a random one.
-        // If actual ID uniqueness across all users is needed, a different strategy is required (e.g., a separate /userIDs list).
-        return Promise.resolve(true); // Temporarily bypass actual ID check as IDs are internal properties not keys.
-      };
-
-      const createUser = (userID, userName, startingBalance, grade) => {
-        const newUserRef = ref(database, 'users/' + userName);
-        set(newUserRef, { 
-          id: userID, 
-          balance: startingBalance,
-          grade: grade || 'Unassigned' // Assign grade, or 'Unassigned' if not provided
-        }).then(() => {
-          console.log('User added successfully.');
-          fetchAndDisplayUsers(currentSearchQuery);
-        }).catch((error) => {
-          console.error('Error adding user:', error);
-        });
-      };
-
-      const addUserWithUniqueID = async (userName, startingBalance, grade) => {
-        let userID;
-        let isUnique = false;
-
-        while (!isUnique) {
-          userID = generateUserID();
-          isUnique = await checkUserIDUnique(userID); // This is simplified, see notes above
-        }
-
-        createUser(userID, userName, startingBalance, grade);
-      };
-
-      addUserWithUniqueID(userName, startingBalance, grade);
-    };
+  addUserWithUniqueID(userName, gradeLevel);
+};
 
     let selectedUserKey = ''; // To keep track of which user is selected
 
-    // After: Make openModal global by attaching it to the window object
-    window.openModal = function(userKey) {
-      selectedUserKey = userKey; // Set the selected user key
-      document.getElementById('modal-header').innerText = selectedUserKey;
-      document.getElementById('userModal').style.display = 'block'; // Show the modal
-      setTimeout(() => {
-        const input = document.getElementById('amountInput');
-        if (input){
-          input.focus();
+// After: Make openModal global by attaching it to the window object
+window.openModal = function(userKey) {
+  selectedUserKey = userKey; // Set the selected user key
+  document.getElementById('modal-header').innerText = selectedUserKey;
+  document.getElementById('userModal').style.display = 'block'; // Show the modal
+  setTimeout(() => {
+    const input = document.getElementById('amountInput');
+    if (input){
+      input.focus();
+      console.log("157");
+    }
+  }, 50); // 50ms is usually
+};
+
+// Close the modal
+document.querySelector('.close').addEventListener('click', function() {
+  document.getElementById('userModal').style.display = 'none';
+}); 
+
+// Make addAmount global
+window.addAmount = function() {
+  const amount = Number(document.getElementById('amountInput').value);
+  updateUserBalance(selectedUserKey, amount); // Positive amount for addition
+};
+
+
+
+
+
+//Jiggle when theres an input error: fix the weird charecter input problem
+document.getElementById('amountInput').addEventListener('input', function(e) {
+  // Remove any non-digit characters from the input.
+  const validValue = this.value.replace(/[^0-9]/g, '');
+  
+  // Check if the input value is not solely composed of digits.
+  if (this.value !== validValue) {
+    // Replace the input value with the cleaned, digit-only version.
+    this.value = validValue;
+    
+    // Add the 'jiggle' class to trigger the animation.
+    this.classList.add('jiggle');
+    
+    // Automatically remove the 'jiggle' class after the animation ends (500ms) to reset the state.
+    setTimeout(() => {
+      this.classList.remove('jiggle');
+    }, 500);
+  }
+});
+
+
+// Update user balance and log the transaction
+function updateUserBalance(userKey, amount) {
+    const userRef = ref(database, 'users/' + userKey);
+
+    // Fetch the current balance first
+    get(userRef).then((snapshot) => {
+        if (snapshot.exists()) {
+            const userData = snapshot.val();
+            let currentBalance = userData.balance;
+            let newBalance = currentBalance + amount; // Calculate the new balance
+
+            // Update the user's balance in Firebase
+            set(ref(database, 'users/' + userKey), {
+                id: userData.id, // Preserve existing id
+                balance: newBalance,
+                gradeLevel: userData.gradeLevel // Preserve existing gradeLevel
+            }).then(() => {
+                console.log('User balance updated successfully.');
+
+                if (amount < 0) {
+                    // Withdrawal - add the amount to the business account
+                    updateBusinessBalance(Math.abs(amount));
+                }
+
+                // Log the transaction, passing in the business name
+                logTransaction(userKey, amount, newBalance, businessValue, businessData);
+
+                document.getElementById('userModal').style.display = 'none'; // Close the modal
+                fetchAndDisplayUsers(currentSearchQuery); // Refresh user list after update
+            }).catch((error) => {
+                console.error('Error updating user balance:', error);
+            });
+        } else {
+            console.log('No user found with the key:', userKey);
         }
-      }, 50); // 50ms is usually
-    };
-
-    // Close the modal
-    document.querySelector('.close').addEventListener('click', function() {
-      document.getElementById('userModal').style.display = 'none';
-      document.getElementById('amountInput').value = ''; // Clear input on close
-    }); 
-
-    // Make addAmount global
-    window.addAmount = function() {
-      const amount = Number(document.getElementById('amountInput').value);
-      if (isNaN(amount) || amount <= 0) {
-          document.getElementById('amountInput').classList.add('jiggle');
-          setTimeout(() => document.getElementById('amountInput').classList.remove('jiggle'), 500);
-          return;
-      }
-      updateUserBalance(selectedUserKey, amount); // Positive amount for addition
-    };
-
-    //Jiggle when theres an input error: fix the weird charecter input problem
-    document.getElementById('amountInput').addEventListener('input', function(e) {
-      // Remove any non-digit characters from the input.
-      const validValue = this.value.replace(/[^0-9]/g, '');
-      
-      // Check if the input value is not solely composed of digits.
-      if (this.value !== validValue) {
-        // Replace the input value with the cleaned, digit-only version.
-        this.value = validValue;
-        
-        // Add the 'jiggle' class to trigger the animation.
-        this.classList.add('jiggle');
-        
-        // Automatically remove the 'jiggle' class after the animation ends (500ms) to reset the state.
-        setTimeout(() => {
-          this.classList.remove('jiggle');
-        }, 500);
-      }
+    }).catch((error) => {
+        console.error('Error fetching user data:', error);
     });
+}
 
 
-    // Update user balance and log the transaction
-    function updateUserBalance(userKey, amount) {
-        const userRef = ref(database, 'users/' + userKey);
 
-        // Fetch the current balance first
-        get(userRef).then((snapshot) => {
-            if (snapshot.exists()) {
-                const userData = snapshot.val();
-                let currentBalance = userData.balance;
-                let newBalance = currentBalance + amount; // Calculate the new balance
+
+// Function to log transactions with unique IDs based on timestamp
+function logTransaction(userKey, amount, newBalance, businessValue, businessBalanceAmount) {
+    const transactionID = `trans_${Date.now()}_${Math.floor(Math.random() * 1000)}`; // Generate a unique ID
+
+    const transactionRef = ref(database, 'transactions/' + transactionID); // Use the generated ID
+    
+    const transactionData = {
+        userKey: userKey,
+        amount: amount,
+        newBalance: newBalance,
+        businessBalance: businessBalanceAmount,
+        business: businessValue, // Business name is captured here
+        timestamp: Date.now() // Capturing the timestamp
+    };
+
+    set(transactionRef, transactionData)
+        .then(() => {
+            console.log('Transaction logged successfully.');
+        })
+        .catch((error) => {
+            console.error('Error logging transaction:', error);
+        });
+}
+
+
+
+// Function to update the business's balance: Adds the amount to the current balance
+function updateBusinessBalance(amountToAdd) {
+    const businessRef = ref(database, `businesses/${businessValue}/balance`);
+
+    get(businessRef).then((snapshot) => {
+        let newBalance;
+        let currentBalance = snapshot.exists() ? snapshot.val() : 0; // Use current balance or default to 0
+
+        // Addition of the given amount to the business balance
+        newBalance = currentBalance + amountToAdd;
+
+        // Update the balance in Firebase
+        set(businessRef, newBalance).then(() => {
+            console.log(`Business balance updated to ${newBalance}`);
+        }).catch((error) => {
+            console.error('Error updating business balance:', error);
+        });
+
+    }).catch((error) => {
+        console.error('Error fetching business balance:', error);
+        // Initialize if fetching fails and no balance is found (Handling edge case)
+        set(businessRef, amountToAdd).then(() => {
+            console.log('Business balance initialized and set to:', amountToAdd);
+        }).catch((initError) => {
+            console.error('Error initializing business balance:', initError);
+        });
+    });
+}
+
+window.withdrawAmount = function() {
+    const amountInput = document.getElementById('amountInput');
+    const amountToWithdraw = Number(amountInput.value);
+    const userKey = selectedUserKey;
+    const userRef = ref(database, `users/${userKey}`);
+
+    // Fetch the current user balance first
+    get(userRef).then((snapshot) => {
+        if (snapshot.exists()) {
+            const userData = snapshot.val();
+            let currentBalance = userData.balance;
+            if (amountToWithdraw > currentBalance) {
+                // Trigger jiggle animation if withdrawal amount exceeds the balance
+                amountInput.classList.add('jiggle');
+                setTimeout(() => {
+                    amountInput.classList.remove('jiggle');
+                }, 500);
+            } else {
+                let newBalance = currentBalance - amountToWithdraw; // Calculate the new balance after withdrawal
 
                 // Update the user's balance in Firebase
                 set(ref(database, 'users/' + userKey), {
-                    id: userData.id, // Preserve existing ID
+                    id: userData.id, // Preserve existing id
                     balance: newBalance,
-                    grade: userData.gradeLevel || 'Unassigned' // Preserve existing grade or default
+                    gradeLevel: userData.gradeLevel // Preserve existing gradeLevel
                 }).then(() => {
-                    console.log('User balance updated successfully.');
+                    console.log('Withdrawal successful, user balance updated.');
 
-                    // Determine the business balance update action
-                    let businessBalanceUpdatePromise = Promise.resolve(window.businessData?.balance || 0); // Default to current loaded balance
-                    if (amount < 0) { // If it's a withdrawal from the user
-                        businessBalanceUpdatePromise = updateBusinessBalance(Math.abs(amount));
-                    } else { // If it's an addition to the user (implies withdrawal from business, if business is the source)
-                        // If `addAmount` means money from business, we'd do `updateBusinessBalance(-amount)` here.
-                        // Based on existing code (withdrawAmount adds to business), `addAmount` means money comes from outside business or is added to both, so business balance isn't explicitly changed here.
-                        // Assuming `window.businessData` is kept up-to-date by the interval.
-                        businessBalanceUpdatePromise = get(ref(database, `businesses/${businessValue}/balance`)).then(snap => snap.val() || 0);
-                    }
+                    // This will add the withdrawn amount to the business balance
+                    updateBusinessBalance(amountToWithdraw);
 
-                    businessBalanceUpdatePromise.then((updatedBusinessBalance) => {
-                        logTransaction(userKey, amount, newBalance, businessValue, updatedBusinessBalance);
-                        document.getElementById('userModal').style.display = 'none'; // Close the modal
-                        document.getElementById('amountInput').value = ''; // Clear input
-                    });
+                    // Log the withdrawal transaction, note here the amount is negative
+                    logTransaction(userKey, -amountToWithdraw, newBalance, businessValue, businessData);
+
+                    // Close the modal
+                    document.getElementById('userModal').style.display = 'none';
+                    fetchAndDisplayUsers(currentSearchQuery); // Refresh user list after update
                 }).catch((error) => {
                     console.error('Error updating user balance:', error);
                 });
-            } else {
-                console.log('No user found with the key:', userKey);
             }
-        }).catch((error) => {
-            console.error('Error fetching user data:', error);
-        });
-    }
-
-    // Function to log transactions with unique IDs based on timestamp
-    function logTransaction(userKey, amount, newBalance, businessValue, businessBalanceAmount) {
-        const transactionID = `trans_${Date.now()}_${Math.floor(Math.random() * 1000)}`; // Generate a unique ID
-
-        const transactionRef = ref(database, 'transactions/' + transactionID); // Use the generated ID
-        
-        const transactionData = {
-            userKey: userKey,
-            amount: amount,
-            newBalance: newBalance,
-            businessBalance: businessBalanceAmount,
-            business: businessValue, // Business name is captured here
-            timestamp: Date.now() // Capturing the timestamp
-        };
-
-        set(transactionRef, transactionData)
-            .then(() => {
-                console.log('Transaction logged successfully.');
-            })
-            .catch((error) => {
-                console.error('Error logging transaction:', error);
-            });
-    }
-
-    // Function to update the business's balance: Adds the amount to the current balance
-    // Now returns a Promise that resolves with the new business balance
-    function updateBusinessBalance(amountToAdd) {
-        const businessRef = ref(database, `businesses/${businessValue}/balance`);
-
-        return get(businessRef).then((snapshot) => {
-            let newBalance;
-            let currentBalance = snapshot.exists() ? snapshot.val() : 0; // Use current balance or default to 0
-
-            newBalance = currentBalance + amountToAdd;
-
-            return set(businessRef, newBalance).then(() => {
-                console.log(`Business balance updated to ${newBalance}`);
-                return newBalance; // Return the new balance
-            }).catch((error) => {
-                console.error('Error updating business balance:', error);
-                throw error; // Re-throw to propagate the error
-            });
-        }).catch((error) => {
-            console.error('Error fetching business balance:', error);
-            // Initialize if fetching fails and no balance is found (Handling edge case)
-            return set(businessRef, amountToAdd).then(() => {
-                console.log('Business balance initialized and set to:', amountToAdd);
-                return amountToAdd; // Return the initial amount
-            }).catch((initError) => {
-                console.error('Error initializing business balance:', initError);
-                throw initError;
-            });
-        });
-    }
-
-    window.withdrawAmount = function() {
-        const amountInput = document.getElementById('amountInput');
-        const amountToWithdraw = Number(amountInput.value);
-        const userKey = selectedUserKey;
-        const userRef = ref(database, `users/${userKey}`);
-
-        if (isNaN(amountToWithdraw) || amountToWithdraw <= 0) {
-            amountInput.classList.add('jiggle');
-            setTimeout(() => amountInput.classList.remove('jiggle'), 500);
-            return;
-        }
-
-        // Fetch the current user balance first
-        get(userRef).then((snapshot) => {
-            if (snapshot.exists()) {
-                const userData = snapshot.val();
-                let currentBalance = userData.balance;
-                if (amountToWithdraw > currentBalance) {
-                    // Trigger jiggle animation if withdrawal amount exceeds the balance
-                    amountInput.classList.add('jiggle');
-                    setTimeout(() => {
-                        amountInput.classList.remove('jiggle');
-                    }, 500);
-                } else {
-                    let newBalance = currentBalance - amountToWithdraw; // Calculate the new balance after withdrawal
-
-                    // Update the user's balance in Firebase
-                    set(ref(database, 'users/' + userKey), {
-                        id: userData.id, // Preserve existing ID
-                        balance: newBalance,
-                        grade: userData.gradeLevel || 'Unassigned' // Preserve existing grade or default
-                    }).then(() => {
-                        console.log('Withdrawal successful, user balance updated.');
-
-                        // This will add the withdrawn amount to the business balance
-                        updateBusinessBalance(amountToWithdraw).then((updatedBusinessBalance) => {
-                            // Log the withdrawal transaction, note here the amount is negative
-                            logTransaction(userKey, -amountToWithdraw, newBalance, businessValue, updatedBusinessBalance);
-
-                            // Close the modal and clear input
-                            document.getElementById('userModal').style.display = 'none';
-                            document.getElementById('amountInput').value = '';
-                        });
-                    }).catch((error) => {
-                        console.error('Error updating user balance:', error);
-                    });
-                }
-            } else {
-                console.log('User balance could not be found.');
-            }
-        }).catch((error) => {
-            console.error('Error fetching user balance:', error);
-        });
-    };
-
-    function fetchAndDisplayBusinessBalance() {
-      const businessRef = ref(database, `businesses/${businessValue}`);
-      get(businessRef).then((snapshot) => {
-        if (snapshot.exists()) {
-          window.businessData = snapshot.val();
-          document.getElementById('businessBalance').innerText = `Store earnings: $${businessData.balance}`;
         } else {
-          console.error('Business data not found');
+            console.log('User balance could not be found.');
         }
-      }).catch((error) => {
-        console.error('Error fetching business balance:', error);
-      });
+    }).catch((error) => {
+        console.error('Error fetching user balance:', error);
+    });
+};
+
+
+
+
+function fetchAndDisplayBusinessBalance() {
+  const businessRef = ref(database, `businesses/${businessValue}`);
+  get(businessRef).then((snapshot) => {
+    if (snapshot.exists()) {
+      window.businessData = snapshot.val();
+      document.getElementById('businessBalance').innerText = `Store earnings: $${businessData.balance}`;
+    } else {
+      console.error('Business data not found');
     }
+  }).catch((error) => {
+    console.error('Error fetching business balance:', error);
+  });
+}
 
-    //Code to automsticly update users and business balances
-    setInterval(fetchAndDisplayBusinessBalance, 5000);
+//Code to automsticly update users and business balances
 
-    setInterval(() => {
-      fetchAndDisplayUsers(currentSearchQuery); // Use the updated query for auto-refresh
-    }, 5000); // Adjust the timing as necessary
+// Call this function to initially display the balance and inside updateBusinessBalance to update it
+setInterval(fetchAndDisplayBusinessBalance, 5000);
 
-    fetchAndDisplayBusinessBalance()
+setInterval(() => {
+  fetchAndDisplayUsers(currentSearchQuery); // Use the updated query for auto-refresh
+}, 5000); // Adjust the timing as necessary
+
+fetchAndDisplayBusinessBalance()
   </script>
 </head>
 <body>
   <div id="businessInfo" style="display: grid; grid-template-columns: 1fr auto 1fr;">
-    <span id="businessName" style="float: left;"><h1 style="font-family: Poppins;">Firehawk Store</h1></span>
+  <span id="businessName" style="float: left;"><h1 style="font-family: Poppins;">Firehawk Store</h1></span>
     <img class="logo" src="/lux-bank/assets/fireyhills.png">
-    <span id="businessBalance" style="float: right; text-align: right;">...</span>
-  </div>
+  <span id="businessBalance" style="float: right; text-align: right;">...</span>
+</div>
 
   <form id="searchForm">
     <input type="text" id="searchInput" placeholder="Search users...">
@@ -466,7 +483,7 @@
     <p>Transactions are measured in Hawkeyes.</p>
     <!-- Form to add or withdraw -->
     <input type="text" id="amountInput" placeholder="Enter amount..." pattern="\d*">
-    <button class="fill-button" onclick="addAmount()">Add</button>
+    <button class="fill-button" disabled onclick="addAmount()">Add</button>
     <button class="outline-button" onclick="withdrawAmount()">Withdraw</button>
   </div>
 </div>
