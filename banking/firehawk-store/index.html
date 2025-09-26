@@ -79,43 +79,13 @@
 .user-top { border-top-left-radius: 0; border-top-right-radius: 0; }
 .user-bottom { border-bottom: none; } /* Last item doesn't need bottom border */
 .only-user { border-bottom: none; border-radius: 0; }
-
-/* New styles for user details form in modal */
-.form-group {
-    margin-bottom: 10px;
-    display: flex; /* Arrange label and input in a row */
-    align-items: center; /* Vertically align them */
-}
-
-.form-group label {
-    flex: 0 0 80px; /* Fixed width for labels */
-    margin-right: 10px;
-    font-weight: bold;
-    color: #333;
-}
-
-.form-group input.detail-input {
-    flex-grow: 1; /* Input takes remaining space */
-    padding: 8px 12px;
-    border: 1px solid #ccc;
-    border-radius: 5px;
-    font-size: 1em;
-    box-sizing: border-box; /* Include padding and border in the element's total width and height */
-}
-
-/* Adjust button spacing */
-#userDetailsForm .fill-button {
-    margin-top: 15px;
-    width: 100%; /* Make save button full width */
-}
 </style>
 
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js" defer></script>
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js" defer></script>
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-    // Import `update` method along with others
-    import { getDatabase, ref, set, get, update } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+    import { getDatabase, ref, set, get } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
     const firebaseConfig = {
         apiKey: "AIzaSyASd5JOikXTlRp8eA2j_26Z1NWatZMjZds",
@@ -134,7 +104,10 @@
     window.businessValue = "Firehawk Store";
 
     let currentSearchQuery = "";
-    let collapsedStates = {}; // Global state to preserve collapse status for sections
+    // Global state to preserve collapse status for sections
+    // Default: { "Grade 3": true } means Grade 3 is collapsed.
+    // If a grade level is not in this object, it defaults to collapsed on first render.
+    let collapsedStates = {};
 
     // Function to check if business account exists and create it if not
     function ensureBusinessAccountExists() {
@@ -352,8 +325,7 @@
         set(newUserRef, {
           id: userID,
           balance: startingBalance, // Use startingBalance
-          gradeLevel: gradeLevel, // Store gradeLevel
-          weeklyPayroll: '' // Initialize weeklyPayroll as an empty string
+          gradeLevel: gradeLevel // Store gradeLevel
         }).then(() => {
           console.log('User added successfully.');
           fetchAndDisplayUsers(currentSearchQuery);
@@ -387,45 +359,19 @@
 
 
     let selectedUserKey = ''; // To keep track of which user is selected
-    let originalUserData = null; // Store the original fetched user data for comparison
 
     window.openModal = function(userKey) {
       selectedUserKey = userKey; // Set the selected user key
-      document.getElementById('modal-header').innerText = `User: ${selectedUserKey}`; // Update modal title
-
-      // Clear previous input for transactions
+      document.getElementById('modal-header').innerText = selectedUserKey;
+      document.getElementById('userModal').style.display = 'block'; // Show the modal
+      // Clear previous input when opening modal
       document.getElementById('amountInput').value = '';
-
-      // Fetch user data and populate detail fields
-      const userRef = ref(database, 'users/' + userKey);
-      get(userRef).then((snapshot) => {
-        if (snapshot.exists()) {
-          const userData = snapshot.val();
-          originalUserData = { ...userData }; // Store a copy of the original data
-
-          document.getElementById('detailBalance').value = userData.balance !== undefined ? userData.balance : 0;
-          document.getElementById('detailGrade').value = userData.gradeLevel !== undefined ? userData.gradeLevel : '';
-          document.getElementById('detailPayroll').value = userData.weeklyPayroll !== undefined ? userData.weeklyPayroll : ''; // Assuming weeklyPayroll might be missing
-          document.getElementById('detailUserId').value = userData.id !== undefined ? userData.id : '';
-
-          document.getElementById('userModal').style.display = 'block'; // Show the modal
-          setTimeout(() => {
-            const input = document.getElementById('amountInput');
-            if (input){
-              input.focus();
-            }
-          }, 50); // 50ms is usually enough for modal to render
-        } else {
-          console.error('No user found with the key:', userKey);
-          alert('User data not found!');
-          // Optionally, close modal or show an error state
-          document.getElementById('userModal').style.display = 'none';
+      setTimeout(() => {
+        const input = document.getElementById('amountInput');
+        if (input){
+          input.focus();
         }
-      }).catch((error) => {
-        console.error('Error fetching user data for modal:', error);
-        alert('Error fetching user data!');
-        document.getElementById('userModal').style.display = 'none';
-      });
+      }, 50); // 50ms is usually enough for modal to render
     };
 
     // Close the modal
@@ -465,76 +411,6 @@
       }
     });
 
-    // New function to save user details
-    window.saveUserDetails = function() {
-        if (!selectedUserKey || !originalUserData) {
-            console.error("No user selected or original data not loaded.");
-            alert("Please select a user first.");
-            return;
-        }
-
-        const updates = {};
-        let changedFields = false;
-
-        // Get current values from input fields
-        const newBalance = parseFloat(document.getElementById('detailBalance').value);
-        const newGrade = document.getElementById('detailGrade').value.trim();
-        const newPayroll = document.getElementById('detailPayroll').value.trim();
-        const newId = document.getElementById('detailUserId').value.trim();
-
-        // Validate balance input
-        if (isNaN(newBalance)) {
-            alert("Balance must be a valid number.");
-            document.getElementById('detailBalance').classList.add('jiggle');
-            setTimeout(() => document.getElementById('detailBalance').classList.remove('jiggle'), 500);
-            return;
-        }
-        // Basic validation for User ID (cannot be empty)
-        if (!newId) {
-            alert("User ID cannot be empty.");
-            document.getElementById('detailUserId').classList.add('jiggle');
-            setTimeout(() => document.getElementById('detailUserId').classList.remove('jiggle'), 500);
-            return;
-        }
-
-
-        // Compare and add to updates object
-        // Use Number() for balance comparison to avoid issues with float precision or string comparison
-        if (Number(newBalance.toFixed(2)) !== Number(originalUserData.balance.toFixed(2))) { // Compare fixed to 2 decimal places
-            updates.balance = newBalance;
-            changedFields = true;
-        }
-        if (newGrade !== originalUserData.gradeLevel) {
-            updates.gradeLevel = newGrade;
-            changedFields = true;
-        }
-        if (newPayroll !== (originalUserData.weeklyPayroll || '')) { // Compare with empty string if original is undefined/null
-            updates.weeklyPayroll = newPayroll;
-            changedFields = true;
-        }
-        if (newId !== originalUserData.id) {
-            updates.id = newId;
-            changedFields = true;
-        }
-
-        if (!changedFields) {
-            alert("No changes detected.");
-            return;
-        }
-
-        // Perform the update
-        const userRef = ref(database, 'users/' + selectedUserKey);
-        // Use `update` to merge changes, preserving other fields not explicitly updated
-        update(userRef, updates).then(() => {
-            console.log("User details updated successfully:", updates);
-            alert("Details saved!");
-            document.getElementById('userModal').style.display = 'none'; // Close modal on success
-            fetchAndDisplayUsers(currentSearchQuery); // Refresh user list
-        }).catch((error) => {
-            console.error("Error updating user details:", error);
-            alert("Error saving details: " + error.message);
-        });
-    };
 
     // Update user balance and log the transaction
     function updateUserBalance(userKey, amount) {
@@ -549,7 +425,7 @@
 
                 // Update the user's balance in Firebase, preserving other data
                 set(ref(database, 'users/' + userKey), {
-                    ...userData, // Preserve existing user data (like gradeLevel, id, weeklyPayroll)
+                    ...userData, // Preserve existing user data (like gradeLevel, id)
                     balance: newBalance
                 }).then(() => {
                     console.log('User balance updated successfully.');
@@ -660,7 +536,7 @@
 
                     // Update the user's balance in Firebase, preserving other data
                     set(ref(database, 'users/' + userKey), {
-                        ...userData, // Preserve existing user data (like gradeLevel, id, weeklyPayroll)
+                        ...userData, // Preserve existing user data (like gradeLevel, id)
                         balance: newBalance
                     }).then(() => {
                         console.log('Withdrawal successful, user balance updated.');
@@ -733,35 +609,12 @@
 <div id="userModal" class="modal">
   <div class="modal-content">
     <span class="close">&times;</span>
-    <h2 id="modal-header" style="font-family: 'poppins';">User Actions</h2> <!-- Changed title to be more general -->
+    <h2 id="modal-header" style="font-family: 'poppins';">Edit User Balance</h2>
     <p>Transactions are measured in Hawkeyes.</p>
-
-    <h3 style="margin-top: 15px;">Transactions</h3>
     <!-- Form to add or withdraw -->
     <input type="text" id="amountInput" placeholder="Enter amount..." pattern="\d*">
     <button class="fill-button" onclick="addAmount()">Add</button>
     <button class="outline-button" onclick="withdrawAmount()">Withdraw</button>
-
-    <h3 style="margin-top: 25px;">User Details</h3>
-    <div id="userDetailsForm">
-      <div class="form-group">
-        <label for="detailBalance">Balance</label>
-        <input type="number" id="detailBalance" class="detail-input">
-      </div>
-      <div class="form-group">
-        <label for="detailGrade">Grade</label>
-        <input type="text" id="detailGrade" class="detail-input">
-      </div>
-      <div class="form-group">
-        <label for="detailPayroll">Payroll</label>
-        <input type="text" id="detailPayroll" class="detail-input">
-      </div>
-      <div class="form-group">
-        <label for="detailUserId">User ID</label>
-        <input type="text" id="detailUserId" class="detail-input"> <!-- Removed readonly as per prompt -->
-      </div>
-      <button class="fill-button" onclick="saveUserDetails()">Save Details</button>
-    </div>
   </div>
 </div>
 
