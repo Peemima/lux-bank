@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Lux Bank Banking Dashboard</title> <!-- Changed title -->
+  <title>Firehawk Store Point of Sale</title>
   <noscript>
     <h1>js_err_noscrpt_popup</h1>
     <p>A wild error popped out of nowhere!</p>
@@ -131,7 +131,7 @@
     const app = initializeApp(firebaseConfig);
     const database = getDatabase(app);
 
-    window.businessValue = "Lux Bank"; // Changed businessValue
+    window.businessValue = "Firehawk Store";
 
     let currentSearchQuery = "";
     let collapsedStates = {}; // Global state to preserve collapse status for sections
@@ -693,10 +693,10 @@
       get(businessRef).then((snapshot) => {
         if (snapshot.exists()) {
           window.businessData = snapshot.val(); // Store business data globally
-          document.getElementById('businessBalance').innerText = `Bank Earnings: $${businessData.balance}`; // Changed text
+          document.getElementById('businessBalance').innerText = `Store earnings: $${businessData.balance}`;
         } else {
           console.error('Business data not found');
-          document.getElementById('businessBalance').innerText = `Bank Earnings: $0`; // Changed text
+          document.getElementById('businessBalance').innerText = `Store earnings: $0`; // Display 0 if not found
           window.businessData = { balance: 0 }; // Initialize global businessData
         }
       }).catch((error) => {
@@ -718,10 +718,10 @@
 </head>
 <body>
   <div id="businessInfo" style="display: grid; grid-template-columns: 1fr auto 1fr;">
-    <span id="businessName" style="float: left;"><h1 style="font-family: Poppins;">Lux Bank</h1></span> <!-- Changed H1 text -->
-    <!-- <img class="logo" src="/lux-bank/assets/fireyhills.png"> Removed Firehawk specific logo -->
-    <span id="businessBalance" style="float: right; text-align: right;">...</span>
-  </div>
+  <span id="businessName" style="float: left;"><h1 style="font-family: Poppins;">Firehawk Store</h1></span>
+    <img class="logo" src="/lux-bank/assets/fireyhills.png">
+  <span id="businessBalance" style="float: right; text-align: right;">...</span>
+</div>
 
   <form id="searchForm">
     <input type="text" id="searchInput" placeholder="Search users...">
@@ -733,10 +733,10 @@
 <div id="userModal" class="modal">
   <div class="modal-content">
     <span class="close">&times;</span>
-    <h2 id="modal-header" style="font-family: 'poppins';">User Actions</h2>
-    <!-- Removed "Transactions are measured in Hawkeyes." -->
+    <h2 id="modal-header" style="font-family: 'poppins';">User Actions</h2> <!-- Changed title to be more general -->
+    <p>Transactions are measured in Hawkeyes.</p>
 
-    <h3 style="margin-top: 15px;">Account Transactions</h3> <!-- Changed title -->
+    <h3 style="margin-top: 15px;">Transactions</h3>
     <!-- Form to add or withdraw -->
     <input type="text" id="amountInput" placeholder="Enter amount..." pattern="\d*">
     <button class="fill-button" onclick="addAmount()">Add</button>
@@ -758,7 +758,7 @@
       </div>
       <div class="form-group">
         <label for="detailUserId">User ID</label>
-        <input type="text" id="detailUserId" class="detail-input">
+        <input type="text" id="detailUserId" class="detail-input"> <!-- Removed readonly as per prompt -->
       </div>
       <button class="fill-button" onclick="saveUserDetails()">Save Details</button>
     </div>
