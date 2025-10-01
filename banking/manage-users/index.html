@@ -535,7 +535,8 @@
         function applyUpdates() {
             // Compare and add to updates object
             // Use Number() for balance comparison to avoid issues with float precision or string comparison
-            if (Number(newBalance.toFixed(2)) !== Number(originalUserData.balance.toFixed(2))) { // Compare fixed to 2 decimal places
+            if (Number(newBalance.toFixed(2)) !== Number((parseFloat(originalUserData.balance) || 0).toFixed(2))) {
+ // Compare fixed to 2 decimal places
                 updates.balance = newBalance;
                 changedFields = true;
             }
