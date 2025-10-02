@@ -163,6 +163,15 @@
 
     // Removed ensureBusinessAccountExists function as it's no longer needed
 
+    // Helper: Capitalize first and last name
+    function formatUserName(name) {
+      return name
+        .toLowerCase()
+        .split(/\s+/) // Split on spaces
+        .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+        .join(" ");
+    }
+
     document.addEventListener("DOMContentLoaded", function() {
       // Removed ensureBusinessAccountExists() and fetchAndDisplayBusinessBalance() calls
 
@@ -233,7 +242,11 @@
 
         if (!foundMatchingUser && query !== "") {
             // Changed the button to use the new promptAndAddUser function
-            allUsersContainer.innerHTML = `<div class="user-info"><p class="list-name">No matching users found for "${query}".</p><button class="fill-button" onclick="promptAndAddUser('${query}')">Add ${query}</button></div>`;
+            allUsersContainer.innerHTML = `
+            <div class="user-info">
+              <p class="list-name">No matching users found for "${query}".</p>
+              <button class="fill-button" onclick="promptAndAddUser('${query}')">Add ${formatUserName(query)}</button>
+            </div>`;
             return;
         }
 
@@ -347,36 +360,36 @@
 
     // NEW FUNCTION: Handles prompting for user details and adding a new user
     window.promptAndAddUser = async function(prefilledUserName = "") {
-        let userName = prefilledUserName || prompt("Enter new user's name:");
-        if (!userName) return; // User cancelled
-
-        // Check if user name already exists
-        const userExistsRef = ref(database, 'users/' + userName);
-        const userExistsSnapshot = await get(userExistsRef);
-        if (userExistsSnapshot.exists()) {
-            alert(`User "${userName}" already exists. Please choose a different name or edit the existing user.`);
-            return;
-        }
-
-        let balanceInput = prompt(`Enter starting balance for ${userName}: (e.g., 100.00)`);
-        if (balanceInput === null) return; // User cancelled
-        let balance = parseFloat(balanceInput);
-        if (isNaN(balance) || balance < 0) {
-            alert("Invalid balance. Please enter a non-negative number.");
-            return;
-        }
-
-        let gradeLevel = prompt(`Enter grade level for ${userName}: (e.g., K, 1, 5, High School)`);
-        if (gradeLevel === null) return; // User cancelled, default to Unknown if empty
-        if (gradeLevel.trim() === '') gradeLevel = "Unknown";
-
-
-        let weeklyPayroll = prompt(`Enter weekly payroll for ${userName}: (e.g., 5.00 or 10.50)`);
-        if (weeklyPayroll === null) return; // User cancelled, default to empty string if empty
-
-        // Generate unique ID and create user
-        addUserWithUniqueID(userName, balance, gradeLevel, weeklyPayroll);
-    };
+      let rawName = prefilledUserName || prompt("Enter new user's name:");
+      if (!rawName) return; // User cancelled
+  
+      let userName = formatUserName(rawName); // ✅ Fix capitalization
+  
+      // Check if user name already exists
+      const userExistsRef = ref(database, 'users/' + userName);
+      const userExistsSnapshot = await get(userExistsRef);
+      if (userExistsSnapshot.exists()) {
+          alert(`User "${userName}" already exists. Please choose a different name or edit the existing user.`);
+          return;
+      }
+  
+      let balanceInput = prompt(`Enter starting balance for ${userName}: (e.g., 100.00)`);
+      if (balanceInput === null) return;
+      let balance = parseFloat(balanceInput);
+      if (isNaN(balance) || balance < 0) {
+          alert("Invalid balance. Please enter a non-negative number.");
+          return;
+      }
+  
+      let gradeLevel = prompt(`Enter grade level for ${userName}: (e.g., K, 1, 5, High School)`);
+      if (gradeLevel === null) return;
+      if (gradeLevel.trim() === '') gradeLevel = "Unknown";
+  
+      let weeklyPayroll = prompt(`Enter weekly payroll for ${userName}: (e.g., 5.00 or 10.50)`);
+      if (weeklyPayroll === null) return;
+  
+      addUserWithUniqueID(userName, balance, gradeLevel, weeklyPayroll);
+  };
 
     // Removed the old window.addUser function entirely.
 
